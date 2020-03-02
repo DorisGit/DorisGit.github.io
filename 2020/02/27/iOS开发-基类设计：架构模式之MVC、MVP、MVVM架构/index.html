@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://dorisgit.github.io').hostname,
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="概述最近在改造项目中的基类设计，侧重注意了一下基类的设计和使用。 现存问题： ViewController承担任务过多，不易扩展变化，列表数据处理存在资源浪费  123451. 列表中已无更多数据还会进行网络请求，浪费资源2. 列表已经有可用数据，再进行第N页请求失败了,都会展示网络加载失败页面，无法展示之前有效数据3. 基类做了上拉下拉数据默认获取，有一定的方便性，但是也影响了数据的灵活组装4.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS开发-基类设计：架构模式之MVC、MVP、MVVM架构">
+<meta property="og:url" content="https://dorisgit.github.io/2020/02/27/iOS%E5%BC%80%E5%8F%91-%E5%9F%BA%E7%B1%BB%E8%AE%BE%E8%AE%A1%EF%BC%9A%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%E4%B9%8BMVC%E3%80%81MVP%E3%80%81MVVM%E6%9E%B6%E6%9E%84/index.html">
+<meta property="og:site_name" content="泡泡茶壶">
+<meta property="og:description" content="概述最近在改造项目中的基类设计，侧重注意了一下基类的设计和使用。 现存问题： ViewController承担任务过多，不易扩展变化，列表数据处理存在资源浪费  123451. 列表中已无更多数据还会进行网络请求，浪费资源2. 列表已经有可用数据，再进行第N页请求失败了,都会展示网络加载失败页面，无法展示之前有效数据3. 基类做了上拉下拉数据默认获取，有一定的方便性，但是也影响了数据的灵活组装4.">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/5458052-2c6fb3f34f4d9ed8.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/540">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/5458052-2c6fb3f34f4d9ed8.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/540">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/5458052-d8e29878d1167f47.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/720">
+<meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/d/dc/Model_View_Presenter_GUI_Design_Pattern.png">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/5458052-655c18035e28aab5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/720">
+<meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/8/87/MVVMPattern.png">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/1874977-9bab0f07280d0134.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1000">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/1874977-f8c57cfd22113349.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/675">
+<meta property="article:published_time" content="2020-02-27T14:37:25.000Z">
+<meta property="article:modified_time" content="2020-02-27T14:38:27.838Z">
+<meta property="article:author" content="Doris AI">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://upload-images.jianshu.io/upload_images/5458052-2c6fb3f34f4d9ed8.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/540">
+
+<link rel="canonical" href="https://dorisgit.github.io/2020/02/27/iOS%E5%BC%80%E5%8F%91-%E5%9F%BA%E7%B1%BB%E8%AE%BE%E8%AE%A1%EF%BC%9A%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%E4%B9%8BMVC%E3%80%81MVP%E3%80%81MVVM%E6%9E%B6%E6%9E%84/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>iOS开发-基类设计：架构模式之MVC、MVP、MVVM架构 | 泡泡茶壶</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">泡泡茶壶</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="en">
+    <link itemprop="mainEntityOfPage" href="https://dorisgit.github.io/2020/02/27/iOS%E5%BC%80%E5%8F%91-%E5%9F%BA%E7%B1%BB%E8%AE%BE%E8%AE%A1%EF%BC%9A%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F%E4%B9%8BMVC%E3%80%81MVP%E3%80%81MVVM%E6%9E%B6%E6%9E%84/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Doris AI">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="泡泡茶壶">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          iOS开发-基类设计：架构模式之MVC、MVP、MVVM架构
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2020-02-27 22:37:25 / Modified: 22:38:27" itemprop="dateCreated datePublished" datetime="2020-02-27T22:37:25+08:00">2020-02-27</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>最近在改造项目中的基类设计，侧重注意了一下基类的设计和使用。</p>
+<h3 id="现存问题："><a href="#现存问题：" class="headerlink" title="现存问题："></a>现存问题：</h3><ul>
+<li>ViewController承担任务过多，不易扩展变化，列表数据处理存在资源浪费</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1. 列表中已无更多数据还会进行网络请求，浪费资源</span><br><span class="line">2. 列表已经有可用数据，再进行第N页请求失败了,都会展示网络加载失败页面，无法展示之前有效数据</span><br><span class="line">3. 基类做了上拉下拉数据默认获取，有一定的方便性，但是也影响了数据的灵活组装</span><br><span class="line">4. 下拉加载、上拉获取，不同业务也有不确定性，不够通用的业务放在基类中反而增加了很多判断</span><br><span class="line">5. ViewController更新取决于监听ViewModel对于数据获取完后对Key改变</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>ViewModel业务承载过于单一，对于复杂业务无法进行拆分组装</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1. 只能承载单个列表请求，业务复杂的列表，无法进行拆分后组装</span><br><span class="line">2. 网络请求分散于VM C各个地方，不便于统一开发规范</span><br></pre></td></tr></table></figure>
+
+<h3 id="改造目的："><a href="#改造目的：" class="headerlink" title="改造目的："></a>改造目的：</h3><ol>
+<li>聚合大量共有的常用业务逻辑，极大程度减少开发者冗余代码的产生，更加专注于自身模块的开发</li>
+<li>采用协议的方式，让其他类可以去实现，一定程序上保证了开发规范</li>
+</ol>
+<h2 id="架构设计"><a href="#架构设计" class="headerlink" title="架构设计"></a>架构设计</h2><p>关于基类架构设计，基于项目本身也是基于MVVM的模式，目前也准备沿用下去，对应着也了解一下Model、View、Controller/Presenter/ViewModel之间的关系，以及这三者组合而形成的多种设计模式：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">MVC（传统MVC、Cocoa MVC）</span><br><span class="line">MVP</span><br><span class="line">MVVM</span><br></pre></td></tr></table></figure>
+
+<h3 id="Model-View-Controller简述"><a href="#Model-View-Controller简述" class="headerlink" title="Model View Controller简述"></a>Model View Controller简述</h3><h4 id="Model"><a href="#Model" class="headerlink" title="Model"></a>Model</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&quot;Model objects encapsulate the data specific to an application and define the logic and computation that manipulate and process that data. For example, a model object might represent a character in a game or a contact in an address book. A model object can have to-one and to-many relationships with other model objects, and so sometimes the model layer of an application effectively is one or more object graphs. Much of the data that is part of the persistent state of the application (whether that persistent state is stored in files or databases) should reside in the model objects after the data is loaded into the application. Because model objects represent knowledge and expertise related to a specific problem domain, they can be reused in similar problem domains. Ideally, a model object should have no explicit connection to the view objects that present its data and allow users to edit that data—it should not be concerned with user-interface and presentation issues.&quot;</span><br></pre></td></tr></table></figure>
+
+<p>模型 - 封装特定于应用程序的数据，可以是单个对象，也可以是对象的某种结构，并定义操作和处理该数据的逻辑和计算。理想状态下，model与显示其数据或编辑其数据视图都没有直接关系，它不关心用户界面和展示情况</p>
+<h4 id="View"><a href="#View" class="headerlink" title="View"></a>View</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">“A view object is an object in an application that users can see. A view object knows how to draw itself and can respond to user actions. A major purpose of view objects is to display data from the application’s model objects and to enable the editing of that data. Despite this, view objects are typically decoupled from model objects in an MVC application.</span><br><span class="line"></span><br><span class="line">Because you typically reuse and reconfigure them, view objects provide consistency between applications. Both the UIKit and AppKit frameworks provide collections of view classes, and Interface Builder offers dozens of view objects in its Library.”</span><br></pre></td></tr></table></figure>
+
+<p>视图 - 作为UI的视觉展示，通常会突出model的某些属性，也会隐藏其他属性。View应明确知道该如何根据Model中的对象属性绘制自己，并响应用户操作对数据进行编辑。</p>
+<p>虽然View看起来与Model应该是强关联，但通常View与Model是解耦的</p>
+<h4 id="Controller-Presenter-ViewModel"><a href="#Controller-Presenter-ViewModel" class="headerlink" title="Controller/Presenter/ViewModel"></a>Controller/Presenter/ViewModel</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">“A controller object acts as an intermediary between one or more of an application’s view objects and one or more of its model objects. Controller objects are thus a conduit through which view objects learn about changes in model objects and vice versa. Controller objects can also perform setup and coordinating tasks for an application and manage the life cycles of other objects.”</span><br></pre></td></tr></table></figure>
+
+<p>控制器 - 通常作为View与Model的中介，View通过其知道Model的变化，对应更新视图变化，Model通过其获知用户操作后需要进行的数据更新。</p>
+<h3 id="Model-View-Controller-MVC"><a href="#Model-View-Controller-MVC" class="headerlink" title="Model-View-Controller(MVC)"></a>Model-View-Controller(MVC)</h3><h4 id="传统的MVC"><a href="#传统的MVC" class="headerlink" title="传统的MVC"></a><a href="https://en.wikipedia.org/wiki/Model–view–controller" target="_blank" rel="noopener">传统的MVC</a></h4><p><img src="https://upload-images.jianshu.io/upload_images/5458052-2c6fb3f34f4d9ed8.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/540" alt="old_mvc"></p>
+<ol>
+<li>View从Model中获取数据的变化，进行状态更新</li>
+<li>Model负责数据管理，通知View更新UI</li>
+<li>Controller响应用户输入并对数据模型对象执行更新</li>
+</ol>
+<blockquote>
+</blockquote>
+<p>简单来看，其符合View、Model、Controller特性设计，但三者之间均存在通讯，紧密耦合，大大降低了三者之间的复用性。</p>
+<h4 id="Cocoa-MVC"><a href="#Cocoa-MVC" class="headerlink" title="Cocoa MVC"></a><a href="https://developer.apple.com/library/archive/documentation/General/Conceptual/CocoaEncyclopedia/Model-View-Controller/Model-View-Controller.html#//apple_ref/doc/uid/TP40010810-CH14" target="_blank" rel="noopener">Cocoa MVC</a></h4><p>基于传统MVC过于古老，且不太实用于当下的iOS开发，苹果设计出一套Cocoa MVC模式，进行解耦View 与 Model</p>
+<h5 id="愿景"><a href="#愿景" class="headerlink" title="愿景"></a>愿景</h5><p>Controller作为中介器协调View与Model，View与Model完全解耦</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/5458052-2c6fb3f34f4d9ed8.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/540" alt="cocoa_mvc"></p>
+<h5 id="实际"><a href="#实际" class="headerlink" title="实际"></a>实际</h5><p>Controller需要承担代理、数据源、分发取消网络和一系列其他的任务，通常过于臃肿<br>View只作为传递用户动作事件而存在</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/5458052-d8e29878d1167f47.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/720" alt="cocoa_mvc2"></p>
+<p>Controller与View是紧密耦合的，直接导致对他们进行测试是很艰难的（需要模拟View和它们的生命周期），业务代码也逐渐的被分散到View布局代码中，View的复用也变得极其艰难，当有类似View出现时，要么我们将在View中写很多逻辑控制，要么我们将舍弃复用而再维护一个类似的View，造成很多的代码冗余</p>
+<h4 id="综上特性"><a href="#综上特性" class="headerlink" title="综上特性"></a>综上特性</h4><ul>
+<li>View与Model进行了解耦，Model可方便进行单元测试和复用</li>
+<li>Controller与View紧密耦合,Controller承担任务过重，过于臃肿</li>
+<li>不熟悉的开发人员也能快速上手</li>
+</ul>
+<h3 id="MVP-Model-view-presenter"><a href="#MVP-Model-view-presenter" class="headerlink" title="MVP(Model-view-presenter)"></a><a href="https://en.wikipedia.org/wiki/Model–view–presenter" target="_blank" rel="noopener">MVP(Model-view-presenter)</a></h3><p>MVP是基于MVC架构模式的一种派生模式，更加适用于构建用户交互，旨在促进自动化单元测试。<br>MVP定义出一种“中介者”角色，所有的协调更新逻辑都可交由Present来处理</p>
+<p><img src="https://upload.wikimedia.org/wikipedia/commons/d/dc/Model_View_Presenter_GUI_Design_Pattern.png" alt="MVP"></p>
+<ul>
+<li>Model定义要在用户界面中显示以及操作的数据接口</li>
+<li>View由Model驱动显示数据并将用户操作事件告知给“中介者”</li>
+<li>Presenter根据模型和视图进行操作，从Model中检索数据，并将其进行处理后驱动在View中展示</li>
+</ul>
+<p><img src="https://upload-images.jianshu.io/upload_images/5458052-655c18035e28aab5.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/720" alt="MVP"></p>
+<p>看起来MVP是更加符合苹果愿景的用户界面架构模式，Presenter在此只负责更新View的数据和状态，并不关注Controller的生命周期，就MVP而言，如果把Controller的子类看作Views，我们的可测试性将极大的提高，但相应的开发速度可能会有一些降低，因为必须要做一些手动的数据和事件的绑定。</p>
+<ol>
+<li>View/Controller与Model解耦，功能简单，便于测试</li>
+<li>代码量大，所有的更新传递数据操作都要通过Presenter，但是概念清晰，职责明确</li>
+</ol>
+<h3 id="MVVM（Model-View-ViewModel）"><a href="#MVVM（Model-View-ViewModel）" class="headerlink" title="MVVM（Model-View-ViewModel）"></a><a href="https://en.wikipedia.org/wiki/Model–view–viewmodel" target="_blank" rel="noopener">MVVM（Model-View-ViewModel）</a></h3><p>MVVM 同样也是一种派生自MVC的设计模式，它将用户界面展示与后端逻辑分离开来，ViewModel作为一个转换器，负责管理Model的转换以及View的更新，用于处理大部分视图的显示逻辑、Model的转换逻辑、对于后端数据的访问逻辑<br><img src="https://upload.wikimedia.org/wikipedia/commons/8/87/MVVMPattern.png" alt="MVVM"></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Q:ViewModel在iOS中ViewModel实际上代表什么？</span><br><span class="line"></span><br><span class="line">A:它基本上就是UIKit下的每个控件以及控件的状态。ViewModel调用会改变Model同时会将Model的改变更新到自身并且因为我们绑定了View和ViewModel，第一步就是相应的更新状态。</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://upload-images.jianshu.io/upload_images/1874977-9bab0f07280d0134.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1000" alt="MVVM"></p>
+<ul>
+<li>Model 数据对象（数据处理可通过自身提供接口，也可添加分类来扩展业务逻辑）</li>
+<li>View（View+Controller），负责UI展示，绑定viewModel，触发viewModel中提供的命令以及呈现viewModel提供的数据</li>
+<li>View-Model 负责从Model获取View所需的数据，转换成View可以展示的数据，并暴露公开的属性和命令提供给view进行绑定</li>
+<li>Binder 在MVVM中，声明性数据和命令绑定是隐式的。它可以使开发者非常方便的实现View与ViewModel的同步，避免编写大量烦杂的样板话的代码。</li>
+</ul>
+<hr>
+<h4 id="iOS中基于Binder的两种方案："><a href="#iOS中基于Binder的两种方案：" class="headerlink" title="iOS中基于Binder的两种方案："></a>iOS中基于Binder的两种方案：</h4><p>基于KVO的绑定库如<a href="https://github.com/Rightpoint/RZDataBinding" target="_blank" rel="noopener">RZDataBinding</a>和<a href="https://github.com/DeclarativeHub/Bond" target="_blank" rel="noopener">SwiftBond</a></p>
+<p>完全的函数响应式编程，比如像<a href="https://github.com/ReactiveCocoa/ReactiveCocoa" target="_blank" rel="noopener">ReactiveCocoa</a>、<a href="https://github.com/ReactiveX/RxSwift/" target="_blank" rel="noopener">RxSwift</a>或者<a href="https://github.com/mxcl/PromiseKit" target="_blank" rel="noopener">PromiseKit</a></p>
+<hr>
+<h4 id="MVVM模块层级图"><a href="#MVVM模块层级图" class="headerlink" title="MVVM模块层级图"></a>MVVM模块层级图</h4><p><img src="https://upload-images.jianshu.io/upload_images/1874977-f8c57cfd22113349.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/675" alt="MVVM模块层级图"></p>
+<h4 id="综上特性-1"><a href="#综上特性-1" class="headerlink" title="综上特性"></a>综上特性</h4><ul>
+<li>任务均摊 – 在例子中并不是很清晰，但是事实上，MVVM的View要比MVP中的View承担的责任多。因为前者通过ViewModel的设置绑定来更新状态，而后者只监听Presenter的事件但并不会对自己有什么更新。</li>
+<li>可测试性 – ViewModel不知道关于View的任何事情，这允许我们可以轻易的测试ViewModel。同时View也可以被测试，但是由于属于UIKit的范畴，对他们的测试通常会被忽略。</li>
+<li>易用性 – 必须把View中的事件指向Presenter并且手动的来更新View，如果使用绑定的话，MVVM代码量将会小的多。</li>
+</ul>
+<h2 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h2><p><a href="https://developer.apple.com/library/archive/documentation/General/Conceptual/DevPedia-CocoaCore/MVC.html" target="_blank" rel="noopener">View、Model、Controller相关定义</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Model–view–controller" target="_blank" rel="noopener">传统MVC</a></p>
+<p><a href="https://developer.apple.com/library/archive/documentation/General/Conceptual/CocoaEncyclopedia/Model-View-Controller/Model-View-Controller.html#//apple_ref/doc/uid/TP40010810-CH14" target="_blank" rel="noopener">Cocoa MVC</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Model–view–presenter" target="_blank" rel="noopener">MVP</a></p>
+<p><a href="https://en.wikipedia.org/wiki/Model–view–viewmodel" target="_blank" rel="noopener">MVVM</a></p>
+<p><a href="https://www.jianshu.com/p/ed9fd8a9e2d4" target="_blank" rel="noopener">iOS开发-进阶:架构模式–解密 MVC，MVP，MVVM以及VIPER架构</a></p>
+<p><a href="https://www.jianshu.com/p/db8400e1d40e" target="_blank" rel="noopener">iOS 关于MVVM Without ReactiveCocoa设计模式的那些事</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/02/27/BeeHive-%E7%BB%84%E4%BB%B6%E5%8C%96Protoco-impClass%E5%85%B7%E4%BD%93%E5%BA%94%E7%94%A8%E5%AE%9E%E4%BE%8B/" rel="prev" title="BeeHive-组件化Protoco-impClass具体应用实例">
+      <i class="fa fa-chevron-left"></i> BeeHive-组件化Protoco-impClass具体应用实例
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/02/27/iOS%E5%BC%80%E5%8F%91-layoutSubviews/" rel="next" title="iOS开发-layoutSubviews">
+      iOS开发-layoutSubviews <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#概述"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#现存问题："><span class="nav-number">1.1.</span> <span class="nav-text">现存问题：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#改造目的："><span class="nav-number">1.2.</span> <span class="nav-text">改造目的：</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#架构设计"><span class="nav-number">2.</span> <span class="nav-text">架构设计</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Model-View-Controller简述"><span class="nav-number">2.1.</span> <span class="nav-text">Model View Controller简述</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Model"><span class="nav-number">2.1.1.</span> <span class="nav-text">Model</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#View"><span class="nav-number">2.1.2.</span> <span class="nav-text">View</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Controller-Presenter-ViewModel"><span class="nav-number">2.1.3.</span> <span class="nav-text">Controller&#x2F;Presenter&#x2F;ViewModel</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Model-View-Controller-MVC"><span class="nav-number">2.2.</span> <span class="nav-text">Model-View-Controller(MVC)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#传统的MVC"><span class="nav-number">2.2.1.</span> <span class="nav-text">传统的MVC</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Cocoa-MVC"><span class="nav-number">2.2.2.</span> <span class="nav-text">Cocoa MVC</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#愿景"><span class="nav-number">2.2.2.1.</span> <span class="nav-text">愿景</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#实际"><span class="nav-number">2.2.2.2.</span> <span class="nav-text">实际</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#综上特性"><span class="nav-number">2.2.3.</span> <span class="nav-text">综上特性</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MVP-Model-view-presenter"><span class="nav-number">2.3.</span> <span class="nav-text">MVP(Model-view-presenter)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MVVM（Model-View-ViewModel）"><span class="nav-number">2.4.</span> <span class="nav-text">MVVM（Model-View-ViewModel）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#iOS中基于Binder的两种方案："><span class="nav-number">2.4.1.</span> <span class="nav-text">iOS中基于Binder的两种方案：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#MVVM模块层级图"><span class="nav-number">2.4.2.</span> <span class="nav-text">MVVM模块层级图</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#综上特性-1"><span class="nav-number">2.4.3.</span> <span class="nav-text">综上特性</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文档"><span class="nav-number">3.</span> <span class="nav-text">参考文档</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Doris AI</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Doris AI</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.7.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
