@@ -97,16 +97,6 @@
   </style>
 </noscript>
 
-<script>
-var _hmt = _hmt || [];
-(function() {
-  var hm = document.createElement("script");
-  hm.src = "https://hm.baidu.com/hm.js?fb50c6ae2621e2aade87ca92196e5240";
-  var s = document.getElementsByTagName("script")[0]; 
-  s.parentNode.insertBefore(hm, s);
-})();
-</script>
-
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage">
@@ -475,7 +465,7 @@ var _hmt = _hmt || [];
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-03-02 14:44:09" itemprop="dateModified" datetime="2020-03-02T14:44:09+08:00">2020-03-02</time>
+                <time title="Modified: 2020-03-02 22:55:11" itemprop="dateModified" datetime="2020-03-02T22:55:11+08:00">2020-03-02</time>
               </span>
 
           
@@ -494,14 +484,14 @@ var _hmt = _hmt || [];
 <p>1.各个模块以插件的形式存在。每个都可独立，相互解耦。</p>
 <p>2.各个模块具体实现与接口调用分离</p>
 <p>3.各个模块也有生命周期，也可以进行管理。</p>
-<h3 id="官方架构图"><a href="#官方架构图" class="headerlink" title="官方架构图"></a>官方架构图</h3><p><img src="https://camo.githubusercontent.com/67b1379dc8c53a59e8dcc68128c374445860393e/68747470733a2f2f696d672e616c6963646e2e636f6d2f7470732f5442316b3575364c705858585863325870585858585858585858582d313936382d313436322e706e67" alt="img"></p>
-<h3 id="基本架构"><a href="#基本架构" class="headerlink" title="基本架构"></a>基本架构</h3><p><img src="https://camo.githubusercontent.com/686d58ea786e73b5a7562267e25720c922605db6/687474703a2f2f67746d7330322e616c6963646e2e636f6d2f7470732f69322f54423164687946494658585858617661585858376a6a62534658582d3531352d3233332e6a70675f343030783430302e6a7067" alt="img"></p>
+<h3 id="官方架构图"><a href="#官方架构图" class="headerlink" title="官方架构图"></a>官方架构图</h3><p><img src="https://github.com/DorisGit/Images/blob/master/MarkdownImages/67b1379dc8c53a59e8dcc68128c374445860393e/68747470733a2f2f696d672e616c6963646e2e636f6d2f7470732f5442316b3575364c705858585863325870585858585858585858582d313936382d313436322e706e67" alt="img"></p>
+<h3 id="基本架构"><a href="#基本架构" class="headerlink" title="基本架构"></a>基本架构</h3><p><img src="https://github.com/DorisGit/Images/blob/master/MarkdownImages/686d58ea786e73b5a7562267e25720c922605db6/687474703a2f2f67746d7330322e616c6963646e2e636f6d2f7470732f69322f54423164687946494658585858617661585858376a6a62534658582d3531352d3233332e6a70675f343030783430302e6a7067" alt="img"></p>
 <ol>
 <li>各个功能模块以protocol为key，以impClass为Value注册添加到Core 中</li>
 <li>模块间、应用事件调用通过注册的ServiceProtocol进行</li>
 <li>ModuleProtocol可调用应用事件和系统事件</li>
 </ol>
-<h2 id="组件通讯"><a href="#组件通讯" class="headerlink" title="组件通讯"></a>组件通讯</h2><p><img src="/Users/mikasa/Downloads/image2019-12-4_15-36-40.png" alt="image2019-12-4_15-36-40"></p>
+<h2 id="组件通讯"><a href="#组件通讯" class="headerlink" title="组件通讯"></a>组件通讯</h2><p><img src="https://github.com/DorisGit/Images/blob/master/MarkdownImages/image2019-12-4_15-36-40.png" alt="img"></p>
 <p>【调用者】发起调用—&gt;传递调用标示（当前protocol）—&gt;告知中间件需要调用哪个组件</p>
 <p>【中间层】根据调用者传递表示，返回目标组件句柄</p>
 <p>【调用组件】根据调用者持有的目标组件句柄，遵循调用</p>
@@ -525,10 +515,10 @@ var _hmt = _hmt || [];
 </ul>
 <h4 id="系统事件"><a href="#系统事件" class="headerlink" title="系统事件"></a>系统事件</h4><p>系统事件通常指Application生命周期事件，例如DidBecomeActive、WillEnterBackground等。</p>
 <p>系统事件基本工作流程图：</p>
-<p><img src="https://camo.githubusercontent.com/28c5b98011b3af7c8373903c73430f729f58eeb9/68747470733a2f2f696d672e616c6963646e2e636f6d2f7470732f5442316a484b324e4658585858584b5856585858585858585858582d313833382d3832322e6a7067" alt="img"></p>
+<p><img src="https://github.com/DorisGit/Images/blob/master/MarkdownImages/28c5b98011b3af7c8373903c73430f729f58eeb9/68747470733a2f2f696d672e616c6963646e2e636f6d2f7470732f5442316a484b324e4658585858584b5856585858585858585858582d313833382d3832322e6a7067" alt="img"></p>
 <h4 id="通用事件"><a href="#通用事件" class="headerlink" title="通用事件"></a>通用事件</h4><p>在系统事件的基础之上，扩展了应用的通用事件，例如<code>modSetup</code>、<code>modInit</code>等，可以用于编码实现各插件模块的设置与初始化。</p>
 <p>扩展的通用事件如下：</p>
-<p><img src="https://camo.githubusercontent.com/ee7d906a217a09daca26e5995a7b5451e43bfa8f/68747470733a2f2f696d672e616c6963646e2e636f6d2f7470732f54423132624f494e4658585858626c6170585858585858585858582d313834382d3634302e6a7067" alt="img"></p>
+<p><img src="https://github.com/DorisGit/Images/blob/master/MarkdownImages/ee7d906a217a09daca26e5995a7b5451e43bfa8f/68747470733a2f2f696d672e616c6963646e2e636f6d2f7470732f54423132624f494e4658585858626c6170585858585858585858582d313834382d3634302e6a7067" alt="img"></p>
 <h4 id="业务自定义事件"><a href="#业务自定义事件" class="headerlink" title="业务自定义事件"></a>业务自定义事件</h4><p>如果觉得系统事件、通用事件不足以满足需要，我们还将事件封装简化成<code>BHAppdelgate</code>，你可以通过继承BHAppdelegate`来扩展自己的事件。</p>
 <p>自定义的事件的type就是BHMDidCustomEvent = 1000</p>
 <h4 id="BeeHive事件-BHModuleEventType"><a href="#BeeHive事件-BHModuleEventType" class="headerlink" title="BeeHive事件(BHModuleEventType)"></a>BeeHive事件(BHModuleEventType)</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">typedef NS_ENUM(NSInteger, BHModuleEventType)</span><br><span class="line">&#123;</span><br><span class="line">    &#x2F;&#x2F;通用事件</span><br><span class="line">    BHMSetupEvent &#x3D; 0,</span><br><span class="line">    BHMInitEvent,&#x2F;&#x2F;特殊事件</span><br><span class="line">    BHMTearDownEvent,&#x2F;&#x2F;特殊事件</span><br><span class="line">    BHMSplashEvent,&#x2F;&#x2F;通用事件</span><br><span class="line">  </span><br><span class="line">  	&#x2F;&#x2F;3D-Touch</span><br><span class="line">    BHMQuickActionEvent,</span><br><span class="line">  </span><br><span class="line">    &#x2F;&#x2F;生命周期</span><br><span class="line">    BHMWillResignActiveEvent,</span><br><span class="line">    BHMDidEnterBackgroundEvent,</span><br><span class="line">    BHMWillEnterForegroundEvent,</span><br><span class="line">    BHMDidBecomeActiveEvent,</span><br><span class="line">    BHMWillTerminateEvent,</span><br><span class="line">  </span><br><span class="line">  	&#x2F;&#x2F;未使用</span><br><span class="line">    BHMUnmountEvent,</span><br><span class="line">    BHMOpenURLEvent,</span><br><span class="line">    BHMDidReceiveMemoryWarningEvent,</span><br><span class="line">  </span><br><span class="line">  	&#x2F;&#x2F;推送相关事件</span><br><span class="line">    BHMDidFailToRegisterForRemoteNotificationsEvent,</span><br><span class="line">    BHMDidRegisterForRemoteNotificationsEvent,</span><br><span class="line">    BHMDidReceiveRemoteNotificationEvent,</span><br><span class="line">    BHMDidReceiveLocalNotificationEvent,</span><br><span class="line">    BHMWillPresentNotificationEvent,</span><br><span class="line">    BHMDidReceiveNotificationResponseEvent,</span><br><span class="line">  </span><br><span class="line"> 		&#x2F;&#x2F;handoff和相关事件</span><br><span class="line">    BHMWillContinueUserActivityEvent,</span><br><span class="line">    BHMContinueUserActivityEvent,</span><br><span class="line">    BHMDidFailToContinueUserActivityEvent,</span><br><span class="line">    BHMDidUpdateUserActivityEvent,</span><br><span class="line">  </span><br><span class="line">    &#x2F;&#x2F;watchApp请求事件</span><br><span class="line">    BHMHandleWatchKitExtensionRequestEvent,</span><br><span class="line">    </span><br><span class="line">    BHMDidCustomEvent &#x3D; 1000&#x2F;&#x2F; 自定义业务事件</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
@@ -557,7 +547,7 @@ var _hmt = _hmt || [];
 <p>[BHContext shareInstance].moduleConfigName = @“BeeHive.bundle/BeeHive.plist”</p>
 </li>
 <li><p>配置文件格式</p>
-<img src="/Users/mikasa/Library/Application Support/typora-user-images/image-20200227230948167.png">
+<p><img src="https://github.com/DorisGit/Images/blob/master/MarkdownImages/image-20200227230948167.png" alt="img"></p>
 </li>
 <li><p>读取文件内容，将其读取存入内存字段BHModuleInfos中</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">- (void)loadLocalModules &#123;</span><br><span class="line">    </span><br><span class="line">    NSString *plistPath &#x3D; [[NSBundle mainBundle] pathForResource:[BHContext shareInstance].moduleConfigName ofType:@&quot;plist&quot;];</span><br><span class="line">    if (![[NSFileManager defaultManager] fileExistsAtPath:plistPath]) &#123;</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line">    NSDictionary *moduleList &#x3D; [[NSDictionary alloc] initWithContentsOfFile:plistPath];</span><br><span class="line">    </span><br><span class="line">    &#x2F;&#x2F; 加载模块文件</span><br><span class="line">    NSArray&lt;NSDictionary *&gt; *modulesArray &#x3D; [moduleList objectForKey:kModuleArrayKey];</span><br><span class="line">    NSMutableDictionary&lt;NSString *, NSNumber *&gt; *moduleInfoByClass &#x3D; @&#123;&#125;.mutableCopy;</span><br><span class="line">    [self.BHModuleInfos enumerateObjectsUsingBlock:^(NSDictionary * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) &#123;</span><br><span class="line">        &#x2F;&#x2F; 标记当前模块已被加载</span><br><span class="line">        [moduleInfoByClass setObject:@1 forKey:[obj objectForKey:kModuleInfoNameKey]];</span><br><span class="line">    &#125;];</span><br><span class="line">    [modulesArray enumerateObjectsUsingBlock:^(NSDictionary * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) &#123;</span><br><span class="line">        if (!moduleInfoByClass[[obj objectForKey:kModuleInfoNameKey]]) &#123;</span><br><span class="line">            [self.BHModuleInfos addObject:obj];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -652,7 +642,7 @@ var _hmt = _hmt || [];
 <p>[BHContext shareInstance].serviceConfigName = @”BeeHive.bundle/BHService.plist”</p>
 </li>
 <li><p>配置文件格式</p>
-<img src="/Users/mikasa/Library/Application Support/typora-user-images/image-20200228173020182.png" alt="image-20200228173020182" style="zoom:80%;" />
+<img src="https://github.com/DorisGit/Images/blob/master/MarkdownImages/image-20200228173020182.png" alt="image-20200228173020182" style="zoom:80%;" />
 </li>
 <li><p>读取文件，形成protocolKey:protocolImplClass映射关系，将其Add到allServicesDict字典中</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">- (void)registerLocalServices &#123;</span><br><span class="line">    </span><br><span class="line">    NSString *serviceConfigName &#x3D; [BHContext shareInstance].serviceConfigName;</span><br><span class="line">    NSString *plistPath &#x3D; [[NSBundle mainBundle] pathForResource:serviceConfigName ofType:@&quot;plist&quot;];</span><br><span class="line">    if (!plistPath) &#123;</span><br><span class="line">        return;</span><br><span class="line">    &#125;</span><br><span class="line">    NSArray *serviceList &#x3D; [[NSArray alloc] initWithContentsOfFile:plistPath];</span><br><span class="line">    </span><br><span class="line">    &#x2F;&#x2F; 读取plist的文件</span><br><span class="line">    [self.lock lock];</span><br><span class="line">    for (NSDictionary *dict in serviceList) &#123;</span><br><span class="line">        NSString *protocolKey &#x3D; [dict objectForKey:@&quot;service&quot;];</span><br><span class="line">        NSString *protocolImplClass &#x3D; [dict objectForKey:@&quot;impl&quot;];</span><br><span class="line">        if (protocolKey.length &gt; 0 &amp;&amp; protocolImplClass.length &gt; 0) &#123;</span><br><span class="line">            [self.allServicesDict addEntriesFromDictionary:@&#123;protocolKey:protocolImplClass&#125;];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    [self.lock unlock];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
