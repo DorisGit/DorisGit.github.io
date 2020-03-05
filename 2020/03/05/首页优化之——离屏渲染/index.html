@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://dorisgit.github.io').hostname,
+    root: '/',
+    scheme: 'Mist',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="首页作为最大访问量的页面，页面流畅度怎么样？会不会存在多余的CPU计算、GPU渲染占用额外资源问题？视图图层还有没有可优化的空间？App体验很重要，一款流畅的app会给用户带来不一样的使用感受。 离屏渲染概述OpenGL中，GPU屏幕渲染方式中有两种，一种当前屏幕渲染，一种为离屏渲染 On-Screen Rendering（当前屏幕渲染） GPU的渲染操作是在当前用于显示的屏幕缓冲区中进行 Off">
+<meta property="og:type" content="article">
+<meta property="og:title" content="首页优化之——离屏渲染">
+<meta property="og:url" content="https://dorisgit.github.io/2020/03/05/%E9%A6%96%E9%A1%B5%E4%BC%98%E5%8C%96%E4%B9%8B%E2%80%94%E2%80%94%E7%A6%BB%E5%B1%8F%E6%B8%B2%E6%9F%93/index.html">
+<meta property="og:site_name" content="泡泡茶壶">
+<meta property="og:description" content="首页作为最大访问量的页面，页面流畅度怎么样？会不会存在多余的CPU计算、GPU渲染占用额外资源问题？视图图层还有没有可优化的空间？App体验很重要，一款流畅的app会给用户带来不一样的使用感受。 离屏渲染概述OpenGL中，GPU屏幕渲染方式中有两种，一种当前屏幕渲染，一种为离屏渲染 On-Screen Rendering（当前屏幕渲染） GPU的渲染操作是在当前用于显示的屏幕缓冲区中进行 Off">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://q6luryr3j.bkt.clouddn.com/image2020-3-5_15-58-38.png?version=1&amp;modificationDate=1583395119000&amp;api=v2">
+<meta property="og:image" content="http://q6luryr3j.bkt.clouddn.com/image2020-3-5_15-59-8.png">
+<meta property="og:image" content="http://q6luryr3j.bkt.clouddn.com/image2020-3-4_20-17-35.png">
+<meta property="og:image" content="http://q6luryr3j.bkt.clouddn.com/image2020-3-4_20-17-16.png">
+<meta property="og:image" content="http://q6luryr3j.bkt.clouddn.com/image2020-3-4_20-13-58.png">
+<meta property="og:image" content="http://q6luryr3j.bkt.clouddn.com/image2020-3-4_20-16-11.png">
+<meta property="og:image" content="http://q6luryr3j.bkt.clouddn.com/image2020-3-5_16-49-19.png?version=1&modificationDate=1583398160000&api=v2">
+<meta property="og:image" content="http://q6luryr3j.bkt.clouddn.com/image2020-3-5_18-24-47.png?version=1&modificationDate=1583403888000&api=v2">
+<meta property="og:image" content="http://q6luryr3j.bkt.clouddn.com/image2020-3-5_18-27-27.png?version=1&modificationDate=1583404048000&api=v2">
+<meta property="og:image" content="http://q6luryr3j.bkt.clouddn.com/37334-ea98e568f4748d39.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1045">
+<meta property="og:image" content="http://q6luryr3j.bkt.clouddn.com/image2020-3-5_19-49-52.png">
+<meta property="og:image" content="http://q6luryr3j.bkt.clouddn.com/image2020-3-5_19-48-46.png">
+<meta property="og:image" content="http://q6luryr3j.bkt.clouddn.com/image2020-3-5_19-55-32.png">
+<meta property="article:published_time" content="2020-03-05T13:13:25.000Z">
+<meta property="article:modified_time" content="2020-03-05T13:29:36.691Z">
+<meta property="article:author" content="Doris AI">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://q6luryr3j.bkt.clouddn.com/image2020-3-5_15-58-38.png?version=1&amp;modificationDate=1583395119000&amp;api=v2">
+
+<link rel="canonical" href="https://dorisgit.github.io/2020/03/05/%E9%A6%96%E9%A1%B5%E4%BC%98%E5%8C%96%E4%B9%8B%E2%80%94%E2%80%94%E7%A6%BB%E5%B1%8F%E6%B8%B2%E6%9F%93/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>首页优化之——离屏渲染 | 泡泡茶壶</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">泡泡茶壶</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="en">
+    <link itemprop="mainEntityOfPage" href="https://dorisgit.github.io/2020/03/05/%E9%A6%96%E9%A1%B5%E4%BC%98%E5%8C%96%E4%B9%8B%E2%80%94%E2%80%94%E7%A6%BB%E5%B1%8F%E6%B8%B2%E6%9F%93/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Doris AI">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="泡泡茶壶">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          首页优化之——离屏渲染
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2020-03-05 21:13:25 / Modified: 21:29:36" itemprop="dateCreated datePublished" datetime="2020-03-05T21:13:25+08:00">2020-03-05</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>首页作为最大访问量的页面，页面流畅度怎么样？会不会存在多余的CPU计算、GPU渲染占用额外资源问题？视图图层还有没有可优化的空间？App体验很重要，一款流畅的app会给用户带来不一样的使用感受。</p>
+<h1 id="离屏渲染"><a href="#离屏渲染" class="headerlink" title="离屏渲染"></a>离屏渲染</h1><h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>OpenGL中，GPU屏幕渲染方式中有两种，一种当前屏幕渲染，一种为离屏渲染</p>
+<p>On-Screen Rendering（当前屏幕渲染）</p>
+<p>GPU的渲染操作是在当前用于显示的屏幕缓冲区中进行</p>
+<p>Off-Screen Rendering（离屏渲染）</p>
+<p>GPU的渲染操作是在当前屏幕缓冲区以外开辟一个缓冲区进行渲染操作，处理不好离屏渲染往往会对APP的性能产生较大的影响</p>
+<h3 id="为什么离屏渲染往往会对APP的性能产生较大的影响"><a href="#为什么离屏渲染往往会对APP的性能产生较大的影响" class="headerlink" title="为什么离屏渲染往往会对APP的性能产生较大的影响?"></a>为什么离屏渲染往往会对APP的性能产生较大的影响?</h3><p>想要进行离屏渲染，首先得创建一个屏幕外缓冲区，屏幕渲染会有一个上下文环境的概念，离屏渲染的整个过程需要切换上下文环境，先从当前屏幕切换到离屏，等渲染完成后又需要再切换回来，触发离屏渲染后，这样的转换发生在每一帧，在页面发生滚动的过程中出现大量离屏渲染，会严重影响帧率；</p>
+<p>由于垂直同步机制的机制，如果一个ASync时间内容GPU没有完成渲染任务，提交到帧缓冲区，那么这一帧就会被丢弃，等到下一次机会再显示，而屏幕则依旧展示上一次内容，也就是我们看到的界面卡顿。</p>
+<h3 id="既然离屏渲染这么耗性能，为什么有这套机制呢？"><a href="#既然离屏渲染这么耗性能，为什么有这套机制呢？" class="headerlink" title="既然离屏渲染这么耗性能，为什么有这套机制呢？"></a><strong>既然离屏渲染这么耗性能，为什么有这套机制呢？</strong></h3><p>有些效果被认为不能直接显示在屏幕上，而需要在别的地方做预合成。图层属性的混合体在没有被预合成之前不能直接在屏幕上绘制，这时就需要离屏渲染。离屏渲染并不意味着软件绘制，但是它意味着图层在被绘制到屏幕上前必须在一个屏幕外上下文环境中被渲染合成（不论是CPU 还是GPU）</p>
+<h3 id="怎样既能保证图层属性混合体在一个屏幕外上下文环境中被绘制，而又不影响App性能呢？"><a href="#怎样既能保证图层属性混合体在一个屏幕外上下文环境中被绘制，而又不影响App性能呢？" class="headerlink" title="怎样既能保证图层属性混合体在一个屏幕外上下文环境中被绘制，而又不影响App性能呢？"></a>怎样既能保证图层属性混合体在一个屏幕外上下文环境中被绘制，而又不影响App性能呢？</h3><p>1、缓存已经合成的纹理图，复用缓存位图，但这样只能在位图不会发生变化的前提下使用，在一些场景下位图的失效，或者还需要被使用的位图也有可能被GPU丢弃的情况下，需要额外的计算来校验位图的是否可用情况；</p>
+<p>2、既然离屏渲染的关键点在于两次昂贵的环境切换（转换环境到屏幕外缓冲区，再转换环境到帧缓冲区），文章<a href="https://objccn.io/issue-3-1/" target="_blank" rel="noopener">绘制像素到屏幕</a>中也有提到“直接将图层合成到帧的缓冲区中(在屏幕上)比先创建屏幕外缓冲区，然后渲染到纹理中，最后将结果渲染到帧的缓冲区中要廉价很多”</p>
+<h2 id="哪些情况会引发离屏渲染"><a href="#哪些情况会引发离屏渲染" class="headerlink" title="哪些情况会引发离屏渲染"></a>哪些情况会引发离屏渲染</h2><ul>
+<li>为图层设置遮罩（layer.mask）</li>
+<li>将图层的layer.masksToBounds / view.clipsToBounds属性设置为true</li>
+<li>将图层layer.allowsGroupOpacity属性设置为YES和layer.opacity小于1.0</li>
+<li>为图层设置阴影（layer.shadow *）</li>
+<li>为图层设置layer.shouldRasterize=true（光栅化）</li>
+<li>具有layer.cornerRadius，layer.edgeAntialiasingMask（抗锯齿），layer.allowsEdgeAntialiasing的图层</li>
+<li>文本（任何种类，包括UILabel，CATextLayer，Core Text等）</li>
+<li>使用CGContext在drawRect :方法中绘制大部分情况下会导致离屏渲染，甚至仅仅只是一个空的实现</li>
+</ul>
+<h2 id="检测项目中离屏渲染"><a href="#检测项目中离屏渲染" class="headerlink" title="检测项目中离屏渲染"></a>检测项目中离屏渲染</h2><h3 id="模拟器检测"><a href="#模拟器检测" class="headerlink" title="模拟器检测"></a>模拟器检测</h3><p>模拟器的 debug -&gt; 选取 Color Off-screen Rendered</p>
+<img src="http://q6luryr3j.bkt.clouddn.com/image2020-3-5_15-58-38.png?version=1&amp;modificationDate=1583395119000&amp;api=v2" alt="img" style="zoom:80%;" />
+
+<p>打开后会把需要离屏渲染的部分高亮为黄色，表明这些黄色图层可能存在性能问题</p>
+<p><img src="http://q6luryr3j.bkt.clouddn.com/image2020-3-5_15-59-8.png" alt="img"></p>
+<p>可以看出搜索栏、Banner设置圆角、卡片设置圆角的图层出现了离屏渲染的问题</p>
+<p>1、搜索栏、Banner圆角设置</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">self.layer.masksToBounds &#x3D; YES;</span><br><span class="line">self.layer.cornerRadius &#x3D; self.height &#x2F; 2;</span><br></pre></td></tr></table></figure>
+
+<p>取消圆角设置，卡片上的黄色图层随机消失，可以看出图层的layer.masksToBounds / view.clipsToBounds属性设置为true会引发离屏渲染</p>
+<p><img src="http://q6luryr3j.bkt.clouddn.com/image2020-3-4_20-17-35.png" alt="img"></p>
+<p>2、卡片圆角设置</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">- (void)containerRectCorner:(CGSize)cornerRadii byRoundingCorners:(UIRectCorner)corners &#123;</span><br><span class="line">    UIBezierPath *maskPath &#x3D; [UIBezierPath bezierPathWithRoundedRect:self.bounds byRoundingCorners:corners cornerRadii:cornerRadii];</span><br><span class="line">    CAShapeLayer *maskLayer &#x3D; [[CAShapeLayer alloc] init];</span><br><span class="line">    maskLayer.frame &#x3D; self.bounds;</span><br><span class="line">    maskLayer.path &#x3D; maskPath.CGPath;</span><br><span class="line">    self.layer.mask &#x3D; maskLayer;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>而当把卡片圆角设置取消掉，卡片上的黄色图层随机消失，表明当我们直接为图层设置遮罩（layer.mask），是会引发离屏渲染的</p>
+<p><img src="http://q6luryr3j.bkt.clouddn.com/image2020-3-4_20-17-16.png" alt="img"></p>
+<p>3、更改View的Alpha小于1</p>
+<p><img src="http://q6luryr3j.bkt.clouddn.com/image2020-3-4_20-13-58.png" alt="img"></p>
+<p>在这里，其实我们是在滑动过程中更新segment的Alpha值，当Alpha&lt;1时，可以看出出现离屏渲染的情况，而当alpha=1时，则黄色消失</p>
+<p><img src="http://q6luryr3j.bkt.clouddn.com/image2020-3-4_20-16-11.png" alt="img"></p>
+<h3 id="Instrument检测"><a href="#Instrument检测" class="headerlink" title="Instrument检测"></a>Instrument检测</h3><p>Instrument 的 Core Animation 工具检查 <em>Color Hits Green and Misses Red</em> 选项。绿色代表无论何时一个屏幕外缓冲区被复用，而红色代表当缓冲区被重新创建。</p>
+<h2 id="方案优化"><a href="#方案优化" class="headerlink" title="方案优化"></a>方案优化</h2><h3 id="圆角优化"><a href="#圆角优化" class="headerlink" title="圆角优化"></a>圆角优化</h3><p><strong>1、设置shouldRasterize=true（光栅化）</strong></p>
+<p>缓存可以使离屏渲染的结果缓存到内存中存为位图， 使用的时候直接使用缓存，节省了一直离屏渲染损耗的性能。但是如果layer及sublayers常常改变的话，它就会一直不停的渲染及删除缓存重新 创建缓存，所以这种情况下建议不要使用光栅化，这样也是比较损耗性能的</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">self.layer.shouldRasterize &#x3D; YES; </span><br><span class="line">self.layer.rasterizationScale &#x3D; [UIScreen mainScreen].scale;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>2、使用Core Graphics 绘制圆角</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">- (void)mm_addRounderCornerWithRadius:(CGFloat)radius &#123;</span><br><span class="line"> </span><br><span class="line">    CGSize size &#x3D; self.bounds.size;</span><br><span class="line">    UIGraphicsBeginImageContextWithOptions(self.bounds.size, NO, 0);</span><br><span class="line">    CGContextRef cxt &#x3D; UIGraphicsGetCurrentContext();</span><br><span class="line">    CGContextSetFillColorWithColor(cxt, [UIColor whiteColor].CGColor);</span><br><span class="line">    CGContextSetStrokeColorWithColor(cxt, [UIColor redColor].CGColor);</span><br><span class="line">    CGContextSetLineWidth(cxt, 0.5);</span><br><span class="line">    CGContextMoveToPoint(cxt, 0, radius);</span><br><span class="line">    CGContextAddArcToPoint(cxt, 0, 0, radius, 0, radius);&#x2F;&#x2F; 左上角</span><br><span class="line">    CGContextAddArcToPoint(cxt, size.width, 0, size.width, radius, radius);&#x2F;&#x2F; 右上角</span><br><span class="line">    CGContextAddArcToPoint(cxt, size.width, size.height ,size.width-radius, size.height, radius);&#x2F;&#x2F; 右下角</span><br><span class="line">    CGContextAddArcToPoint(cxt, 0, size.height, 0, size.height-radius, radius);&#x2F;&#x2F; 左下角</span><br><span class="line">    CGContextSetLineCap(cxt, kCGLineCapRound);</span><br><span class="line">    CGContextSetLineJoin(cxt, kCGLineJoinRound);</span><br><span class="line">    CGContextClosePath(cxt);</span><br><span class="line">    CGContextDrawPath(cxt, kCGPathFillStroke);</span><br><span class="line">    UIImage *image &#x3D; UIGraphicsGetImageFromCurrentImageContext();</span><br><span class="line">    UIGraphicsEndImageContext();</span><br><span class="line"> </span><br><span class="line">    UIImageView *imageView &#x3D; [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, size.width, size.height)];</span><br><span class="line">    [imageView setImage:image];</span><br><span class="line">    [self insertSubview:imageView atIndex:0];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>2、使用贝塞尔曲线UIBezierPath和Core Graphics框架画出一个圆角</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">- (void)drawImageRoundedCorners:(UIRectCorner)corners</span><br><span class="line">                      withRadii:(CGSize)radii &#123;</span><br><span class="line"> </span><br><span class="line">    &#x2F;&#x2F;开始对imageView进行画图</span><br><span class="line">    UIGraphicsBeginImageContextWithOptions(rect.size, NO, 1);</span><br><span class="line">    &#x2F;&#x2F;使用贝塞尔曲线画出一个圆形图</span><br><span class="line">    CGContextRef ctx &#x3D; UIGraphicsGetCurrentContext();</span><br><span class="line">    [[UIColor redColor] setStroke];</span><br><span class="line">    [[UIColor whiteColor] setFill];</span><br><span class="line">    UIBezierPath *bezierPath &#x3D; [UIBezierPath bezierPathWithRoundedRect:rect byRoundingCorners:corners cornerRadii:radii];</span><br><span class="line">    [bezierPath addClip];</span><br><span class="line">    CGContextAddPath(ctx, bezierPath.CGPath);</span><br><span class="line">    CGContextDrawPath(ctx, kCGPathFillStroke);</span><br><span class="line">    UIImage *image &#x3D; UIGraphicsGetImageFromCurrentImageContext();</span><br><span class="line">    &#x2F;&#x2F;结束画图</span><br><span class="line">    UIGraphicsEndImageContext();</span><br><span class="line"> </span><br><span class="line">    UIImageView *imageView &#x3D; [[UIImageView alloc] initWithFrame:self.bounds];</span><br><span class="line">    imageView.image &#x3D; image;</span><br><span class="line">    [self insertSubview:imageView atIndex:0];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://q6luryr3j.bkt.clouddn.com/image2020-3-5_16-49-19.png?version=1&modificationDate=1583398160000&api=v2" alt="img"></p>
+<p><strong>左1 右2</strong></p>
+<p><strong>3、使用CAShapeLayer和UIBezierPath设置圆角</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">- (void)addRoundedCorners:(UIRectCorner)corners</span><br><span class="line">                withRadii:(CGSize)radii</span><br><span class="line">                fillColor:(CGColorRef)fillColor</span><br><span class="line">              borderColor:(CGColorRef)borderColor</span><br><span class="line">              borderWidth:(CGFloat)borderWidth &#123;</span><br><span class="line">     </span><br><span class="line">    UIBezierPath *rounded &#x3D; [UIBezierPath bezierPathWithRoundedRect:self.bounds byRoundingCorners:corners cornerRadii:radii];</span><br><span class="line">    CAShapeLayer *shape &#x3D; [[CAShapeLayer alloc] init];</span><br><span class="line">    shape.frame &#x3D; self.bounds;</span><br><span class="line">    shape.strokeColor &#x3D; borderColor;</span><br><span class="line">    shape.fillColor &#x3D; fillColor;</span><br><span class="line">    shape.lineWidth &#x3D; borderWidth;</span><br><span class="line">    shape.path &#x3D; rounded.CGPath;</span><br><span class="line">    [self.layer addSublayer:shape];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="需要注意的点"><a href="#需要注意的点" class="headerlink" title="需要注意的点"></a>需要注意的点</h3><p><strong>以上2、3、4无论哪一种方法，都不能为View设置背景颜色</strong></p>
+<p>因为我们没有设置masksToBounds，超出圆角的部分仍然会显示</p>
+<p><strong>在使用UIGraphicsGetCurrentContext()尝试获取当前上下文进行绘制时，发现拿到的一直是nil</strong></p>
+<p>原因是，在调用 drawRect前，视图对象会先往栈上压入一个有效的上下文并使它成为当前上下文。所以在drawRect方法中可以通过UIGraphicsGetCurrentContext()获取到上下文。但是在其他地方可能会获取到为nil,需要自己创建一个上下文如果</p>
+<p>能够只用 <code>cornerRadius</code> 解决问题，就不用优化。 </p>
+<p>如果必须设置 <code>masksToBounds</code>，可以参考圆角视图的数量，如果数量较少（一页只有几个）也可以考虑不用优化。 </p>
+<p><code>UIImageView</code> 的圆角通过直接截取图片实现，其它视图的圆角可以通过 Core Graphics 画出圆角矩形实现。</p>
+<p><a href="http://www.cocoachina.com/articles/12873" target="_blank" rel="noopener">layer.mask与layer.cornerRadius测试对比</a></p>
+<p>实现圆角cornerRadius要比mask高效很多。</p>
+<p>Rasterize在大部分情况下极大减少GPU工作。在有空间的情况下，大部分情况下缓存总能帮到你</p>
+<p>后台预处理图片也能很简单帮上你很大的忙。</p>
+<h4 id="关于cornerRadius属性的解释"><a href="#关于cornerRadius属性的解释" class="headerlink" title="关于cornerRadius属性的解释"></a><code>关于cornerRadius属性的解释</code></h4><blockquote>
+<p>By default, the corner radius does not apply to the image in the layer’s contents property; it applies only to the background color and border of the layer. However, setting the masksToBounds property to true causes the content to be clipped to the rounded corners.</p>
+</blockquote>
+<p>也就是说在默认情况下，cornerRadius这个属性只会影响背景颜色和layer的border属性，而不会影响View的contents属性，只有当设置masksToBounds为True的时候，才会影响View的content</p>
+<h3 id="Shadow"><a href="#Shadow" class="headerlink" title="Shadow"></a>Shadow</h3><p>通常设置阴影的方式为,</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">self.layer.shadowColor &#x3D; shadowColor.CGColor;</span><br><span class="line">self.layer.shadowOffset &#x3D; shadowOffset;</span><br><span class="line">self.layer.shadowOpacity &#x3D; shadowOpacity;</span><br><span class="line">self.layer.shadowRadius &#x3D; shadowRadius;</span><br></pre></td></tr></table></figure>
+
+<p>另外一种设置阴影的方式</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">- (void)addShadow:(UIColor *)shadowColor shadowOpacity:(CGFloat)shadowOpacity shadowRadius:(CGFloat)shadowRadius shadowOffset:(CGSize)shadowOffset shadowFrame:(CGRect)shadowFrame &#123;</span><br><span class="line">    self.layer.shadowColor &#x3D; shadowColor.CGColor;</span><br><span class="line">    self.layer.shadowOffset &#x3D; shadowOffset;</span><br><span class="line">    self.layer.shadowOpacity &#x3D; shadowOpacity;</span><br><span class="line">    self.layer.shadowRadius &#x3D; shadowRadius;</span><br><span class="line">    self.layer.masksToBounds &#x3D; NO;</span><br><span class="line">    UIBezierPath *path &#x3D; [UIBezierPath bezierPathWithRect:shadowFrame];</span><br><span class="line">    self.layer.shadowPath &#x3D; path.CGPath;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>让我们看下效果</p>
+<p><img src="http://q6luryr3j.bkt.clouddn.com/image2020-3-5_18-24-47.png?version=1&modificationDate=1583403888000&api=v2" alt="img"></p>
+<p>左侧出现了我们的Off-Screen Render Yellow，也就是检测出来离屏渲染，这里的区别就是，默认shadowPath为nil，仅开启阴影(没有指定路径，同屏数量10个以上)在滚动时帧率会大幅下降，检测到离屏渲染的黄色特征；指定一个与边界相同的简单路径后离屏渲染特征消失，帧率恢复正常。</p>
+<p><strong>测试结果（结果来源于 <a href="https://www.jianshu.com/p/ca51c9d3575b" target="_blank" rel="noopener">离屏渲染优化详解：实例示范+性能测试</a>）</strong></p>
+<p><img src="http://q6luryr3j.bkt.clouddn.com/image2020-3-5_18-27-27.png?version=1&modificationDate=1583404048000&api=v2" alt="img"></p>
+<p>为阴影指定路径确实可以作为阴影优化的一点，“除了指定路径，实现良好性能阴影的方法还有：用圆角优化里混合图层的方法模拟阴影的效果：放一个同样效果的视图在要添加阴影程度的视图的下方；使用 Core Graphics 绘制阴影，不过除非万不得已没人想碰 Core Graphics API。从实现成本来讲，都不如指定路径方便。这两种方法实现简单形状的阴影比较方便，比如图中左侧和中间的效果，面对右侧的阴影效果就不好弄了，用指定路径的方法实现也比较麻烦。</p>
+<h3 id="Mask"><a href="#Mask" class="headerlink" title="Mask"></a>Mask</h3><p>一个图层可以有一个和它相关联的 mask(蒙板)，mask 是一个拥有 alpha 值的位图，当像素要和它下面包含的像素合并之前都会把 mask 应用到图层的像素上去，当你要设置一个图层的圆角半径时，你可以有效的在图层上面设置一个 mask。但是也可以指定任意一个蒙板</p>
+<p>前面看到过，当我们为一个View设置圆角时，同样也可以通过Mask</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">- (void)addRoundedCorners:(UIRectCorner)corners</span><br><span class="line">                withRadii:(CGSize)radii &#123;</span><br><span class="line">    UIBezierPath* rounded &#x3D; [UIBezierPath bezierPathWithRoundedRect:self.bounds byRoundingCorners:corners cornerRadii:radii];</span><br><span class="line">    CAShapeLayer* shape &#x3D; [[CAShapeLayer alloc] init];</span><br><span class="line">    [shape setPath:rounded.CGPath];</span><br><span class="line">    self.layer.mask &#x3D; shape;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是显然Mask仍然会有离屏渲染</p>
+<p>同样的 mask 效果使用 CAShapeLayer 时相比直接使用 maskView 在帧率上稍低，CPU 利用率无明显变化，但是 GPU 利用率也低一些。</p>
+<p><a href="https://developer.apple.com/videos/play/wwdc2014/419/" target="_blank" rel="noopener">WWDC 2014: Advanced Graphics and Animations for iOS Apps</a></p>
+<h3 id="GroupOpacity"><a href="#GroupOpacity" class="headerlink" title="GroupOpacity"></a>GroupOpacity</h3><p><img src="http://q6luryr3j.bkt.clouddn.com/37334-ea98e568f4748d39.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1045" alt="img"></p>
+<p>GroupOpacity 是指 CALayer 的<code>allowsGroupOpacity</code>属性，UIView 的<code>alpha</code>属性等同于 CALayer <code>opacity</code>属性。开启 GroupOpacity 后，子 layer 在视觉上的透明度的上限是其父 layer 的<code>opacity；</code></p>
+<p>从 iOS 7 以后默认全局开启了这个功能，这样做是为了让子视图与其容器视图保持同样的透明度。</p>
+<p>这个触发条件并不需要subLayer.opacity != 1.0，非常容易满足。然而在 TableView 这样的视图里设置 cell 的alpha属性小于1并不能检测离屏渲染的黄色特征，性能上也没有明显差别。经过摸索发现：只有设置cell.contentView, tableView 的alpha小于1时会触发离屏渲染，对性能无明显影响；设置 cell 的alpha属性并不会对整体的透明度产生影响，只有设置 cell.contentView 才有效</p>
+<p>设置cell的alpha属性小于1，无离屏渲染</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cell.alpha &#x3D; 0.3;</span><br></pre></td></tr></table></figure>
+
+<img src="http://q6luryr3j.bkt.clouddn.com/image2020-3-5_19-49-52.png" alt="img" style="zoom:80%;" />
+
+<p>设置cell.contentView的属性小于1，有离屏渲染</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cell.contentView.alpha &#x3D; 0.3;</span><br></pre></td></tr></table></figure>
+
+<img src="http://q6luryr3j.bkt.clouddn.com/image2020-3-5_19-48-46.png" alt="img" style="zoom:80%;" />
+
+<h3 id="开启layer-edgeAntialiasingMask、layer-allowsEdgeAntialiasing的图层"><a href="#开启layer-edgeAntialiasingMask、layer-allowsEdgeAntialiasing的图层" class="headerlink" title="开启layer.edgeAntialiasingMask、layer.allowsEdgeAntialiasing的图层"></a>开启layer.edgeAntialiasingMask、layer.allowsEdgeAntialiasing的图层</h3><p>经过测试，开启设置<code>layer.allowsEdgeAntialiasing=true、layer.</code>edgeAntialiasingMask=true并不会触发离屏渲染，对性能也没有什么影响</p>
+<img src="http://q6luryr3j.bkt.clouddn.com/image2020-3-5_19-55-32.png" alt="img" style="zoom:80%;" />
+
+
+
+<h2 id="其他一些优化建议"><a href="#其他一些优化建议" class="headerlink" title="其他一些优化建议"></a>其他一些优化建议</h2><ul>
+<li>当我们需要圆角效果时，可以使用一张中间透明图片蒙上去</li>
+<li>使用ShadowPath指定layer阴影效果路径</li>
+<li>使用异步进行layer渲染（Facebook开源的异步绘制框架AsyncDisplayKit）</li>
+<li>设置layer的opaque值为YES，减少复杂图层合成</li>
+<li>尽量使用不包含透明（alpha）通道的图片资源</li>
+<li>尽量设置layer的大小值为整形值</li>
+<li>直接让美工把图片切成圆角进行显示，这是效率最高的一种方案</li>
+<li>很多情况下用户上传图片进行显示，可以让服务端处理圆角</li>
+<li>使用代码手动生成圆角Image设置到要显示的View上，利用UIBezierPath（CoreGraphics框架）画出来圆角图片</li>
+</ul>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ol>
+<li>RoundedCorner 在仅指定<code>cornerRadius</code>时不会触发离屏渲染，仅适用于特殊情况：<code>contents</code>为 nil 或者<code>contents</code>不会遮挡背景色圆角；</li>
+<li>Shawdow 可以通过指定路径来取消离屏渲染；</li>
+<li>Mask 无法取消离屏渲染；</li>
+</ol>
+<p>以上效果在同等数量的规模下，对性能的影响等级：Shadow &gt; RoundedCorner &gt; Mask &gt; GroupOpacity</p>
+<p>任何时候优先考虑避免触发离屏渲染，无法避免时优化方案有两种：</p>
+<ol>
+<li>Rasterization：适用于静态内容的视图，也就是内部结构和内容不发生变化的视图，对上面的所有效果而言，在实现成本以及性能上最均衡的。即使是动态变化的视图，开启 Rasterization 后能够有效降低 GPU 的负荷，不过在动态视图里是否启用还是看 Instruments 的数据。</li>
+<li>规避离屏渲染，用其他手法来模拟效果，混合图层是个性能最好、耗能最少的通用优化方案，尤其对于 rounded corer 和 mask。</li>
+</ol>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a href="https://www.jianshu.com/p/ca51c9d3575b" target="_blank" rel="noopener">离屏渲染优化详解：实例示范+性能测试</a></p>
+<p><a href="http://www.cocoachina.com/articles/12873" target="_blank" rel="noopener">layer.mask与layer.cornerRadius测试对比</a></p>
+<p><a href="https://objccn.io/issue-3-1/" target="_blank" rel="noopener">绘制像素到屏幕上</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/02/27/iOS%E5%BC%80%E5%8F%91-layoutSubviews/" rel="prev" title="iOS开发-layoutSubviews">
+      <i class="fa fa-chevron-left"></i> iOS开发-layoutSubviews
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#离屏渲染"><span class="nav-number">1.</span> <span class="nav-text">离屏渲染</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#概述"><span class="nav-number">1.1.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#为什么离屏渲染往往会对APP的性能产生较大的影响"><span class="nav-number">1.1.1.</span> <span class="nav-text">为什么离屏渲染往往会对APP的性能产生较大的影响?</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#既然离屏渲染这么耗性能，为什么有这套机制呢？"><span class="nav-number">1.1.2.</span> <span class="nav-text">既然离屏渲染这么耗性能，为什么有这套机制呢？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#怎样既能保证图层属性混合体在一个屏幕外上下文环境中被绘制，而又不影响App性能呢？"><span class="nav-number">1.1.3.</span> <span class="nav-text">怎样既能保证图层属性混合体在一个屏幕外上下文环境中被绘制，而又不影响App性能呢？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#哪些情况会引发离屏渲染"><span class="nav-number">1.2.</span> <span class="nav-text">哪些情况会引发离屏渲染</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#检测项目中离屏渲染"><span class="nav-number">1.3.</span> <span class="nav-text">检测项目中离屏渲染</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#模拟器检测"><span class="nav-number">1.3.1.</span> <span class="nav-text">模拟器检测</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Instrument检测"><span class="nav-number">1.3.2.</span> <span class="nav-text">Instrument检测</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#方案优化"><span class="nav-number">1.4.</span> <span class="nav-text">方案优化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#圆角优化"><span class="nav-number">1.4.1.</span> <span class="nav-text">圆角优化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#需要注意的点"><span class="nav-number">1.4.2.</span> <span class="nav-text">需要注意的点</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#关于cornerRadius属性的解释"><span class="nav-number">1.4.2.1.</span> <span class="nav-text">关于cornerRadius属性的解释</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Shadow"><span class="nav-number">1.4.3.</span> <span class="nav-text">Shadow</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Mask"><span class="nav-number">1.4.4.</span> <span class="nav-text">Mask</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GroupOpacity"><span class="nav-number">1.4.5.</span> <span class="nav-text">GroupOpacity</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#开启layer-edgeAntialiasingMask、layer-allowsEdgeAntialiasing的图层"><span class="nav-number">1.4.6.</span> <span class="nav-text">开启layer.edgeAntialiasingMask、layer.allowsEdgeAntialiasing的图层</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#其他一些优化建议"><span class="nav-number">1.5.</span> <span class="nav-text">其他一些优化建议</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.6.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">1.7.</span> <span class="nav-text">参考资料</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Doris AI</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Doris AI</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v7.7.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
