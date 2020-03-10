@@ -165,6 +165,126 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://dorisgit.github.io/2020/03/10/NSObject-%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Doris AI">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="泡泡茶壶">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/03/10/NSObject-%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" class="post-title-link" itemprop="url">NSObject 源码分析</a>
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-03-10 16:36:42" itemprop="dateCreated datePublished" datetime="2020-03-10T16:36:42+08:00">2020-03-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-03-11 00:13:04" itemprop="dateModified" datetime="2020-03-11T00:13:04+08:00">2020-03-11</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Object-c中我们知道，所有类均继承自NSObject，那么NSObject具体是什么呢？</p>
+<h3 id="objc-object"><a href="#objc-object" class="headerlink" title="objc_object"></a>objc_object</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">@interface NSObject &lt;NSObject&gt; &#123;</span><br><span class="line">#pragma clang diagnostic push</span><br><span class="line">#pragma clang diagnostic ignored &quot;-Wobjc-interface-ivars&quot;</span><br><span class="line">    Class isa  OBJC_ISA_AVAILABILITY;</span><br><span class="line">#pragma clang diagnostic pop</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以直观看到的是NSObject类中只有一个类型为Class的isa指针，那么我们重点关注一下Class类型</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">typedef struct objc_class *Class;</span><br><span class="line">typedef struct objc_object *id;</span><br><span class="line"></span><br><span class="line">struct objc_object &#123;</span><br><span class="line">private:</span><br><span class="line">    isa_t isa;</span><br><span class="line"></span><br><span class="line">public:</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; ISA() assumes this is NOT a tagged pointer object</span><br><span class="line">    Class ISA();</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; getIsa() allows this to be a tagged pointer object</span><br><span class="line">    Class getIsa();</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; initIsa() should be used to init the isa of new objects only.</span><br><span class="line">    &#x2F;&#x2F; If this object already has an isa, use changeIsa() for correctness.</span><br><span class="line">    &#x2F;&#x2F; initInstanceIsa(): objects with no custom RR&#x2F;AWZ</span><br><span class="line">    &#x2F;&#x2F; initClassIsa(): class objects</span><br><span class="line">    &#x2F;&#x2F; initProtocolIsa(): protocol objects</span><br><span class="line">    &#x2F;&#x2F; initIsa(): other objects</span><br><span class="line">    void initIsa(Class cls &#x2F;*nonpointer&#x3D;false*&#x2F;);</span><br><span class="line">    void initClassIsa(Class cls &#x2F;*nonpointer&#x3D;maybe*&#x2F;);</span><br><span class="line">    void initProtocolIsa(Class cls &#x2F;*nonpointer&#x3D;maybe*&#x2F;);</span><br><span class="line">    void initInstanceIsa(Class cls, bool hasCxxDtor);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">union isa_t &#123;</span><br><span class="line">    isa_t() &#123; &#125;</span><br><span class="line">    isa_t(uintptr_t value) : bits(value) &#123; &#125;</span><br><span class="line"></span><br><span class="line">    Class cls;</span><br><span class="line">    uintptr_t bits;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">struct objc_class : objc_object &#123;</span><br><span class="line">    &#x2F;&#x2F; Class ISA;</span><br><span class="line">    Class superclass;</span><br><span class="line">    cache_t cache;             &#x2F;&#x2F; formerly cache pointer and vtable</span><br><span class="line">    class_data_bits_t bits;    &#x2F;&#x2F; class_rw_t * plus custom rr&#x2F;alloc flags</span><br><span class="line">  </span><br><span class="line">    class_rw_t *data() &#123; </span><br><span class="line">        return bits.data();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>objc_object结构体中包含一个<code>isa_t</code>类型的结构体isa，而<code>objc_class</code>继承自<code>objc_object</code>，表明<code>objc_class</code>也会包含isa_t类型的结构体isa。</p>
+<p>objc_class除了isa之外还有三个成员，一个是父类的指针，一个是方法缓存，最后一个是这个类的实例方法列表。</p>
+<p>![image-20200310221249637](/Users/mikasa/Library/Application Support/typora-user-images/image-20200310221249637.png)</p>
+<p>当对象的实例方法被调用时，会通过isa找到对应的Class，然后在该类的bits中查找对应的方法，<code>bits.data()</code>获取类对象的数据区域，在该区域中可以查找对应的方法和对应的实现。</p>
+<p>当类的类方法被调用时，会通过isa找到对应的元类（meta-class）,查找方法的机制与对象一致</p>
+<p>总结：</p>
+<p>对象方法被调用时，通过对象的isa在类中获取方法的实现</p>
+<p>类方法被调用时，通过类的isa在元类中获取方法的实现</p>
+<h2 id="Meta-Class"><a href="#Meta-Class" class="headerlink" title="Meta-Class"></a><a href="http://www.cocoawithlove.com/2010/01/what-is-meta-class-in-objective-c.html" target="_blank" rel="noopener">Meta-Class</a></h2><p>每个类都会有一个单独的meta-class，meta-class中存储着这个类的所有方法</p>
+<blockquote>
+<p>The meta-class, like the <code>Class</code> before it, is also an object. This means that you can invoke methods on it too. Naturally, this means that it must also have a class.</p>
+<p>All meta-classes use the base class’ meta-class (the meta-class of the top <code>Class</code> in their inheritance hierarchy) as their class. This means that for all classes that descend from <code>NSObject</code> (most classes), the meta-class has the <code>NSObject</code> meta-class as its class.</p>
+<p>Following the rule that all meta-classes use the base class’ meta-class as their class, any base meta-classes will be its own class (their <code>isa</code> pointer points to themselves). This means that the <code>isa</code> pointer on the <code>NSObject</code> meta-class points to itself (it is an instance of itself).</p>
+</blockquote>
+<p>This means that the <code>isa</code> pointer on the <code>NSObject</code> meta-class points to itself (it is an instance of itself).这也意味着NSObject元类上的isa指针指向着元类它自己</p>
+<p>如下对应图，描述了基类、元类、对象三者之间的关系</p>
+<p><img src="/Users/mikasa/Desktop/image_mark/23_7.png" alt="23_7"></p>
+<p>添加代码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">- (void)clickCell_1 &#123;</span><br><span class="line">    </span><br><span class="line">    NSLog(@&quot;This object is %p.&quot;, self);</span><br><span class="line">    NSLog(@&quot;Class is %@, and super is %@.&quot;, [self class], [self superclass]);</span><br><span class="line">    </span><br><span class="line">    Class currentClass &#x3D; [self class];</span><br><span class="line">    for (int i &#x3D; 1; i &lt; 5; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        NSLog(@&quot;%@ the isa pointer %d times gives %p&quot;, currentClass,i, currentClass);</span><br><span class="line">        currentClass &#x3D; object_getClass(currentClass);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    NSLog(@&quot;NSObject&#39;s class is %p&quot;, [NSObject class]);</span><br><span class="line">    NSLog(@&quot;NSObject&#39;s meta class is %p&quot;, object_getClass([NSObject class]));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>打印如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">This object is 0x7fa88fd05280.</span><br><span class="line"></span><br><span class="line">Class is MMViewController, and super is MMBaseViewController.</span><br><span class="line"></span><br><span class="line">MMViewController the isa pointer 1 times gives 0x10087daf0</span><br><span class="line"></span><br><span class="line">MMViewController the isa pointer 2 times gives 0x10087db18</span><br><span class="line"></span><br><span class="line">NSObject the isa pointer 3 times gives 0x1027e61d8</span><br><span class="line"></span><br><span class="line">NSObject the isa pointer 4 times gives 0x1027e61d8</span><br><span class="line"></span><br><span class="line">NSObject&#39;s class is 0x1027e6200</span><br><span class="line"></span><br><span class="line">NSObject&#39;s meta class is 0x1027e61d8</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>基类（NSObject）没有超类，所以基类的supperClass指向nil</li>
+<li>每个Class都有唯一的isa指针指向meta-class，意味着每个类都有自己唯一的方法列表，同时意味着每个类对象本身并不是同一个类</li>
+<li>meta-class的supperClass指向NSObject，形成回路</li>
+<li>每个meta-class的isa指针都指向基类的meta-class，基类的meta-class的isa指针也指向自身</li>
+</ol>
+<h3 id="isa-t"><a href="#isa-t" class="headerlink" title="isa_t"></a>isa_t</h3><p>isa_t是一个union联合体，联合体的所有成员会占用同一段内存，修改一个成员会影响其余所有成员，</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">union isa_t &#123;</span><br><span class="line">    isa_t() &#123; &#125;</span><br><span class="line">    isa_t(uintptr_t value) : bits(value) &#123; &#125;</span><br><span class="line"></span><br><span class="line">    Class cls;</span><br><span class="line">    uintptr_t bits;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>Objc_object结构体中三个初始化个方法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">void initIsa(Class cls &#x2F;*nonpointer&#x3D;false*&#x2F;);</span><br><span class="line">void initClassIsa(Class cls &#x2F;*nonpointer&#x3D;maybe*&#x2F;);</span><br><span class="line">void initProtocolIsa(Class cls &#x2F;*nonpointer&#x3D;maybe*&#x2F;);</span><br><span class="line">void initInstanceIsa(Class cls, &#x2F;*nonpointer&#x3D;true*&#x2F;bool hasCxxDtor);</span><br></pre></td></tr></table></figure>
+
+<p>最终都会调到<code>objc_object::initIsa(Class cls, bool nonpointer, bool hasCxxDtor)</code> </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">objc_object::initIsa(Class cls, bool nonpointer, bool hasCxxDtor) </span><br><span class="line">&#123; </span><br><span class="line">    if (!nonpointer) &#123;</span><br><span class="line">        isa.cls &#x3D; cls;</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        isa_t newisa(0);</span><br><span class="line"></span><br><span class="line">#if SUPPORT_INDEXED_ISA</span><br><span class="line">        newisa.bits &#x3D; ISA_INDEX_MAGIC_VALUE;</span><br><span class="line">        &#x2F;&#x2F; isa.magic is part of ISA_MAGIC_VALUE</span><br><span class="line">        &#x2F;&#x2F; isa.nonpointer is part of ISA_MAGIC_VALUE</span><br><span class="line">        newisa.has_cxx_dtor &#x3D; hasCxxDtor;</span><br><span class="line">        newisa.indexcls &#x3D; (uintptr_t)cls-&gt;classArrayIndex();</span><br><span class="line">#else</span><br><span class="line">        newisa.bits &#x3D; ISA_MAGIC_VALUE;</span><br><span class="line">        &#x2F;&#x2F; isa.magic is part of ISA_MAGIC_VALUE</span><br><span class="line">        &#x2F;&#x2F; isa.nonpointer is part of ISA_MAGIC_VALUE</span><br><span class="line">        newisa.has_cxx_dtor &#x3D; hasCxxDtor;</span><br><span class="line">        newisa.shiftcls &#x3D; (uintptr_t)cls &gt;&gt; 3;</span><br><span class="line">#endif</span><br><span class="line">        isa &#x3D; newisa;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>SUPPORT_INDEXED_ISA</p>
+<p>表示 isa_t 中存放的 Class 信息是 Class 的地址，还是一个索引(根据该索引可在类信息表中查找该类结构地址)。经测试，iOS 设备上 SUPPORT_INDEXED_ISA 是 0。 </p>
+</blockquote>
+<p>ISA_MAGIC_VALUE</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"># if __arm64__</span><br><span class="line">#   define ISA_MASK        0x0000000ffffffff8ULL</span><br><span class="line">#   define ISA_MAGIC_MASK  0x000003f000000001ULL</span><br><span class="line">#   define ISA_MAGIC_VALUE 0x000001a000000001ULL</span><br><span class="line">#   define ISA_BITFIELD                                                      \</span><br><span class="line">      uintptr_t nonpointer        : 1;                                       \</span><br><span class="line">      uintptr_t has_assoc         : 1;                                       \</span><br><span class="line">      uintptr_t has_cxx_dtor      : 1;                                       \</span><br><span class="line">      uintptr_t shiftcls          : 33; &#x2F;*MACH_VM_MAX_ADDRESS 0x1000000000*&#x2F; \</span><br><span class="line">      uintptr_t magic             : 6;                                       \</span><br><span class="line">      uintptr_t weakly_referenced : 1;                                       \</span><br><span class="line">      uintptr_t deallocating      : 1;                                       \</span><br><span class="line">      uintptr_t has_sidetable_rc  : 1;                                       \</span><br><span class="line">      uintptr_t extra_rc          : 19</span><br><span class="line">#   define RC_ONE   (1ULL&lt;&lt;45)</span><br><span class="line">#   define RC_HALF  (1ULL&lt;&lt;18)</span><br><span class="line"></span><br><span class="line"># elif __x86_64__</span><br><span class="line">#   define ISA_MASK        0x00007ffffffffff8ULL</span><br><span class="line">#   define ISA_MAGIC_MASK  0x001f800000000001ULL</span><br><span class="line">#   define ISA_MAGIC_VALUE 0x001d800000000001ULL</span><br><span class="line">#   define ISA_BITFIELD                                                        \</span><br><span class="line">      uintptr_t nonpointer        : 1;                                         \</span><br><span class="line">      uintptr_t has_assoc         : 1;                                         \</span><br><span class="line">      uintptr_t has_cxx_dtor      : 1;                                         \</span><br><span class="line">      uintptr_t shiftcls          : 44; &#x2F;*MACH_VM_MAX_ADDRESS 0x7fffffe00000*&#x2F; \</span><br><span class="line">      uintptr_t magic             : 6;                                         \</span><br><span class="line">      uintptr_t weakly_referenced : 1;                                         \</span><br><span class="line">      uintptr_t deallocating      : 1;                                         \</span><br><span class="line">      uintptr_t has_sidetable_rc  : 1;                                         \</span><br><span class="line">      uintptr_t extra_rc          : 8</span><br><span class="line">#   define RC_ONE   (1ULL&lt;&lt;56)</span><br><span class="line">#   define RC_HALF  (1ULL&lt;&lt;7)</span><br></pre></td></tr></table></figure>
+
+<p><img src="/Users/mikasa/Desktop/image_mark/23_8.png" alt="23_8"></p>
+<p>ISA_MAGIC_VALUE = 0x000001a000000001ULL转换成二进制是11010000000000000000000000000000000000001，结构如下图：</p>
+<p><img src="/Users/mikasa/Desktop/image_mark/23_9.png" alt="23_9"></p>
+<p>参数说明：</p>
+<p>第一位index，代表是否开启isa指针优化，1表示开启</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+        
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="en">
     <link itemprop="mainEntityOfPage" href="https://dorisgit.github.io/2020/03/06/jekins-%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1129,7 +1249,7 @@ Static静态变量会按照他们申明的顺序，放到一个单独的段中�
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-count">7</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
