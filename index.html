@@ -196,7 +196,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-03-11 22:48:08" itemprop="dateModified" datetime="2020-03-11T22:48:08+08:00">2020-03-11</time>
+                <time title="Modified: 2020-03-11 23:28:49" itemprop="dateModified" datetime="2020-03-11T23:28:49+08:00">2020-03-11</time>
               </span>
 
           
@@ -224,7 +224,7 @@
 <p>总结：</p>
 <p>对象方法被调用时，通过对象的isa在类中获取方法的实现</p>
 <p>类方法被调用时，通过类的isa在元类中获取方法的实现</p>
-<h2 id="Meta-Class"><a href="#Meta-Class" class="headerlink" title="Meta-Class"></a><a href="http://www.cocoawithlove.com/2010/01/what-is-meta-class-in-objective-c.html" target="_blank" rel="noopener">Meta-Class</a></h2><p>每个类都会有一个单独的meta-class，meta-class中存储着这个类的所有方法</p>
+<h3 id="Meta-Class"><a href="#Meta-Class" class="headerlink" title="Meta-Class"></a><a href="http://www.cocoawithlove.com/2010/01/what-is-meta-class-in-objective-c.html" target="_blank" rel="noopener">Meta-Class</a></h3><p>每个类都会有一个单独的meta-class，meta-class中存储着这个类的所有方法</p>
 <blockquote>
 <p>The meta-class, like the <code>Class</code> before it, is also an object. This means that you can invoke methods on it too. Naturally, this means that it must also have a class.</p>
 <p>All meta-classes use the base class’ meta-class (the meta-class of the top <code>Class</code> in their inheritance hierarchy) as their class. This means that for all classes that descend from <code>NSObject</code> (most classes), the meta-class has the <code>NSObject</code> meta-class as its class.</p>
@@ -237,7 +237,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">- (void)clickCell_1 &#123;</span><br><span class="line">    </span><br><span class="line">    NSLog(@&quot;This object is %p.&quot;, self);</span><br><span class="line">    NSLog(@&quot;Class is %@, and super is %@.&quot;, [self class], [self superclass]);</span><br><span class="line">    </span><br><span class="line">    Class currentClass &#x3D; [self class];</span><br><span class="line">    for (int i &#x3D; 1; i &lt; 5; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        NSLog(@&quot;%@ the isa pointer %d times gives %p&quot;, currentClass,i, currentClass);</span><br><span class="line">        currentClass &#x3D; object_getClass(currentClass);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    NSLog(@&quot;NSObject&#39;s class is %p&quot;, [NSObject class]);</span><br><span class="line">    NSLog(@&quot;NSObject&#39;s meta class is %p&quot;, object_getClass([NSObject class]));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>打印如下</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">This object is 0x7fa88fd05280.</span><br><span class="line"></span><br><span class="line">Class is MMViewController, and super is MMBaseViewController.</span><br><span class="line"></span><br><span class="line">MMViewController the isa pointer 1 times gives 0x10087daf0</span><br><span class="line"></span><br><span class="line">MMViewController the isa pointer 2 times gives 0x10087db18</span><br><span class="line"></span><br><span class="line">NSObject the isa pointer 3 times gives 0x1027e61d8</span><br><span class="line"></span><br><span class="line">NSObject the isa pointer 4 times gives 0x1027e61d8</span><br><span class="line"></span><br><span class="line">NSObject&#39;s class is 0x1027e6200</span><br><span class="line"></span><br><span class="line">NSObject&#39;s meta class is 0x1027e61d8</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">This object is 0x7fa88fd05280.</span><br><span class="line">Class is MMViewController, and super is MMBaseViewController.</span><br><span class="line">MMViewController the isa pointer 1 times gives 0x10087daf0</span><br><span class="line">MMViewController the isa pointer 2 times gives 0x10087db18</span><br><span class="line">NSObject the isa pointer 3 times gives 0x1027e61d8</span><br><span class="line">NSObject the isa pointer 4 times gives 0x1027e61d8</span><br><span class="line"></span><br><span class="line">NSObject&#39;s class is 0x1027e6200</span><br><span class="line">NSObject&#39;s meta class is 0x1027e61d8</span><br></pre></td></tr></table></figure>
 
 <ol>
 <li>基类（NSObject）没有超类，所以基类的supperClass指向nil</li>
@@ -245,6 +245,8 @@
 <li>meta-class的supperClass指向NSObject，形成回路</li>
 <li>每个meta-class的isa指针都指向基类的meta-class，基类的meta-class的isa指针也指向自身</li>
 </ol>
+<p>objc_object关系图：</p>
+<p><img src="/Users/mikasa/Desktop/image_mark/image-20200311232447574.png" alt="image-20200311232447574"></p>
 <h3 id="isa-t"><a href="#isa-t" class="headerlink" title="isa_t"></a>isa_t</h3><p>isa_t是一个union联合体，联合体的所有成员会占用同一段内存，修改一个成员会影响其余所有成员，</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">union isa_t &#123;</span><br><span class="line">    isa_t() &#123; &#125;</span><br><span class="line">    isa_t(uintptr_t value) : bits(value) &#123; &#125;</span><br><span class="line"></span><br><span class="line">    Class cls;</span><br><span class="line">    uintptr_t bits;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 
@@ -299,7 +301,7 @@
 <p><img src="/Users/mikasa/Desktop/image_mark/23_9.png" alt="23_9"></p>
 <p>参数说明：</p>
 <p>第一位index，代表是否开启isa指针优化，1表示开启</p>
-<h1 id="Tagged-Pointer"><a href="#Tagged-Pointer" class="headerlink" title="Tagged Pointer"></a><a href="https://www.infoq.cn/article/deep-understanding-of-tagged-pointer/" target="_blank" rel="noopener">Tagged Pointer</a></h1><p>关于taggerPointer，在 2013 年 9 月，苹果推出了<a href="http://en.wikipedia.org/wiki/IPhone_5S" target="_blank" rel="noopener"> iPhone5s </a>，与此同时，iPhone5s 配备了首个采用 64 位架构的<a href="http://en.wikipedia.org/wiki/Apple_A7" target="_blank" rel="noopener"> A7 双核处理器</a>，为了节省内存和提高执行效率，苹果提出了<code>Tagged Pointer</code>的概念。对于 64 位程序，引入 Tagged Pointer 后，相关逻辑能减少一半的内存占用，以及 3 倍的访问速度提升，100 倍的创建、销毁速度提升。</p>
+<h3 id="Tagged-Pointer"><a href="#Tagged-Pointer" class="headerlink" title="Tagged Pointer"></a><a href="https://www.infoq.cn/article/deep-understanding-of-tagged-pointer/" target="_blank" rel="noopener">Tagged Pointer</a></h3><p>关于taggerPointer，在 2013 年 9 月，苹果推出了<a href="http://en.wikipedia.org/wiki/IPhone_5S" target="_blank" rel="noopener"> iPhone5s </a>，与此同时，iPhone5s 配备了首个采用 64 位架构的<a href="http://en.wikipedia.org/wiki/Apple_A7" target="_blank" rel="noopener"> A7 双核处理器</a>，为了节省内存和提高执行效率，苹果提出了<code>Tagged Pointer</code>的概念。对于 64 位程序，引入 Tagged Pointer 后，相关逻辑能减少一半的内存占用，以及 3 倍的访问速度提升，100 倍的创建、销毁速度提升。</p>
 <p>为什么能减少近一半的内存占用呢？假设我们要存储一个 NSNumber 对象，其值是一个整数。正常情况下，如果这个整数只是一个 NSInteger 的普通变量，那么它所占用的内存是与 CPU 的位数有关，在 32 位 CPU 下占 4 个字节，在 64 位 CPU 下是占 8 个字节的。而指针类型的大小通常也是与 CPU 位数相关，一个指针所占用的内存在 32 位 CPU 下为 4 个字节，在 64 位 CPU 下也是 8 个字节。</p>
 <p>所以一个普通的 iOS 程序，如果没有<code>Tagged Pointer</code>对象，从 32 位机器迁移到 64 位机器中后，虽然逻辑没有任何变化，但这种 NSNumber、NSDate 一类的对象所占用的内存会翻倍。如下图所示：</p>
 <p><img src="/Users/mikasa/Desktop/image_mark/23-10.png" alt="23-10"></p>
@@ -331,7 +333,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">class_data_bits_t bits;    &#x2F;&#x2F; class_rw_t * plus custom rr&#x2F;alloc flags</span><br></pre></td></tr></table></figure>
 
 <p>class_rw_t中存放着类的属性、方法和遵循的协议，class_ro_t是一个指向了常量的指针，存放着编译器决定了的属性、方法和遵循的协议。</p>
-<p>在运行时调用<code>realizeClassWithoutSwift</code>方法，会进行以下几件事情：</p>
+<h3 id="realizeClassWithoutSwift"><a href="#realizeClassWithoutSwift" class="headerlink" title="realizeClassWithoutSwift"></a>realizeClassWithoutSwift</h3><p>在运行时调用<code>realizeClassWithoutSwift</code>方法，会进行以下几件事情：</p>
 <ol>
 <li>对类cls执行首次初始化</li>
 <li>分配读写数据，初始化一个class_rw_t结构体</li>
@@ -345,7 +347,7 @@
 <ol>
 <li>类的一些方法、属性、遵守协议是在编译期决定的（baseMethods等成员在以及类在内存中的位置都是在编译器决定的），之后在修改代码也不会改变内存中的位置</li>
 <li>类的方法、属性、遵守协议在编译期被存放在只读区域class_ro_t中，直到<code>realizeClassWithoutSwift</code>执行后被加载存放到class_rw_t中</li>
-<li>class_ro_t中成员变量列表用指向常量的指针<code>const ivar_list_t * ivars;</code>，class_rw_t结构中无此成员，这也可以说明为什么category可以为类添加方法，而不能添加成员变量</li>
+<li>class_ro_t中成员变量列表用指向常量的指针<code>const ivar_list_t * ivars;</code>，class_rw_t结构中无此成员</li>
 <li>运行时采用category添加方法时，会修改class_rw_t的methods列表，而不会影响到class_ro_t中的baseMethods</li>
 </ol>
 <h3 id="method-t"><a href="#method-t" class="headerlink" title="method_t"></a>method_t</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">struct method_t &#123;</span><br><span class="line">    SEL name;</span><br><span class="line">    const char *types;</span><br><span class="line">    MethodListIMP imp;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -374,7 +376,24 @@
 </li>
 </ol>
 <p><code>NSObject</code>只有一个变量<code>isa</code>，作为根类，<code>instanceSize</code>为0，<code>instanceSize</code>则为8。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">@interface TestIvar : NSObject&#123;</span><br><span class="line">  NSString *_ivarStr;</span><br><span class="line">&#125;</span><br><span class="line">@property(nonatomic, assign) NSInteger propertyInt;</span><br><span class="line">@end</span><br></pre></td></tr></table></figure>
+
+<p><img src="/Users/mikasa/Desktop/image_mark/23.12.png" alt="23.12"></p>
 <p><code>TestIvar</code>中有两个变量，<code>instanceStart</code>刚好接在父类的后面， <code>instanceSize</code>为两个变量的大小+父类的<code>instanceSize</code>。这样类的内存布局就很清晰了，<code>isa</code>变量放在第一位，接下来先是父类的按顺序排放，最后子类的接在后面。</p>
+<h4 id="IvarLayout"><a href="#IvarLayout" class="headerlink" title="IvarLayout"></a>IvarLayout</h4><p><code>class_ro_t</code>中有两个变量<code>ivarLayout</code>和<code>weakIvarLayout</code>，是用来记录变量那些是<code>strong</code>的，哪些是<code>weak</code>的，在<code>object_getIvar</code>中有通过<code>_class_lookUpIvar</code>获取变量的<code>objc_ivar_memory_management_t</code>:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">_class_lookUpIvar(Class cls, Ivar ivar, ptrdiff_t&amp; ivarOffset, </span><br><span class="line">                  objc_ivar_memory_management_t&amp; memoryManagement)</span><br><span class="line">&#123;</span><br><span class="line">    ivarOffset &#x3D; ivar_getOffset(ivar);</span><br><span class="line">		Class ivarCls &#x3D; _class_getClassForIvar(cls, ivar);</span><br><span class="line">    if (ivarCls-&gt;hasAutomaticIvars()) &#123;</span><br><span class="line">        &#x2F;&#x2F; ARC layout bitmaps encode the class&#39;s own ivars only.</span><br><span class="line">        &#x2F;&#x2F; Use alignedInstanceStart() because unaligned bytes at the start</span><br><span class="line">        &#x2F;&#x2F; of this class&#39;s ivars are not represented in the layout bitmap.</span><br><span class="line">        ptrdiff_t localOffset &#x3D; </span><br><span class="line">            ivarOffset - ivarCls-&gt;alignedInstanceStart();</span><br><span class="line"></span><br><span class="line">        if (isScanned(localOffset, class_getIvarLayout(ivarCls))) &#123;</span><br><span class="line">            memoryManagement &#x3D; objc_ivar_memoryStrong;</span><br><span class="line">            return;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if (isScanned(localOffset, class_getWeakIvarLayout(ivarCls))) &#123;</span><br><span class="line">            memoryManagement &#x3D; objc_ivar_memoryWeak;</span><br><span class="line">            return;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F; Unretained is only for true ARC classes.</span><br><span class="line">        if (ivarCls-&gt;isARC()) &#123;</span><br><span class="line">            memoryManagement &#x3D; objc_ivar_memoryUnretained;</span><br><span class="line">            return;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    memoryManagement &#x3D; objc_ivar_memoryUnknown;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过判断变量的偏移量<code>localOffset</code>跟<code>ivarLayout</code>和<code>weakIvarLayout</code>来对比，来判断是<code>strong</code>还是<code>weak</code>的。</p>
+<h4 id="为什么不能动态的添加Ivar"><a href="#为什么不能动态的添加Ivar" class="headerlink" title="为什么不能动态的添加Ivar"></a>为什么不能动态的添加Ivar</h4><p>假设我们已经有上面的类<code>TestIvar</code>,之后我们在运行期给类NSObject动态的添加了一个变量a，此时a的内存地址就会紧接着isa，由于此时没有调整所有变量的offset，那么TestIvar._ivarStr和NSObject.A就会有内存重叠，导致出现错误。这样NSObject所有子类都有可能出现这个问题</p>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><ol>
+<li>变量Ivar都是在编译期生成的，并且所有子类的变量都排在父类的后面</li>
+<li>ivarLayout和weakIvarLayout分别代表着strong和weak变量的分布</li>
+<li>运行期不能动态添加Ivar，如果在运行期动态添加Ivar，可能会导致所有子类无法正常使用</li>
+</ol>
+<h3 id="property-t"><a href="#property-t" class="headerlink" title="property_t"></a>property_t</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">struct property_t &#123;</span><br><span class="line">    const char *name;</span><br><span class="line">    const char *attributes;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>property在iOS中由ivar+setter+getter组成，也就是说当声明一个属性，编译器会自动生成一个ivar和两个Method</p>
+<p>关于<code>attributes</code>具体参考<a href="https://developer.apple.com/library/content/documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Articles/ocrtPropertyIntrospection.html#//apple_ref/doc/uid/TP40008048-CH101-SW24" target="_blank" rel="noopener">Declared Properties</a>。</p>
 
       
     </div>
