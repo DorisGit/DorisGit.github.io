@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://dorisgit.github.io').hostname,
+    root: '/',
+    scheme: 'Mist',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="前言Objective-C作为基于Runtime的语言，它有着非常强大的动态特性，可以在运行期间自省、进行方法调剂、为类添加属性、方法、修改消息转发链路，在代码运行期间可以通过Runtime修改Objective-C层的一切类、属性、方法。 概述在很多语言中，比如C，调用一个方法就是跳到内存中的某一个点并开始执行一段代码。没有任何的动态的特性，因为这在编译时就决定好了，而在Object-C中，[p">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Objective-C Runtime——objc_msgSend消息发送和转发">
+<meta property="og:url" content="https://dorisgit.github.io/2020/03/12/Objective-C-Runtime%E2%80%94%E2%80%94objc-msgSend%E6%B6%88%E6%81%AF%E5%8F%91%E9%80%81%E5%92%8C%E8%BD%AC%E5%8F%91/index.html">
+<meta property="og:site_name" content="泡泡茶壶">
+<meta property="og:description" content="前言Objective-C作为基于Runtime的语言，它有着非常强大的动态特性，可以在运行期间自省、进行方法调剂、为类添加属性、方法、修改消息转发链路，在代码运行期间可以通过Runtime修改Objective-C层的一切类、属性、方法。 概述在很多语言中，比如C，调用一个方法就是跳到内存中的某一个点并开始执行一段代码。没有任何的动态的特性，因为这在编译时就决定好了，而在Object-C中，[p">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-03-12T14:45:43.000Z">
+<meta property="article:modified_time" content="2020-03-15T15:38:23.076Z">
+<meta property="article:author" content="Doris AI">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://dorisgit.github.io/2020/03/12/Objective-C-Runtime%E2%80%94%E2%80%94objc-msgSend%E6%B6%88%E6%81%AF%E5%8F%91%E9%80%81%E5%92%8C%E8%BD%AC%E5%8F%91/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Objective-C Runtime——objc_msgSend消息发送和转发 | 泡泡茶壶</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">泡泡茶壶</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="en">
+    <link itemprop="mainEntityOfPage" href="https://dorisgit.github.io/2020/03/12/Objective-C-Runtime%E2%80%94%E2%80%94objc-msgSend%E6%B6%88%E6%81%AF%E5%8F%91%E9%80%81%E5%92%8C%E8%BD%AC%E5%8F%91/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Doris AI">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="泡泡茶壶">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Objective-C Runtime——objc_msgSend消息发送和转发
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-03-12 22:45:43" itemprop="dateCreated datePublished" datetime="2020-03-12T22:45:43+08:00">2020-03-12</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-03-15 23:38:23" itemprop="dateModified" datetime="2020-03-15T23:38:23+08:00">2020-03-15</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>Objective-C作为基于Runtime的语言，它有着非常强大的动态特性，可以在运行期间自省、进行方法调剂、为类添加属性、方法、修改消息转发链路，在代码运行期间可以通过Runtime修改Objective-C层的一切类、属性、方法。</p>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>在很多语言中，比如C，调用一个方法就是跳到内存中的某一个点并开始执行一段代码。没有任何的动态的特性，因为这在编译时就决定好了，而在Object-C中，<code>[person run]</code>并不会立即执行run这个方法的代码，它在运行时给person发送一条run的消息，这个消息，也许会由person来处理，也许会被转发给另外一个对象，或者不予理睬假装没有收到这个消息。多条不同的消息也可以对应同一个方法的实现。</p>
+<p>需要提前获知的信息：</p>
+<ol>
+<li>在Object-C中“方法调用”其实应该叫做“消息传递”</li>
+<li><code>[person run]</code>会被翻译为objc_msgSend(person,@selector(run))</li>
+<li>在消息的响应链路中可能会调用 <code>- resolveInstanceMethod:</code>或者<code>- forwardInvocation:</code>等方法</li>
+</ol>
+<h3 id="objc-msgSend"><a href="#objc-msgSend" class="headerlink" title="objc_msgSend"></a>objc_msgSend</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;** </span><br><span class="line"> * Sends a message with a simple return value to an instance of a class.</span><br><span class="line"> * </span><br><span class="line"> * @param self A pointer to the instance of the class that is to receive the message.</span><br><span class="line"> * @param op The selector of the method that handles the message.</span><br><span class="line"> * @param ... </span><br><span class="line"> *   A variable argument list containing the arguments to the method.</span><br><span class="line"> * </span><br><span class="line"> * @return The return value of the method.</span><br><span class="line"> * </span><br><span class="line"> * @note When it encounters a method call, the compiler generates a call to one of the</span><br><span class="line"> *  functions \c objc_msgSend, \c objc_msgSend_stret, \c objc_msgSendSuper, or \c objc_msgSendSuper_stret.</span><br><span class="line"> *  Messages sent to an object’s superclass (using the \c super keyword) are sent using \c objc_msgSendSuper; </span><br><span class="line"> *  other messages are sent using \c objc_msgSend. Methods that have data structures as return values</span><br><span class="line"> *  are sent using \c objc_msgSendSuper_stret and \c objc_msgSend_stret.</span><br><span class="line"> *&#x2F;</span><br><span class="line">objc_msgSend(id _Nullable self, SEL _Nonnull op, ...)</span><br><span class="line">    OBJC_AVAILABLE(10.0, 2.0, 9.0, 1.0, 2.0);</span><br></pre></td></tr></table></figure>
+
+<p>当编译器遇到一个方法调用时，它会将方法的调用翻译成一下函数中的一个<code>objc_msgSend</code> <code>objc_msgSend_stret</code> <code>objc_msgSendSuper</code> <code>objc_msgSendSuper_stret</code>，发送给对象的父类的消息会使用会使用<code>objc_msgSendSuper</code>，有数据结构作为返回值的方法会调用<code>objc_msgSendSuper_stret</code> 或者<code>objc_msgSend_stret</code>，其他消息都是使用<code>objc_msgSend</code>发送</p>
+<p><code>objc_msgSend</code>有两个参数，一个是对象结构成员中的receiver，一个是SEL</p>
+<h4 id="SEL"><a href="#SEL" class="headerlink" title="SEL"></a>SEL</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;&#x2F; An opaque type that represents a method selector.</span><br><span class="line">typedef struct objc_selector *SEL;</span><br></pre></td></tr></table></figure>
+
+<p>要传递的消息都会通过@selector()转换成<code>objc_msgSend</code>的一个参数传递进去</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[person run] ——&gt; objc_msgSend(person, @selector(run))</span><br></pre></td></tr></table></figure>
+
+<p>objc_selector是一个映射到方法的C字符串，需要注意的是：</p>
+<ol>
+<li>使用selector()生成的选择子不会因为类的不同而改变，其内存地址在编译期间就已经确定了，也就是说向不同的类发送相同的消息时，生成的选择子是一样的，选择子只与方法名相关，即使方法相同参数变量类型不同也会导致他们具有相同的选择子。这也是OC不支持重栽的原因</li>
+<li>Objective-C为我们维护了一个巨大的选择子表</li>
+<li>在使用@selector()时，会从这个选择子表中根据选择子的名称查找对应的SEL，如果没有找到，则会生成一个SEL并添加到表中</li>
+<li>在编译期间会扫描全部的头文件和实现文件将其中的方法以及使用的@selector()生成的选择子添加到选择子表中</li>
+</ol>
+<h4 id="objc-msgSend源码解析"><a href="#objc-msgSend源码解析" class="headerlink" title="objc_msgSend源码解析"></a><a href="http://www.mulle-kybernetik.com/artikel/Optimization/opti-9.html" target="_blank" rel="noopener">objc_msgSend源码解析</a></h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;objc/objc-runtime.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function">id  <span class="title">c_objc_msgSend</span><span class="params">( struct objc_class <span class="comment">/* ahem */</span> *self, SEL _cmd, ...)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">objc_class</span>    *<span class="title">cls</span>;</span></span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">objc_cache</span>    *<span class="title">cache</span>;</span></span><br><span class="line">   <span class="keyword">unsigned</span> <span class="keyword">int</span>         hash;</span><br><span class="line">   <span class="class"><span class="keyword">struct</span> <span class="title">objc_method</span>   *<span class="title">method</span>;</span>   </span><br><span class="line">   <span class="keyword">unsigned</span> <span class="keyword">int</span>         index;</span><br><span class="line">   </span><br><span class="line">   <span class="keyword">if</span>( self)</span><br><span class="line">   &#123;</span><br><span class="line">      cls   = self-&gt;isa;</span><br><span class="line">      cache = cls-&gt;cache;</span><br><span class="line">      hash  = cache-&gt;mask;</span><br><span class="line">      index = (<span class="keyword">unsigned</span> <span class="keyword">int</span>) _cmd &amp; hash;</span><br><span class="line">      </span><br><span class="line">      <span class="keyword">do</span></span><br><span class="line">      &#123;</span><br><span class="line">         method = cache-&gt;buckets[ index];</span><br><span class="line">         <span class="keyword">if</span>( ! method)</span><br><span class="line">            <span class="keyword">goto</span> recache;</span><br><span class="line">         index = (index + <span class="number">1</span>) &amp; cache-&gt;mask;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">while</span>( method-&gt;method_name != _cmd);</span><br><span class="line">      <span class="keyword">return</span>( (*method-&gt;method_imp)( (id) self, _cmd));</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">return</span>( (id) self);</span><br><span class="line"></span><br><span class="line">recache:</span><br><span class="line">   <span class="comment">/* ... */</span></span><br><span class="line">   <span class="keyword">return</span>( <span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>源码中的方法do-while循环就是在当前类中的方法分发表中查找method的过程</p>
+<p>另外在objc-msg-x86_64.s文件中有一段相关的汇编代码实现</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/********************************************************************</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * id objc_msgSend(id self, SEL	_cmd,...);</span></span><br><span class="line"><span class="comment"> * IMP objc_msgLookup(id self, SEL _cmd, ...);</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * objc_msgLookup ABI:</span></span><br><span class="line"><span class="comment"> * IMP returned in r11</span></span><br><span class="line"><span class="comment"> * Forwarding returned in Z flag</span></span><br><span class="line"><span class="comment"> * r10 reserved for our use but not used</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> ********************************************************************/</span></span><br><span class="line">	</span><br><span class="line">	.data</span><br><span class="line">	.align <span class="number">3</span></span><br><span class="line">	.globl _objc_debug_taggedpointer_classes</span><br><span class="line">_objc_debug_taggedpointer_classes:</span><br><span class="line">	.<span class="built_in">fill</span> <span class="number">16</span>, <span class="number">8</span>, <span class="number">0</span></span><br><span class="line">	.globl _objc_debug_taggedpointer_ext_classes</span><br><span class="line">_objc_debug_taggedpointer_ext_classes:</span><br><span class="line">	.<span class="built_in">fill</span> <span class="number">256</span>, <span class="number">8</span>, <span class="number">0</span></span><br><span class="line"></span><br><span class="line">	ENTRY _objc_msgSend</span><br><span class="line">	UNWIND _objc_msgSend, NoFrame</span><br><span class="line"></span><br><span class="line">	NilTest	NORMAL</span><br><span class="line"></span><br><span class="line">	GetIsaFast NORMAL		<span class="comment">// r10 = self-&gt;isa</span></span><br><span class="line">	CacheLookup NORMAL, CALL	<span class="comment">// calls IMP on success</span></span><br><span class="line"></span><br><span class="line">	NilTestReturnZero NORMAL</span><br><span class="line"></span><br><span class="line">	GetIsaSupport NORMAL</span><br><span class="line"></span><br><span class="line"><span class="comment">// cache miss: go search the method lists</span></span><br><span class="line">LCacheMiss:</span><br><span class="line">	<span class="comment">// isa still in r10</span></span><br><span class="line">	jmp	__objc_msgSend_uncached</span><br><span class="line"></span><br><span class="line">	END_ENTRY _objc_msgSend</span><br><span class="line"></span><br><span class="line">	</span><br><span class="line">	ENTRY _objc_msgLookup</span><br><span class="line"></span><br><span class="line">	NilTest	NORMAL</span><br><span class="line"></span><br><span class="line">	GetIsaFast NORMAL		<span class="comment">// r10 = self-&gt;isa</span></span><br><span class="line">	CacheLookup NORMAL, LOOKUP	<span class="comment">// returns IMP on success</span></span><br><span class="line"></span><br><span class="line">	NilTestReturnIMP NORMAL</span><br><span class="line"></span><br><span class="line">	GetIsaSupport NORMAL</span><br><span class="line"></span><br><span class="line"><span class="comment">// cache miss: go search the method lists</span></span><br><span class="line">LCacheMiss:</span><br><span class="line">	<span class="comment">// isa still in r10</span></span><br><span class="line">	jmp	__objc_msgLookup_uncached</span><br><span class="line"></span><br><span class="line">	END_ENTRY _objc_msgLookup</span><br><span class="line"></span><br><span class="line">	</span><br><span class="line">	ENTRY _objc_msgSend_fixup</span><br><span class="line">	int3</span><br><span class="line">	END_ENTRY _objc_msgSend_fixup</span><br><span class="line"></span><br><span class="line">	</span><br><span class="line">	STATIC_ENTRY _objc_msgSend_fixedup</span><br><span class="line">	<span class="comment">// Load _cmd from the message_ref</span></span><br><span class="line">	movq	<span class="number">8</span>(%a2), %a2</span><br><span class="line">	jmp	_objc_msgSend</span><br><span class="line">	END_ENTRY _objc_msgSend_fixedup</span><br></pre></td></tr></table></figure>
+
+<p>拆开来看，objc_msgSend首先会去尝试查找缓存CacheLookup，当缓存中无法找到时候会去执行MethodTableLookup方法查找，MethodTableLookup可以算是一个接口层宏，主要用户保存环境和准备参数，调用__class_lookupMethodAndLoadCache3方法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;***********************************************************************</span><br><span class="line">* _class_lookupMethodAndLoadCache.</span><br><span class="line">* Method lookup for dispatchers ONLY. OTHER CODE SHOULD USE lookUpImp().</span><br><span class="line">* This lookup avoids optimistic cache scan because the dispatcher </span><br><span class="line">* already tried that.</span><br><span class="line">**********************************************************************&#x2F;</span><br><span class="line">IMP _class_lookupMethodAndLoadCache3(id obj, SEL sel, Class cls)</span><br><span class="line">&#123;</span><br><span class="line">    return lookUpImpOrForward(cls, sel, obj, </span><br><span class="line">                              YES&#x2F;*initialize*&#x2F;, NO&#x2F;*cache*&#x2F;, YES&#x2F;*resolver*&#x2F;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>_class_lookupMethodAndLoadCache3函数也是个接口层，此函数提供相应的参数配置，实际功能在lookUpImpOrForward中</p>
+<h5 id="lookUpImpOrForward"><a href="#lookUpImpOrForward" class="headerlink" title="lookUpImpOrForward"></a>lookUpImpOrForward</h5><figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/***********************************************************************</span></span><br><span class="line"><span class="comment">* lookUpImpOrForward.</span></span><br><span class="line"><span class="comment">* The standard IMP lookup. </span></span><br><span class="line"><span class="comment">* initialize==NO tries to avoid +initialize (but sometimes fails)</span></span><br><span class="line"><span class="comment">* cache==NO skips optimistic unlocked lookup (but uses cache elsewhere)</span></span><br><span class="line"><span class="comment">* Most callers should use initialize==YES and cache==YES.</span></span><br><span class="line"><span class="comment">* inst is an instance of cls or a subclass thereof, or nil if none is known. </span></span><br><span class="line"><span class="comment">*   If cls is an un-initialized metaclass then a non-nil inst is faster.</span></span><br><span class="line"><span class="comment">* May return _objc_msgForward_impcache. IMPs destined for external use </span></span><br><span class="line"><span class="comment">*   must be converted to _objc_msgForward or _objc_msgForward_stret.</span></span><br><span class="line"><span class="comment">*   If you don't want forwarding at all, use lookUpImpOrNil() instead.</span></span><br><span class="line"><span class="comment">**********************************************************************/</span></span><br><span class="line">IMP lookUpImpOrForward(Class cls, SEL sel, <span class="keyword">id</span> inst, </span><br><span class="line">                       <span class="keyword">bool</span> initialize, <span class="keyword">bool</span> cache, <span class="keyword">bool</span> resolver)</span><br><span class="line">&#123;</span><br><span class="line">    IMP imp = <span class="literal">nil</span>;</span><br><span class="line">    <span class="keyword">bool</span> triedResolver = <span class="literal">NO</span>;</span><br><span class="line"><span class="comment">/*…… 中间为查找过程 ……*/</span></span><br><span class="line">    <span class="keyword">return</span> imp;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>逐行解析一下</p>
+<ol>
+<li><p>runtimeLock.assertUnlocked();这是加一个读写锁，保证线程安全</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">runtimeLock.assertUnlocked();</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>是否查找缓存的IMP，如果传入YES，则调用cache_getImp方法去查找缓存中IMP</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; Optimistic cache lookup</span><br><span class="line">if (cache) &#123;</span><br><span class="line">    imp &#x3D; cache_getImp(cls, sel);</span><br><span class="line">    if (imp) return imp;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>cache_getImp的具体实现也是具体的编译指令</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/********************************************************************</span></span><br><span class="line"><span class="comment"> * IMP cache_getImp(Class cls, SEL sel)</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * On entry:	a1 = class whose cache is to be searched</span></span><br><span class="line"><span class="comment"> *		a2 = selector to search for</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * If found, returns method implementation.</span></span><br><span class="line"><span class="comment"> * If not found, returns NULL.</span></span><br><span class="line"><span class="comment"> ********************************************************************/</span></span><br><span class="line"></span><br><span class="line">	STATIC_ENTRY _cache_getImp</span><br><span class="line"></span><br><span class="line"><span class="comment">// do lookup</span></span><br><span class="line">	movq	%a1, %r10		<span class="comment">// move class to r10 for CacheLookup</span></span><br><span class="line">	CacheLookup NORMAL, GETIMP	<span class="comment">// returns IMP on success</span></span><br><span class="line"></span><br><span class="line">LCacheMiss:</span><br><span class="line"><span class="comment">// cache miss, return nil</span></span><br><span class="line">	xorl	%eax, %eax</span><br><span class="line">	ret</span><br><span class="line"></span><br><span class="line">	END_ENTRY _cache_getImp</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>校验当前类是否已被加载</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">checkIsKnownClass(cls);</span><br><span class="line"></span><br><span class="line">&#x2F;***********************************************************************</span><br><span class="line">* isKnownClass</span><br><span class="line">* Return true if the class is known to the runtime (located within the</span><br><span class="line">* shared cache, within the data segment of a loaded image, or has been</span><br><span class="line">* allocated with obj_allocateClassPair).</span><br><span class="line">**********************************************************************&#x2F;</span><br><span class="line">static bool isKnownClass(Class cls) &#123;</span><br><span class="line">    &#x2F;&#x2F; The order of conditionals here is important for speed. We want to</span><br><span class="line">    &#x2F;&#x2F; put the most common cases first, but also the fastest cases</span><br><span class="line">    &#x2F;&#x2F; first. Checking the shared region is both fast and common.</span><br><span class="line">    &#x2F;&#x2F; Checking allocatedClasses is fast, but may not be common,</span><br><span class="line">    &#x2F;&#x2F; depending on what the program is doing. Checking if data segments</span><br><span class="line">    &#x2F;&#x2F; contain the address is slow, so do it last.</span><br><span class="line">    return (sharedRegionContains(cls) ||</span><br><span class="line">            NXHashMember(allocatedClasses, cls) ||</span><br><span class="line">            dataSegmentsContain(cls));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>判断当前类是否被初始化，进行首次初始化，分配读写数据，返回真实类结构</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">if (!cls-&gt;isRealized()) &#123;</span><br><span class="line">        cls &#x3D; realizeClassMaybeSwiftAndLeaveLocked(cls, runtimeLock);</span><br><span class="line">        &#x2F;&#x2F; runtimeLock may have been dropped but is now locked again</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>初始化类的过程</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">if (initialize &amp;&amp; !cls-&gt;isInitialized()) &#123;</span><br><span class="line">        cls &#x3D; initializeAndLeaveLocked(cls, inst, runtimeLock);</span><br><span class="line">        &#x2F;&#x2F; runtimeLock may have been dropped but is now locked again</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F; If sel &#x3D;&#x3D; initialize, class_initialize will send +initialize and </span><br><span class="line">        &#x2F;&#x2F; then the messenger will send +initialize again after this </span><br><span class="line">        &#x2F;&#x2F; procedure finishes. Of course, if this is not being called </span><br><span class="line">        &#x2F;&#x2F; from the messenger then it won&#39;t happen. 2778172</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>因为在运行时中会动态的添加方法，为了保证线程安全，所有加了一个读锁</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">retry:    </span><br><span class="line">    runtimeLock.assertLocked();</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>尝试从缓存列表IMP中获取IMP</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; Try this class&#39;s cache.</span><br><span class="line">imp &#x3D; cache_getImp(cls, sel);</span><br><span class="line">    if (imp) goto done;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>尝试从类的方法列表中获取方法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; Try this class&#39;s method lists.</span><br><span class="line">&#123;</span><br><span class="line">    Method meth &#x3D; getMethodNoSuper_nolock(cls, sel);</span><br><span class="line">    if (meth) &#123;</span><br><span class="line">        log_and_fill_cache(cls, meth-&gt;imp, sel, inst, cls);</span><br><span class="line">        imp &#x3D; meth-&gt;imp;</span><br><span class="line">        goto done;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>尝试从父类及层次结构链中查找</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; Try superclass caches and method lists.</span><br><span class="line">&#123;</span><br><span class="line">    unsigned attempts &#x3D; unreasonableClassCount();</span><br><span class="line">    for (Class curClass &#x3D; cls-&gt;superclass;</span><br><span class="line">         curClass !&#x3D; nil;</span><br><span class="line">         curClass &#x3D; curClass-&gt;superclass)</span><br><span class="line">    &#123;</span><br><span class="line">        &#x2F;&#x2F; Halt if there is a cycle in the superclass chain.</span><br><span class="line">        if (--attempts &#x3D;&#x3D; 0) &#123;</span><br><span class="line">            _objc_fatal(&quot;Memory corruption in class list.&quot;);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F; Superclass cache.</span><br><span class="line">        imp &#x3D; cache_getImp(curClass, sel);</span><br><span class="line">        if (imp) &#123;</span><br><span class="line">            if (imp !&#x3D; (IMP)_objc_msgForward_impcache) &#123;</span><br><span class="line">                &#x2F;&#x2F; Found the method in a superclass. Cache it in this class.</span><br><span class="line">                log_and_fill_cache(cls, imp, sel, inst, curClass);</span><br><span class="line">                goto done;</span><br><span class="line">            &#125;</span><br><span class="line">            else &#123;</span><br><span class="line">                &#x2F;&#x2F; Found a forward:: entry in a superclass.</span><br><span class="line">                &#x2F;&#x2F; Stop searching, but don&#39;t cache yet; call method </span><br><span class="line">                &#x2F;&#x2F; resolver for this class first.</span><br><span class="line">                break;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        &#x2F;&#x2F; Superclass method list.</span><br><span class="line">        Method meth &#x3D; getMethodNoSuper_nolock(curClass, sel);</span><br><span class="line">        if (meth) &#123;</span><br><span class="line">            log_and_fill_cache(cls, meth-&gt;imp, sel, inst, curClass);</span><br><span class="line">            imp &#x3D; meth-&gt;imp;</span><br><span class="line">            goto done;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>如果都没有找到IMP实现，进行消息转发机制</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; No implementation found. Try method resolver once.</span><br><span class="line"></span><br><span class="line">if (resolver  &amp;&amp;  !triedResolver) &#123;</span><br><span class="line">    runtimeLock.unlock();</span><br><span class="line">    resolveMethod(cls, sel, inst);</span><br><span class="line">    runtimeLock.lock();</span><br><span class="line">    &#x2F;&#x2F; Don&#39;t cache the result; we don&#39;t hold the lock so it may have </span><br><span class="line">    &#x2F;&#x2F; changed already. Re-do the search from scratch instead.</span><br><span class="line">    triedResolver &#x3D; YES;</span><br><span class="line">    goto retry;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+</ol>
+<ol start="12">
+<li><p>dd</p>
+</li>
+<li></li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">1. Check for ignored selectors (GC) and short-circuit.</span><br><span class="line"> 2. Check for nil target.</span><br><span class="line">    If nil &amp; nil receiver handler configured, jump to handler</span><br><span class="line">    If nil &amp; no handler (default), cleanup and return.</span><br><span class="line"> 3. Search the class’s method cache for the method IMP(use hash to find&amp;store method in cache)</span><br><span class="line">    -1. If found, jump to it.</span><br><span class="line">    -2. Not found: lookup the method IMP in the class itself corresponding its hierarchy chain.</span><br><span class="line">        If found, load it into cache and jump to it.</span><br><span class="line">        If not found, jump to forwarding mechanism.</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li><p>检查选择子selector是不是要忽略</p>
+</li>
+<li><p>检查target是否为nil</p>
+</li>
+<li><p>在该类class的方法缓存列表中查找方法对呀的IMP实现，如果找到就跳转进去执行</p>
+<p>如果没有找到，就在当前类及层次结构链中的方法列表中查找方法的IMP实现</p>
+</li>
+<li><p>如果还是没有找到，跳转进入消息转发机智</p>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/03/10/Objective-C%20Runtime%E2%80%94%E2%80%94objc_object/" rel="prev" title="Objective-C Runtime——objc_object">
+      <i class="fa fa-chevron-left"></i> Objective-C Runtime——objc_object
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#概述"><span class="nav-number">2.</span> <span class="nav-text">概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#objc-msgSend"><span class="nav-number">2.1.</span> <span class="nav-text">objc_msgSend</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#SEL"><span class="nav-number">2.1.1.</span> <span class="nav-text">SEL</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#objc-msgSend源码解析"><span class="nav-number">2.1.2.</span> <span class="nav-text">objc_msgSend源码解析</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#lookUpImpOrForward"><span class="nav-number">2.1.2.1.</span> <span class="nav-text">lookUpImpOrForward</span></a></li></ol></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Doris AI</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Doris AI</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v7.7.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
