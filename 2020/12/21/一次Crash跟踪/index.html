@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://dorisgit.github.io').hostname,
+    root: '/',
+    scheme: 'Mist',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="一次偶然的机会，线上反馈用户手机出现了打开App即Crash的情况，根据用户提供时间点以及视频信息，我们查看了bugly和尝试本地复现，很遗憾，都没有相关有用信息。 这时想到了，用户分析本机中可能存在log信息。 获取Crash文件设置-&gt;分析与改进-&gt;分析数据，找到当天对应的Crash文件，分享到电脑上。 获取.ipa包的UUID1xcrun dwarfdump --uuid xxx">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一次Crash跟踪">
+<meta property="og:url" content="https://dorisgit.github.io/2020/12/21/%E4%B8%80%E6%AC%A1Crash%E8%B7%9F%E8%B8%AA/index.html">
+<meta property="og:site_name" content="泡泡茶壶">
+<meta property="og:description" content="一次偶然的机会，线上反馈用户手机出现了打开App即Crash的情况，根据用户提供时间点以及视频信息，我们查看了bugly和尝试本地复现，很遗憾，都没有相关有用信息。 这时想到了，用户分析本机中可能存在log信息。 获取Crash文件设置-&gt;分析与改进-&gt;分析数据，找到当天对应的Crash文件，分享到电脑上。 获取.ipa包的UUID1xcrun dwarfdump --uuid xxx">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/image-20201221184525739.png">
+<meta property="article:published_time" content="2020-12-21T08:43:40.000Z">
+<meta property="article:modified_time" content="2020-12-21T11:51:10.357Z">
+<meta property="article:author" content="Doris AI">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/image-20201221184525739.png">
+
+<link rel="canonical" href="https://dorisgit.github.io/2020/12/21/%E4%B8%80%E6%AC%A1Crash%E8%B7%9F%E8%B8%AA/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>一次Crash跟踪 | 泡泡茶壶</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">泡泡茶壶</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="en">
+    <link itemprop="mainEntityOfPage" href="https://dorisgit.github.io/2020/12/21/%E4%B8%80%E6%AC%A1Crash%E8%B7%9F%E8%B8%AA/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Doris AI">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="泡泡茶壶">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          一次Crash跟踪
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2020-12-21 16:43:40 / Modified: 19:51:10" itemprop="dateCreated datePublished" datetime="2020-12-21T16:43:40+08:00">2020-12-21</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>一次偶然的机会，线上反馈用户手机出现了打开App即Crash的情况，根据用户提供时间点以及视频信息，我们查看了bugly和尝试本地复现，很遗憾，都没有相关有用信息。</p>
+<p>这时想到了，用户分析本机中可能存在log信息。</p>
+<h4 id="获取Crash文件"><a href="#获取Crash文件" class="headerlink" title="获取Crash文件"></a>获取Crash文件</h4><p>设置-&gt;分析与改进-&gt;分析数据，找到当天对应的Crash文件，分享到电脑上。</p>
+<h4 id="获取-ipa包的UUID"><a href="#获取-ipa包的UUID" class="headerlink" title="获取.ipa包的UUID"></a>获取.ipa包的UUID</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xcrun dwarfdump --uuid xxx.app/xxx</span><br></pre></td></tr></table></figure>
+
+<p>打印结果：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">UUID: 464A42BE-DB0F-3DF5-ABA7-F3CC4C4944CF (armv7) xxx.app/xxx</span><br><span class="line">UUID: F89C620B-0D6F-3422-A9BE-1C84FC827111 (arm64) xxx.app/xxx</span><br></pre></td></tr></table></figure>
+
+<h4 id="查看Crash文件的UUID"><a href="#查看Crash文件的UUID" class="headerlink" title="查看Crash文件的UUID"></a>查看Crash文件的UUID</h4><p>打开Crash日志，直接搜索<code>Binary Images</code>，对应的就是uuid</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Binary Images:</span><br><span class="line">0x100110000 - 0x10283ffff xxx arm64  &lt;f89c620b0d6f3422a9be1c84fc827111&gt; /var/containers/Bundle/Application/66BFB77D-3B41-42F2-A283-3F96EB4AD716/xxx.app/xxx</span><br></pre></td></tr></table></figure>
+
+<p>可以看到crash日志中的uuid与ipa包中的uuid对应上了</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">f89c620b0d6f3422a9be1c84fc827111</span><br></pre></td></tr></table></figure>
+
+<h4 id="查看-dSYM文件的UUID"><a href="#查看-dSYM文件的UUID" class="headerlink" title="查看.dSYM文件的UUID"></a>查看.dSYM文件的UUID</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dwarfdump --uuid xxx.app.dSYM</span><br></pre></td></tr></table></figure>
+
+<p>打印结果：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">UUID: 464A42BE-DB0F-3DF5-ABA7-F3CC4C4944CF (armv7) xxx.app.dSYM/Contents/Resources/DWARF/xxx</span><br><span class="line">UUID: F89C620B-0D6F-3422-A9BE-1C84FC827111 (arm64) xxx.app.dSYM/Contents/Resources/DWARF/xxx</span><br></pre></td></tr></table></figure>
+
+<h4 id="symbolicatecrash"><a href="#symbolicatecrash" class="headerlink" title="symbolicatecrash"></a>symbolicatecrash</h4><h5 id="获取解析工具symbolicatecrash所在位置"><a href="#获取解析工具symbolicatecrash所在位置" class="headerlink" title="获取解析工具symbolicatecrash所在位置"></a>获取解析工具symbolicatecrash所在位置</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;Applications&#x2F;Xcode.app&#x2F;Contents&#x2F;SharedFrameworks&#x2F;DVTFoundation.framework&#x2F;Versions&#x2F;A&#x2F;Resources&#x2F;symbolicatecrash</span><br></pre></td></tr></table></figure>
+
+<p>按照格式</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">symbolicatecrash .crash文件 .dSYM文件 &gt;result.log</span><br></pre></td></tr></table></figure>
+
+<p>拼装命令，执行即可获得解析结果result.log</p>
+<h5 id="执行命令"><a href="#执行命令" class="headerlink" title="执行命令"></a>执行命令</h5><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/Applications/Xcode.app/Contents/SharedFrameworks/DVTFoundation.framework/Versions/A/Resources/symbolicatecrash /Users/mikasa/Documents/Crash/xxx-2020-12-20-212420.ips xxx.app.dSYM &gt;result.log</span><br></pre></td></tr></table></figure>
+
+<p>终端可能会出现</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Error: "DEVELOPER_DIR" is not defined at /Applications/Xcode.app/Contents/SharedFrameworks/DVTFoundation.framework/Versions/A/Resources/symbolicatecrash line 69.</span><br></pre></td></tr></table></figure>
+
+<h5 id="执行结果"><a href="#执行结果" class="headerlink" title="执行结果"></a>执行结果</h5><p>再执行命令，在终端完成以后，在Crash文件夹中就会多出一个result.log文件，可以查看bug的崩溃信息。</p>
+<p><img src="/Users/mikasa/Desktop/image_mark/image-20201221184525739.png" alt="image-20201221184525739"></p>
+<h4 id="如何找回已发布到App-Store的App对应的dSYM文件？"><a href="#如何找回已发布到App-Store的App对应的dSYM文件？" class="headerlink" title="如何找回已发布到App Store的App对应的dSYM文件？"></a>如何找回已发布到App Store的App对应的dSYM文件？</h4><h5 id="通过Xcode找回"><a href="#通过Xcode找回" class="headerlink" title="通过Xcode找回"></a>通过Xcode找回</h5><ul>
+<li>打开 Xcode 顶部菜单栏 -&gt; Window -&gt; Organizer 窗口</li>
+<li>打开 Xcode 顶部菜单栏，选择 Archive 标签</li>
+<li>找到发布的归档包，右键点击对应归档包，选择Show in Finder操作</li>
+<li>右键选择定位到的归档文件，选择显示包内容操作</li>
+<li>选择dSYMs目录，目录内即为下载到的 dSYM 文件</li>
+</ul>
+<h5 id="通过iTunes-Connect找回"><a href="#通过iTunes-Connect找回" class="headerlink" title="通过iTunes Connect找回"></a>通过iTunes Connect找回</h5><ul>
+<li>登录<a href="https://itunesconnect.apple.com/" target="_blank" rel="noopener">iTunes Connect</a></li>
+<li>进入“我的App（My Apps）”的“活动（Activity）”页面</li>
+<li>在“所有构件版本（All Builds）”中选择某一个版本，点“下载dSYM（Download dSYM）”下载dSYM文件</li>
+</ul>
+<h5 id="通过mdfind工具找回"><a href="#通过mdfind工具找回" class="headerlink" title="通过mdfind工具找回"></a>通过mdfind工具找回</h5><ul>
+<li><p>查询到crash对应的UUID</p>
+</li>
+<li><p>然后在Mac的Shell中，用mdfind命令定位dSYM文件</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mdfind "com_apple_xcode_dsym_uuids == &lt;UUID&gt;"</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意，使用mdfind时，UUID需要格式转换（增加“-”）： 12345678-1234-1234-1234-xxxxxxxxxxxx</p>
+</blockquote>
+</li>
+</ul>
+<p>例如，要定位的dSYM的UUID为：f89c620b0d6f3422a9be1c84fc827111 则定位dSYM文件的命令如下:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mdfind "com_apple_xcode_dsym_uuids == F89C620B-0D6F-3422-A9BE-1C84FC827111"</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/12/21/%E6%B5%85%E8%B0%88iOS%E5%9B%BE%E7%89%87%E8%A7%A3%E5%8E%8B%E7%BC%A9%E4%BB%8E%E6%96%87%E4%BB%B6%E6%B8%B2%E6%9F%93%E5%88%B0%E5%B1%8F%E5%B9%95%E7%9A%84%E8%BF%87%E7%A8%8B/" rel="prev" title="浅谈iOS图片解压缩从文件渲染到屏幕的过程">
+      <i class="fa fa-chevron-left"></i> 浅谈iOS图片解压缩从文件渲染到屏幕的过程
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#获取Crash文件"><span class="nav-number">1.</span> <span class="nav-text">获取Crash文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#获取-ipa包的UUID"><span class="nav-number">2.</span> <span class="nav-text">获取.ipa包的UUID</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#查看Crash文件的UUID"><span class="nav-number">3.</span> <span class="nav-text">查看Crash文件的UUID</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#查看-dSYM文件的UUID"><span class="nav-number">4.</span> <span class="nav-text">查看.dSYM文件的UUID</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#symbolicatecrash"><span class="nav-number">5.</span> <span class="nav-text">symbolicatecrash</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#获取解析工具symbolicatecrash所在位置"><span class="nav-number">5.1.</span> <span class="nav-text">获取解析工具symbolicatecrash所在位置</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#执行命令"><span class="nav-number">5.2.</span> <span class="nav-text">执行命令</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#执行结果"><span class="nav-number">5.3.</span> <span class="nav-text">执行结果</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#如何找回已发布到App-Store的App对应的dSYM文件？"><span class="nav-number">6.</span> <span class="nav-text">如何找回已发布到App Store的App对应的dSYM文件？</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#通过Xcode找回"><span class="nav-number">6.1.</span> <span class="nav-text">通过Xcode找回</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#通过iTunes-Connect找回"><span class="nav-number">6.2.</span> <span class="nav-text">通过iTunes Connect找回</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#通过mdfind工具找回"><span class="nav-number">6.3.</span> <span class="nav-text">通过mdfind工具找回</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Doris AI</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Doris AI</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v7.7.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

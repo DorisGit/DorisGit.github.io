@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://dorisgit.github.io').hostname,
+    root: '/',
+    scheme: 'Mist',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="KVO概述 KVO全称是key value observing，俗称“键值监听&#x2F;观察”，是苹果提供的一套事件通知机制，允许一个对象观察&#x2F;监听另一个对象指定属性值的变化，当被观察对象属性值发生变化时，会触发KVO的监听方法来通知观察者，KVO时MVC应用程序中的各层之前进行通信的非常有用的技术。 KVO 和 NSNotification都是ios中观察者模式的一种实现 KVO可以监听单个属性的变化，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS——KVO相关总结">
+<meta property="og:url" content="https://dorisgit.github.io/2020/12/08/iOS%E2%80%94%E2%80%94KVO%E7%9B%B8%E5%85%B3%E6%80%BB%E7%BB%93/index.html">
+<meta property="og:site_name" content="泡泡茶壶">
+<meta property="og:description" content="KVO概述 KVO全称是key value observing，俗称“键值监听&#x2F;观察”，是苹果提供的一套事件通知机制，允许一个对象观察&#x2F;监听另一个对象指定属性值的变化，当被观察对象属性值发生变化时，会触发KVO的监听方法来通知观察者，KVO时MVC应用程序中的各层之前进行通信的非常有用的技术。 KVO 和 NSNotification都是ios中观察者模式的一种实现 KVO可以监听单个属性的变化，">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-12-08T12:26:57.000Z">
+<meta property="article:modified_time" content="2020-12-11T09:50:28.546Z">
+<meta property="article:author" content="Doris AI">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://dorisgit.github.io/2020/12/08/iOS%E2%80%94%E2%80%94KVO%E7%9B%B8%E5%85%B3%E6%80%BB%E7%BB%93/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>iOS——KVO相关总结 | 泡泡茶壶</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">泡泡茶壶</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="en">
+    <link itemprop="mainEntityOfPage" href="https://dorisgit.github.io/2020/12/08/iOS%E2%80%94%E2%80%94KVO%E7%9B%B8%E5%85%B3%E6%80%BB%E7%BB%93/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Doris AI">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="泡泡茶壶">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          iOS——KVO相关总结
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-12-08 20:26:57" itemprop="dateCreated datePublished" datetime="2020-12-08T20:26:57+08:00">2020-12-08</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-12-11 17:50:28" itemprop="dateModified" datetime="2020-12-11T17:50:28+08:00">2020-12-11</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="KVO概述"><a href="#KVO概述" class="headerlink" title="KVO概述"></a>KVO概述</h3><ul>
+<li>KVO全称是key value observing，俗称“键值监听/观察”，是苹果提供的一套事件通知机制，允许一个对象观察/监听另一个对象指定属性值的变化，当被观察对象属性值发生变化时，会触发KVO的监听方法来通知观察者，KVO时MVC应用程序中的各层之前进行通信的非常有用的技术。</li>
+<li>KVO 和 NSNotification都是ios中观察者模式的一种实现</li>
+<li>KVO可以监听单个属性的变化，也可以监听集合对象的变化，监听集合对象变化时，需要通过KVC的mutableValueForKey:等可变代理方法获得集合代理对象，并使用代理对象进行操作，当代理对象的内部对象发生变化时，会触发KVO的监听方法。集合对象包含NSArray 和 NSSet。</li>
+</ul>
+<h3 id="KVO的基本使用"><a href="#KVO的基本使用" class="headerlink" title="KVO的基本使用"></a>KVO的基本使用</h3><p>KVO使用步骤：添加/注册KVO监听、实现监听方法以接受属性变化通知、移除KVO监听</p>
+<ol>
+<li><p>调用方法给被观察对象添加观察者</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)addObserver:(<span class="built_in">NSObject</span> *)observer forKeyPath:(<span class="built_in">NSString</span> *)keyPath options:(<span class="built_in">NSKeyValueObservingOptions</span>)options context:(<span class="keyword">nullable</span> <span class="keyword">void</span> *)context;</span><br><span class="line"></span><br><span class="line"><span class="comment">// NSArray 添加</span></span><br><span class="line">- (<span class="keyword">void</span>)addObserver:(<span class="built_in">NSObject</span> *)observer toObjectsAtIndexes:(<span class="built_in">NSIndexSet</span> *)indexes forKeyPath:(<span class="built_in">NSString</span> *)keyPath options:(<span class="built_in">NSKeyValueObservingOptions</span>)options context:(<span class="keyword">nullable</span> <span class="keyword">void</span> *)context;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在观察者类中实现方法以接受属性变化的通知消息</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)observeValueForKeyPath:(<span class="keyword">nullable</span> <span class="built_in">NSString</span> *)keyPath ofObject:(<span class="keyword">nullable</span> <span class="keyword">id</span>)object change:(<span class="keyword">nullable</span> <span class="built_in">NSDictionary</span>&lt;<span class="built_in">NSKeyValueChangeKey</span>, <span class="keyword">id</span>&gt; *)change context:(<span class="keyword">nullable</span> <span class="keyword">void</span> *)context;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>当观察者不需要再监听时，调用方法将观察者移除。需要注意的是，至少在观察者销毁之前，进行移除，否则可能会导致Crash</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)removeObserver:(<span class="built_in">NSObject</span> *)observer forKeyPath:(<span class="built_in">NSString</span> *)keyPath context:(<span class="keyword">nullable</span> <span class="keyword">void</span> *)context API_AVAILABLE(macos(<span class="number">10.7</span>), ios(<span class="number">5.0</span>), watchos(<span class="number">2.0</span>), tvos(<span class="number">9.0</span>));</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)removeObserver:(<span class="built_in">NSObject</span> *)observer forKeyPath:(<span class="built_in">NSString</span> *)keyPath;</span><br><span class="line"></span><br><span class="line"><span class="comment">// NSArray 移除</span></span><br><span class="line">- (<span class="keyword">void</span>)removeObserver:(<span class="built_in">NSObject</span> *)observer fromObjectsAtIndexes:(<span class="built_in">NSIndexSet</span> *)indexes forKeyPath:(<span class="built_in">NSString</span> *)keyPath context:(<span class="keyword">nullable</span> <span class="keyword">void</span> *)context API_AVAILABLE(macos(<span class="number">10.7</span>), ios(<span class="number">5.0</span>), watchos(<span class="number">2.0</span>), tvos(<span class="number">9.0</span>));</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)removeObserver:(<span class="built_in">NSObject</span> *)observer fromObjectsAtIndexes:(<span class="built_in">NSIndexSet</span> *)indexes forKeyPath:(<span class="built_in">NSString</span> *)keyPath;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<h4 id="注册方法"><a href="#注册方法" class="headerlink" title="注册方法"></a>注册方法</h4><figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// 注册观察者</span></span><br><span class="line"><span class="comment">/// @param observer 观察者对象</span></span><br><span class="line"><span class="comment">/// @param keyPath 观察对象属性路径</span></span><br><span class="line"><span class="comment">/// @param options</span></span><br><span class="line"><span class="comment">///     NSKeyValueObservingOptionNew 观察新值</span></span><br><span class="line"><span class="comment">///     NSKeyValueObservingOptionOld 观察旧值</span></span><br><span class="line"><span class="comment">///     NSKeyValueObservingOptionInitial 观察初始值（如果想在注册观察者后立即收到一次通知，可以加入此值）</span></span><br><span class="line"><span class="comment">///     NSKeyValueObservingOptionPrior 分别在值改变前后触发方法（即一次修改有两次触发）</span></span><br><span class="line"><span class="comment">/// @param context  可以传入任意数据（任意类型的对象或者C指针），在监听方法中可以接收到这个数据，是KVO中的一种传值方式，</span></span><br><span class="line"><span class="comment">///                 如果传的是一个对象，必须在移除观察之前持有它的强引用，否则在监听方法中访问context就可能导致Crash</span></span><br><span class="line">- (<span class="keyword">void</span>)addObserver:(<span class="built_in">NSObject</span> *)observer forKeyPath:(<span class="built_in">NSString</span> *)keyPath options:(<span class="built_in">NSKeyValueObservingOptions</span>)options context:(<span class="keyword">nullable</span> <span class="keyword">void</span> *)context;</span><br></pre></td></tr></table></figure>
+
+<h4 id="监听方法"><a href="#监听方法" class="headerlink" title="监听方法"></a>监听方法</h4><p>如果对象被注册成为观察者，则该对象必须能响应一下监听方法，即该对象所属类中必须实现监听方法。当被观察对象属性发生改变时会调用监听方法，如果没有实现则会Crash。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// 监听方法</span></span><br><span class="line"><span class="comment">/// @param keyPath 观察对象属性路径</span></span><br><span class="line"><span class="comment">/// @param object 观察对象</span></span><br><span class="line"><span class="comment">/// @param change</span></span><br><span class="line"><span class="comment">/// 字典 NSDictionary&lt;NSKeyValueChangeKey, id&gt;，属性值更改的详细信息，根据注册方法中options参数传入的枚举来返回</span></span><br><span class="line"><span class="comment">/// key为 NSKeyValueChangeKey 枚举类型</span></span><br><span class="line"><span class="comment">/// &#123;</span></span><br><span class="line"><span class="comment">/// 1.NSKeyValueChangeKindKey：存储本次改变的信息（change字典中默认包含这个key）</span></span><br><span class="line"><span class="comment">/// &#123;</span></span><br><span class="line"><span class="comment">/// 对应枚举类型 NSKeyValueChange</span></span><br><span class="line"><span class="comment">///     typedef NS_ENUM(NSUInteger, NSKeyValueChange) &#123;</span></span><br><span class="line"><span class="comment">///         NSKeyValueChangeSetting     = 1,</span></span><br><span class="line"><span class="comment">///         NSKeyValueChangeInsertion   = 2,</span></span><br><span class="line"><span class="comment">///         NSKeyValueChangeRemoval     = 3,</span></span><br><span class="line"><span class="comment">///         NSKeyValueChangeReplacement = 4</span></span><br><span class="line"><span class="comment">///&#125;;</span></span><br><span class="line"><span class="comment">/// 如果是对被观察对象属性（包括集合）进行赋值操作，kind 字段的值为 NSKeyValueChangeSetting</span></span><br><span class="line"><span class="comment">/// 如果被观察的是集合对象，且进行的是（插入、删除、替换）操作，则会根据集合对象的操作方式来设置 kind 字段的值</span></span><br><span class="line"><span class="comment">/// 插入：NSKeyValueChangeInsertion</span></span><br><span class="line"><span class="comment">/// 删除：NSKeyValueChangeRemoval</span></span><br><span class="line"><span class="comment">/// 替换：NSKeyValueChangeReplacement</span></span><br><span class="line"></span><br><span class="line"><span class="comment">///&#125;</span></span><br><span class="line"><span class="comment">/// 2.NSKeyValueChangeNewKey：存储新值（如果options中传入NSKeyValueObservingOptionNew，change字典中就会包含这个key）</span></span><br><span class="line"><span class="comment">/// 3.NSKeyValueChangeOldKey：存储旧值（如果options中传入NSKeyValueObservingOptionOld，change字典中就会包含这个key）</span></span><br><span class="line"><span class="comment">/// 4.NSKeyValueChangeIndexesKey：如果被观察的是集合对象，且进行的是（插入、删除、替换）操作，则change字典中就会包含这个key，</span></span><br><span class="line"><span class="comment">/// 这个key的value是一个NSIndexSet对象，包含更改关系中的索引</span></span><br><span class="line"><span class="comment">/// 5.NSKeyValueChangeNotificationIsPriorKey：如果options中传入NSKeyValueObservingOptionPrior，则在改变前通知的change字典中会包含这个key。</span></span><br><span class="line"><span class="comment">/// 这个key对应的value是NSNumber包装的YES，我们可以这样来判断是不是在改变前的通知[change[NSKeyValueChangeNotificationIsPriorKey] boolValue] == YES]</span></span><br><span class="line"><span class="comment">/// @param context 注册方法中传入的context</span></span><br><span class="line">- (<span class="keyword">void</span>)observeValueForKeyPath:(<span class="built_in">NSString</span> *)keyPath ofObject:(<span class="keyword">id</span>)object change:(<span class="built_in">NSDictionary</span>&lt;<span class="built_in">NSKeyValueChangeKey</span>,<span class="keyword">id</span>&gt; *)change context:(<span class="keyword">void</span> *)context;</span><br></pre></td></tr></table></figure>
+
+<h4 id="移除方法"><a href="#移除方法" class="headerlink" title="移除方法"></a>移除方法</h4><p>在调用注册方法后，KVO不会对观察者进行强引用，所以需要注意观察者的生命周期，至少需要在观察者销毁之谦，调用移除监听方法，否则在观察者被释放后，再次触发KVO监听方法就会Crash。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// 移除观察者</span></span><br><span class="line"><span class="comment">/// @param observer 观察对象</span></span><br><span class="line"><span class="comment">/// @param keyPath 观察对象路径</span></span><br><span class="line"><span class="comment">/// @param context 注册传入的context</span></span><br><span class="line">- (<span class="keyword">void</span>)removeObserver:(<span class="built_in">NSObject</span> *)observer forKeyPath:(<span class="built_in">NSString</span> *)keyPath context:(<span class="keyword">void</span> *)context;</span><br></pre></td></tr></table></figure>
+
+<h4 id="举个🌰"><a href="#举个🌰" class="headerlink" title="举个🌰"></a>举个🌰</h4><figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)add_newKey_kvo &#123;</span><br><span class="line">    [<span class="keyword">self</span>.person addObserver:<span class="keyword">self</span> forKeyPath:<span class="string">@"name"</span> options:<span class="built_in">NSKeyValueObservingOptionNew</span> | <span class="built_in">NSKeyValueObservingOptionInitial</span> context:<span class="literal">nil</span>];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)observeValueForKeyPath:(<span class="built_in">NSString</span> *)keyPath ofObject:(<span class="keyword">id</span>)object change:(<span class="built_in">NSDictionary</span>&lt;<span class="built_in">NSKeyValueChangeKey</span>,<span class="keyword">id</span>&gt; *)change context:(<span class="keyword">void</span> *)context; &#123;</span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"%@--%@--%@--%@"</span>,keyPath,object,change,context);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>======Log======</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">15</span>:<span class="number">57</span>:<span class="number">49</span>] -[MMKVO observeValueForKeyPath:ofObject:change:context:] [第<span class="number">61</span>行] 💕 name--&lt;MMKVOPerson: <span class="number">0x600002a04100</span>&gt;--&#123;</span><br><span class="line">    kind = <span class="number">1</span>;</span><br><span class="line">    new = <span class="string">"&lt;null&gt;"</span>;</span><br><span class="line">&#125;--(null)</span><br><span class="line"></span><br><span class="line">[<span class="number">15</span>:<span class="number">57</span>:<span class="number">49</span>] -[MMKVO observeValueForKeyPath:ofObject:change:context:] [第<span class="number">61</span>行] 💕 name--&lt;MMKVOPerson: <span class="number">0x600002a04100</span>&gt;--&#123;</span><br><span class="line">    kind = <span class="number">1</span>;</span><br><span class="line">    new = <span class="number">123</span>;</span><br><span class="line">&#125;--(null)</span><br></pre></td></tr></table></figure>
+
+<h4 id="实际应用"><a href="#实际应用" class="headerlink" title="实际应用"></a>实际应用</h4><p>KVO主要用来做键值观察操作，想要一个值发生改变后通知另一个对象，则用KVO实现最为合适。</p>
+<p>View-Model-Controller之间数据传递</p>
+<h4 id="KVO触发监听方法的方式"><a href="#KVO触发监听方法的方式" class="headerlink" title="KVO触发监听方法的方式"></a>KVO触发监听方法的方式</h4><p>KVO触发分为手动触发和自动触发</p>
+<h5 id="自动触发"><a href="#自动触发" class="headerlink" title="自动触发"></a>自动触发</h5><ul>
+<li>如果是监听对象特定属性值的改变，通过以下方式改变属性值会触发KVO；<ol>
+<li>使用点语法</li>
+<li>使用setter方法</li>
+<li>使用KVC的setValue:ForKey:方法（key为<code>&lt;key&gt;</code>，<code>_&lt;key&gt;</code>不会触发）</li>
+<li>使用KVC的setValue:ForKeyPath:方法（key为<code>&lt;key&gt;</code>，<code>_&lt;key&gt;</code>不会触发）</li>
+</ol>
+</li>
+<li>如果是监听集合对象的改变，需要通过KVC的mutableArrayValueForKey:等方法获取代理对象，并使用代理对象进行操作，当代理对象的内部对象发生改变时，会触发KVO。集合对象包含NSArray 和 NSSet。</li>
+</ul>
+<h5 id="手动触发"><a href="#手动触发" class="headerlink" title="手动触发"></a>手动触发</h5><ul>
+<li><p>普通对象属性或是成员变量使用</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)willChangeValueForKey:(<span class="built_in">NSString</span> *)key;</span><br><span class="line">- (<span class="keyword">void</span>)didChangeValueForKey:(<span class="built_in">NSString</span> *)key;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>NSArray、NSSet对象使用</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)willChange:(<span class="built_in">NSKeyValueChange</span>)changeKind valuesAtIndexes:(<span class="built_in">NSIndexSet</span> *)indexes forKey:(<span class="built_in">NSString</span> *)key;</span><br><span class="line">- (<span class="keyword">void</span>)didChange:(<span class="built_in">NSKeyValueChange</span>)changeKind valuesAtIndexes:(<span class="built_in">NSIndexSet</span> *)indexes forKey:(<span class="built_in">NSString</span> *)key;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h3 id="KVO的进阶使用"><a href="#KVO的进阶使用" class="headerlink" title="KVO的进阶使用"></a>KVO的进阶使用</h3><h4 id="observationInfo属性"><a href="#observationInfo属性" class="headerlink" title="observationInfo属性"></a>observationInfo属性</h4><ul>
+<li><code>observationInfo</code>属性是<code>NSKeyValueObserving.h</code>文件中系统通过分类给<code>NSObject</code>添加的属性，所以所有继承于<code>NSObject</code>的对象都含有该属性；</li>
+<li>可以通过<code>observationInfo</code>属性查看被观察对象的全部观察信息，包括<code>observer</code>、<code>keyPath</code>、<code>options</code>、<code>context</code>等。</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">@property (nullable) void *observationInfo NS_RETURNS_INNER_POINTER;</span><br></pre></td></tr></table></figure>
+
+<h4 id="context的使用"><a href="#context的使用" class="headerlink" title="context的使用"></a>context的使用</h4><p>注册方法addObserver:forKey:options:context:中context可以传入任意数据，并且可以在监听方法中接收到这个数据。</p>
+<ul>
+<li><p>context左右：标签，可以更精确的确定被观察对象属性，用于继承、多监听；也可用于传值</p>
+<p>KVO只有一个监听回调方法<code>observeValueForKeyPath:ofObject:change:context:</code>，我们通常情况下可以在注册方法中指定context为NULL，并在监听方法中通过object 和 keyPath来判断触发KVO的来源</p>
+<p>但是如果存在继承的情况，子类和父类都对同一个属性进行了观察，当属性变化时候由谁来进行处理，通过context就能很好的解决这个问题，在注册方法中为context设置一个独立无二的值，然后在监听方法中对context进行校验即可</p>
+</li>
+<li><p>苹果推荐用法：用context来准确的缺点被观察对象属性，使用唯一命名的静态变量地址作为context的值。可以为整个类设置一个context，然后在监听方法中通过object 和 keypath来确定被观察属性，这样存在继承的情况就可以通过context来判断，也可以为每个被观察对象数量设置不同的context，这样使用context就能精确的确定被观察对象属性。</p>
+</li>
+</ul>
+<p>以SDWebImage源码为例：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">void</span> * SDMemoryCacheContext = &amp;SDMemoryCacheContext;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 注册监听</span></span><br><span class="line">[config addObserver:<span class="keyword">self</span> forKeyPath:<span class="built_in">NSStringFromSelector</span>(<span class="keyword">@selector</span>(maxMemoryCost)) options:<span class="number">0</span> context:SDMemoryCacheContext];</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)observeValueForKeyPath:(<span class="built_in">NSString</span> *)keyPath ofObject:(<span class="keyword">id</span>)object change:(<span class="built_in">NSDictionary</span>&lt;<span class="built_in">NSKeyValueChangeKey</span>,<span class="keyword">id</span>&gt; *)change context:(<span class="keyword">void</span> *)context &#123;</span><br><span class="line">    <span class="keyword">if</span> (context == SDMemoryCacheContext) &#123;</span><br><span class="line">        <span class="keyword">if</span> ([keyPath isEqualToString:<span class="built_in">NSStringFromSelector</span>(<span class="keyword">@selector</span>(maxMemoryCost))]) &#123;</span><br><span class="line">            <span class="keyword">self</span>.totalCostLimit = <span class="keyword">self</span>.config.maxMemoryCost;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> ([keyPath isEqualToString:<span class="built_in">NSStringFromSelector</span>(<span class="keyword">@selector</span>(maxMemoryCount))]) &#123;</span><br><span class="line">            <span class="keyword">self</span>.countLimit = <span class="keyword">self</span>.config.maxMemoryCount;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        [<span class="keyword">super</span> observeValueForKeyPath:keyPath ofObject:object change:change context:context];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>context优点：嵌套少，性能高，更安全、扩展性强</li>
+<li>context注意点：<ol>
+<li>如果传的是一个对象，必须在移除观察之前持有它的强引用，否则在监听方法中访问<code>context</code>就可能Crash</li>
+<li>空传NULL 而不应该传nil</li>
+</ol>
+</li>
+</ul>
+<p>直接出现Crash</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">MMKVOPerson *person = [MMKVOPerson new];</span><br><span class="line">person.name = <span class="string">@"person"</span>;</span><br><span class="line">[<span class="keyword">self</span>.person addObserver:<span class="keyword">self</span> forKeyPath:<span class="string">@"name"</span> options:<span class="built_in">NSKeyValueObservingOptionNew</span> | <span class="built_in">NSKeyValueObservingOptionInitial</span> context:(__bridge <span class="keyword">void</span> * _Nullable)(person)];</span><br><span class="line"></span><br><span class="line">Thread <span class="number">1</span>: EXC_BAD_ACCESS (code=<span class="number">1</span>, address=<span class="number">0x64b6f2e7498c</span>)</span><br></pre></td></tr></table></figure>
+
+<h4 id="KVO的自动触发控制"><a href="#KVO的自动触发控制" class="headerlink" title="KVO的自动触发控制"></a>KVO的自动触发控制</h4><p>通过在被观察对象的类中重写<code>automaticallyNotifiesObserversForKey:</code>方法来控制<code>KVO</code>的自动触发，通过控制，我们可以只让外界观察类中的某些属性的变化</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">+ (<span class="built_in">BOOL</span>)automaticallyNotifiesObserversForKey:(<span class="built_in">NSString</span> *)key &#123;</span><br><span class="line">    <span class="keyword">if</span> ([key isEqualToString:<span class="string">@"name"</span>]) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NO</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">return</span> [<span class="keyword">super</span> automaticallyNotifiesObserversForKey:key];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[<span class="number">20</span>:<span class="number">03</span>:<span class="number">19</span>] -[MMKVO observeValueForKeyPath:ofObject:change:context:] [第<span class="number">108</span>行] 💕 name--&lt;MMKVOPerson: <span class="number">0x600000e28dd0</span>&gt;--&#123;</span><br><span class="line">    kind = <span class="number">1</span>;</span><br><span class="line">    new = <span class="string">"&lt;null&gt;"</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是对于注册监听<code>option</code>包含的<code>NSKeyValueObservingOptionInitial</code>的观察对象，会在注册观察者后立即收到一次通知。</p>
+<p>也可以实现遵循命名规则为<code>+ (BOOL)automaticallyNotifiesObserversOf&lt;Key&gt;</code>的方法来单一控制属性的KVO自动触发，<code>&lt;key&gt;</code>为属性名（首字母大写）。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">+ (<span class="built_in">BOOL</span>)automaticallyNotifiesObserversOfName;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意：</p>
+<ul>
+<li>第一个方法的优先级高于第二个方法。如果实现了<code>automaticallyNotifiesObserversForKey:</code>方法，并对<code>&lt;key&gt;</code>做了处理，则系统不会再调用 <code>&lt;key&gt;</code>的<code>automaticallyNotifiesObserversOf&lt;Key&gt;</code></li>
+<li>options指定的<code>NSKeyValueObservingOptionInitial</code>触发的<code>KVO</code>通知，是无法被<code>automaticallyNotifiesObserversForKey:</code>阻止</li>
+</ul>
+</blockquote>
+<h4 id="KVO的手动触发"><a href="#KVO的手动触发" class="headerlink" title="KVO的手动触发"></a>KVO的手动触发</h4><h5 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h5><ul>
+<li>使用KVO监听成员变量值的改变；</li>
+<li>在某些需要控制监听过程的场景下：<ol>
+<li>为了尽量减少不必要的触发通知操作</li>
+<li>当多个更改同时具备的时候才调用属性改变的监听方法</li>
+</ol>
+</li>
+</ul>
+<h5 id="触发方式"><a href="#触发方式" class="headerlink" title="触发方式"></a>触发方式</h5><ul>
+<li>由于KVO的本质，重写setter方法来达到可以通知所有观察者对象的目的，所以只有通过setter方法或者KVC方法去修改属性变量值的时候，才会触发KVO，直接修改成员变量是不会触发KVO。</li>
+<li>当我们要使用KVO监听成员变量值改变的时候，可以通过在为成员变量赋值的前后手动调用willChangeValueForKey: 和 didChangeValueForKey:两个方法来手动触发KVO。</li>
+<li>NSKeyValueObservingOptionPrior（分别在值改变前后触发方法，即一次修改有两次触发），两次触发分别在willChangeValueForKey: 和 didChangeValueForKey:的时候进行。</li>
+<li>如果注册方法中options传入NSKeyValueObservingOptionPrior，那么可以通过值调用willChangeValueForKey:来触发改变前的那次KVO，可以用于在属性即将改变时做一些操作。</li>
+</ul>
+<h4 id="KVO新旧值相等时不触发"><a href="#KVO新旧值相等时不触发" class="headerlink" title="KVO新旧值相等时不触发"></a>KVO新旧值相等时不触发</h4><p>控制KVO监听的属性值修改前后相等时，不触发KVO的监听方法，可以结合自动触发和手动触发来实现。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">+ (<span class="built_in">BOOL</span>)automaticallyNotifiesObserversForKey:(<span class="built_in">NSString</span> *)key</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">BOOL</span> automatic = <span class="literal">YES</span>;</span><br><span class="line">    <span class="keyword">if</span> ([key isEqualToString:<span class="string">@"name"</span>]) &#123;</span><br><span class="line">        automatic = <span class="literal">NO</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        automatic = [<span class="keyword">super</span> automaticallyNotifiesObserversForKey:key];</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> automatic;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)setName:(<span class="built_in">NSString</span> *)name</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (![_name isEqualToString:name]) &#123;</span><br><span class="line">        [<span class="keyword">self</span> willChangeValueForKey:<span class="string">@"name"</span>];</span><br><span class="line">        _name = name;</span><br><span class="line">        [<span class="keyword">self</span> didChangeValueForKey:<span class="string">@"name"</span>];</span><br><span class="line">    &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="手动观察集合属性"><a href="#手动观察集合属性" class="headerlink" title="手动观察集合属性"></a>手动观察集合属性</h4><p>手动触发监听方法API（数组）</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)willChange:(<span class="built_in">NSKeyValueChange</span>)changeKind valuesAtIndexes:(<span class="built_in">NSIndexSet</span> *)indexes forKey:(<span class="built_in">NSString</span> *)key;</span><br><span class="line">- (<span class="keyword">void</span>)didChange:(<span class="built_in">NSKeyValueChange</span>)changeKind valuesAtIndexes:(<span class="built_in">NSIndexSet</span> *)indexes forKey:(<span class="built_in">NSString</span> *)key;</span><br></pre></td></tr></table></figure>
+
+<p>需要注意的是，根据<code>KVC</code>的<code>NSMutableArray</code>搜索模式：</p>
+<ul>
+<li>至少要实现一个插入和一个删除方法，都在不会触发<code>KVO</code><ol>
+<li>插入方法：<code>insertObject:in&lt;Key&gt;AtIndex:</code>或<code>insert&lt;Key&gt;:atIndexes:</code> </li>
+<li>删除方法：<code>removeObjectFrom&lt;Key&gt;AtIndex:</code>或<code>remove&lt;Key&gt;AtIndexes:</code></li>
+</ol>
+</li>
+<li>可以不实现替换方法，但是如果不实现替换方法，执行替换操作时，KVO会把它当成先删除后添加，即会触发两次<code>KVO</code>。第一次触发<code>KVO</code>中<code>change</code>字典的<code>old</code>键的值为替换前的元素，第二次触发的<code>KVO</code>中<code>change</code>字典的<code>new</code>键的值为替换后的元素，前提条件是注册方法中的<code>options</code>传入对于的枚举值。</li>
+<li>如果实现替换方法，则执行替换操作只会触发一次<code>KVO</code>，并且<code>change</code>字典会同时包含<code>new</code>和<code>old</code>，前提条件是注册方法中的<code>options</code>中传入了对于的枚举值。<ol>
+<li>替换方法：<code>replaceObjectIn&lt;Key&gt;AtIndex:withObject:</code>或<code>replace&lt;Key&gt;AtIndexes:with&lt;Key&gt;:</code></li>
+</ol>
+</li>
+<li>建议实现替换方法以提高性能</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">+ (BOOL)automaticallyNotifiesObserversForKey:(NSString *)key</span><br><span class="line">&#123;</span><br><span class="line">    BOOL automatic &#x3D; NO;</span><br><span class="line">    if ([key isEqualToString:@&quot;mArray&quot;]) &#123;</span><br><span class="line">        automatic &#x3D; NO;</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        automatic &#x3D; [super automaticallyNotifiesObserversForKey:key];</span><br><span class="line">    &#125;</span><br><span class="line">    return automatic;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (void)insertMArray:(NSArray *)array atIndexes:(NSIndexSet *)indexes</span><br><span class="line">&#123;</span><br><span class="line">    [self willChange:NSKeyValueChangeInsertion valuesAtIndexes:indexes forKey:@&quot;mArray&quot;];</span><br><span class="line">    [self.mArray insertObjects:array atIndexes:indexes];</span><br><span class="line">    [self didChange:NSKeyValueChangeInsertion valuesAtIndexes:indexes forKey:@&quot;mArray&quot;];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (void)removeMArrayAtIndexes:(NSIndexSet *)indexes</span><br><span class="line">&#123;</span><br><span class="line">    [self willChange:NSKeyValueChangeRemoval valuesAtIndexes:indexes forKey:@&quot;mArray&quot;];</span><br><span class="line">    [self.mArray removeObjectsAtIndexes:indexes];</span><br><span class="line">    [self didChange:NSKeyValueChangeRemoval valuesAtIndexes:indexes forKey:@&quot;mArray&quot;];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (void)replaceMArrayAtIndexes:(NSIndexSet *)indexes withMArray:(NSArray *)array</span><br><span class="line">&#123;</span><br><span class="line">    [self willChange:NSKeyValueChangeReplacement valuesAtIndexes:indexes forKey:@&quot;mArray&quot;];</span><br><span class="line">    [self.mArray replaceObjectsAtIndexes:indexes withObjects:array];</span><br><span class="line">    [self didChange:NSKeyValueChangeReplacement valuesAtIndexes:indexes forKey:@&quot;mArray&quot;];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="KVO的依赖观察"><a href="#KVO的依赖观察" class="headerlink" title="KVO的依赖观察"></a>KVO的依赖观察</h4><h5 id="一对一关系"><a href="#一对一关系" class="headerlink" title="一对一关系"></a>一对一关系</h5><p>有些情况下，一个属性的改变依赖于背的一个或多个属性的改变，也就是说当别的属性遍了，这个属性也会跟着改变。</p>
+<p>比如我们对<code>Download</code>类中的<code>downloadProgress</code>属性进行<code>KVO</code>监听，改属性的改变依赖于<code>writtenData</code> 和 <code>totalData</code>属性的改变。观察者监听了<code>downloadProgress</code>，当<code>writtenData</code> 和 <code>totalData</code>属性值发生改变时，观察者也应该被通知。</p>
+<ol>
+<li><p>重写<code>keyPathsForValuesAffectingValueForKey:</code>方法指明属性依赖于 <code>writtenData</code> 和 <code>totalData</code></p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">+ (<span class="built_in">NSSet</span>&lt;<span class="built_in">NSString</span> *&gt; *)keyPathsForValuesAffectingValueForKey:(<span class="built_in">NSString</span> *)key</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">NSSet</span> *keyPaths = [<span class="keyword">super</span> keyPathsForValuesAffectingValueForKey:key];</span><br><span class="line">    <span class="keyword">if</span> ([key isEqualToString:<span class="string">@"downloadProgress"</span>]) &#123;</span><br><span class="line">        <span class="built_in">NSArray</span> *affectingKeys = @[<span class="string">@"writtenData"</span>,<span class="string">@"totalData"</span>];</span><br><span class="line">        keyPaths = [keyPaths setByAddingObjectsFromArray:affectingKeys];</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> keyPaths;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>实现一个遵循命名规则为<code>keyPathsForValuesAffecting&lt;Key&gt;</code>的类方法，<code>&lt;key&gt;</code>是依赖于其他值的属性名（首字母大小）</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">+ (<span class="built_in">NSSet</span>&lt;<span class="built_in">NSString</span> *&gt; *)keyPathsForValuesAffectingDownloadProgress</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> [<span class="built_in">NSSet</span> setWithObjects:<span class="string">@"writtenData"</span>,<span class="string">@"totalData"</span>, <span class="literal">nil</span>];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<blockquote>
+<p>注意：以上两个方法可以同时存在，且都会调用，但是最终结果会以<code>keyPathsForValuesAffectingValueForKey:</code>为准。</p>
+</blockquote>
+<h5 id="一对多关系"><a href="#一对多关系" class="headerlink" title="一对多关系"></a>一对多关系</h5><p>以上方法在观察集合属性时就不管用了。例如，假如你有一个 Department 类，它有一个装有 Employee 类的实例对象的数组，Employee 类有 salary 属性。你希望 Department 类有一个 totalSalary 属性来计算所有员工的薪水，也就是在这个关系中 Department 的 totalSalary 依赖于所有 Employee 实例对象的 salary 属性。以下有两种方法可以解决这个问题。</p>
+<ol>
+<li><p>你可以用<code>KVO</code>将 parent（比如 Department ）作为所有 children（比如 Employee ）相关属性的观察者。你必须在把 child 添加或删除到 parent 时把 parent 作为 child 的观察者添加或删除。在<code>observeValueForKeyPath:ofObject:change:context:</code>方法中我们可以针对被依赖项的变更来更新依赖项的值：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#import <span class="meta-string">"Department.h"</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span> *totalSalaryContext = &amp;totalSalaryContext;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">@interface</span> <span class="title">Department</span> ()</span></span><br><span class="line"><span class="keyword">@property</span> (<span class="keyword">nonatomic</span>,<span class="keyword">strong</span>)<span class="built_in">NSArray</span>&lt;Employee *&gt; *employees;</span><br><span class="line"><span class="keyword">@property</span> (<span class="keyword">nonatomic</span>,<span class="keyword">strong</span>)<span class="built_in">NSNumber</span> *totalSalary;</span><br><span class="line"></span><br><span class="line"><span class="keyword">@end</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">@implementation</span> <span class="title">Department</span></span></span><br><span class="line"></span><br><span class="line">- (<span class="keyword">instancetype</span>)initWithEmployees:(<span class="built_in">NSArray</span> *)employees</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">self</span> = [<span class="keyword">super</span> init];</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">self</span>) &#123;</span><br><span class="line">        <span class="keyword">self</span>.employees = [employees <span class="keyword">copy</span>];</span><br><span class="line">        <span class="keyword">for</span> (Employee *em <span class="keyword">in</span> <span class="keyword">self</span>.employees) &#123;</span><br><span class="line">            [em addObserver:<span class="keyword">self</span> forKeyPath:<span class="string">@"salary"</span> options:<span class="built_in">NSKeyValueObservingOptionNew</span> context:totalSalaryContext];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">self</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)observeValueForKeyPath:(<span class="built_in">NSString</span> *)keyPath ofObject:(<span class="keyword">id</span>)object change:(<span class="built_in">NSDictionary</span> *)change context:(<span class="keyword">void</span> *)context &#123;</span><br><span class="line"> </span><br><span class="line">    <span class="keyword">if</span> (context == totalSalaryContext) &#123;</span><br><span class="line">        [<span class="keyword">self</span> setTotalSalary:[<span class="keyword">self</span> valueForKeyPath:<span class="string">@"employees.@sum.salary"</span>]];</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        [<span class="keyword">super</span> observeValueForKeyPath:keyPath ofObject:object change:change context:context];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">- (<span class="keyword">void</span>)setTotalSalary:(<span class="built_in">NSNumber</span> *)totalSalary</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (_totalSalary != totalSalary) &#123;</span><br><span class="line">        [<span class="keyword">self</span> willChangeValueForKey:<span class="string">@"totalSalary"</span>];</span><br><span class="line">        _totalSalary = totalSalary;</span><br><span class="line">        [<span class="keyword">self</span> didChangeValueForKey:<span class="string">@"totalSalary"</span>];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)dealloc</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">for</span> (Employee *em <span class="keyword">in</span> <span class="keyword">self</span>.employees) &#123;</span><br><span class="line">        [em removeObserver:<span class="keyword">self</span> forKeyPath:<span class="string">@"salary"</span> context:totalSalaryContext];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">@end</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用iOS中观察者模式的另外一种实现方式：通知（NSNotification）</p>
+</li>
+</ol>
+<h3 id="KVO的使用注意"><a href="#KVO的使用注意" class="headerlink" title="KVO的使用注意"></a>KVO的使用注意</h3><h4 id="移除观察者的注意点"><a href="#移除观察者的注意点" class="headerlink" title="移除观察者的注意点"></a>移除观察者的注意点</h4><ul>
+<li>在调用KVO注册方法后，KVO并不会对观察者进行强引用，所以需要注意观察者的生命周期。至少需要在观察者销毁之前，调用KVO移除方法移除观察者，否则如果观察者被释放后，再次触发KVO监听方法就会Crash。</li>
+<li>KVO的注册方法和移除方法应该是成对的，如果重复调用移除方法，就会抛出NSRangeException并导致Crash。</li>
+<li>苹果推荐的方式是，在观察者初始化期间（init 或 viewDidLoad的时候）注册为观察者，在释放（dealloc）时调用移除方法，这样可以保证他们是成对出现的，是一种比较理想的方式。</li>
+</ul>
+<h4 id="防止多次注册-和-移除相同的KVO"><a href="#防止多次注册-和-移除相同的KVO" class="headerlink" title="防止多次注册 和 移除相同的KVO"></a>防止多次注册 和 移除相同的KVO</h4><p>有时候我们难以避免多次注册 和 移除KVO，或者移除了一个未注册的观察者，从而产生可能会导致Crash的风险。</p>
+<h5 id="黑科技防止多次添加删除KVO出现的问题"><a href="#黑科技防止多次添加删除KVO出现的问题" class="headerlink" title="黑科技防止多次添加删除KVO出现的问题"></a>黑科技防止多次添加删除KVO出现的问题</h5><p>核心：利用runtime实现方法交换，进行拦截<code>add</code>  和 <code>remove</code> 进行操作。</p>
+<h6 id="方案一：利用-try-catch"><a href="#方案一：利用-try-catch" class="headerlink" title="方案一：利用@try @catch"></a>方案一：利用@try @catch</h6><p>利用@try @catch捕获异常，不让程序Crash，但是只能针对多次删除<code>KVO</code>的处理</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">@implementation</span> <span class="title">NSObject</span> (<span class="title">kvoRemove</span>)</span></span><br><span class="line"></span><br><span class="line">+ (<span class="keyword">void</span>)load &#123;</span><br><span class="line">    [<span class="keyword">self</span> swizzleInstanceMethod:<span class="keyword">@selector</span>(removeObserver:forKeyPath:) withSelector:<span class="keyword">@selector</span>(swizzle_removeObserver:forKeyPath:)];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)swizzle_removeObserver:(<span class="built_in">NSObject</span> *)observer forKeyPath:(<span class="built_in">NSString</span> *)keyPath &#123;</span><br><span class="line">    <span class="keyword">@try</span> &#123;</span><br><span class="line">        [<span class="keyword">self</span> swizzle_removeObserver:observer forKeyPath:keyPath];</span><br><span class="line">    &#125; <span class="keyword">@catch</span> (<span class="built_in">NSException</span> *exception) &#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">@end</span></span><br></pre></td></tr></table></figure>
+
+<h6 id="方案二：利用模型数组进行存储数据"><a href="#方案二：利用模型数组进行存储数据" class="headerlink" title="方案二：利用模型数组进行存储数据"></a>方案二：利用模型数组进行存储数据</h6><p>利用模型数据进行存储记录</p>
+<ul>
+<li>利用<code>runtime</code>，拦截监听对象 和 <code>keyPath</code></li>
+<li>利用模型存储执行<code>addObserver</code>对象 和 监听的<code>KeyPath</code></li>
+<li>进行存储校验，不存在于模型中的<code>addObserver</code>对象 和 监听的<code>KeyPath</code>，才进行<code>addObserver</code></li>
+<li><code>remove</code>的时候同样进行校验一下</li>
+</ul>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">@interface</span> <span class="title">NSKVOCache</span> : <span class="title">NSObject</span></span></span><br><span class="line"><span class="comment">/// arrayM</span></span><br><span class="line"><span class="keyword">@property</span> (<span class="keyword">nonatomic</span>, <span class="keyword">strong</span>) <span class="built_in">NSMutableDictionary</span>&lt;<span class="built_in">NSString</span> *,<span class="built_in">NSMutableArray</span> *&gt; *dictM;</span><br><span class="line"><span class="keyword">@end</span></span><br><span class="line"><span class="class"><span class="keyword">@implementation</span> <span class="title">NSKVOCache</span></span></span><br><span class="line"></span><br><span class="line">+ (<span class="keyword">instancetype</span>)shareInshance &#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="built_in">dispatch_once_t</span> onceToken;</span><br><span class="line">    <span class="keyword">static</span> <span class="built_in">NSKVOCache</span> *_instance;</span><br><span class="line">    <span class="built_in">dispatch_once</span>(&amp;onceToken, ^&#123;</span><br><span class="line">        _instance = [<span class="built_in">NSKVOCache</span> new];</span><br><span class="line">        _instance.dictM = [<span class="built_in">NSMutableDictionary</span> dictionary];</span><br><span class="line">    &#125;);</span><br><span class="line">    <span class="keyword">return</span> _instance;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">@end</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">@implementation</span> <span class="title">NSObject</span> (<span class="title">kvoRemove</span>)</span></span><br><span class="line"></span><br><span class="line">+ (<span class="keyword">void</span>)load &#123;</span><br><span class="line">    [<span class="keyword">self</span> swizzleInstanceMethod:<span class="keyword">@selector</span>(removeObserver:forKeyPath:)</span><br><span class="line">                   withSelector:<span class="keyword">@selector</span>(swizzle_removeObserver:forKeyPath:)];</span><br><span class="line">    </span><br><span class="line">    [<span class="keyword">self</span> swizzleInstanceMethod:<span class="keyword">@selector</span>(addObserver:forKeyPath:options:context:)</span><br><span class="line">                   withSelector:<span class="keyword">@selector</span>(swizzle_addObserver:forKeyPath:options:context:)];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)swizzle_removeObserver:(<span class="built_in">NSObject</span> *)observer forKeyPath:(<span class="built_in">NSString</span> *)keyPath &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="built_in">NSKVOCache</span> *kvo = [<span class="built_in">NSKVOCache</span> shareInshance];</span><br><span class="line">    <span class="built_in">NSMutableArray</span> *arrayM = kvo.dictM[keyPath];</span><br><span class="line">    <span class="keyword">if</span> (arrayM &amp;&amp; [arrayM containsObject:observer]) &#123;</span><br><span class="line">        [arrayM removeObject:observer];</span><br><span class="line">        [<span class="keyword">self</span> swizzle_removeObserver:observer forKeyPath:keyPath];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)swizzle_addObserver:(<span class="built_in">NSObject</span> *)observer forKeyPath:(<span class="built_in">NSString</span> *)keyPath options:(<span class="built_in">NSKeyValueObservingOptions</span>)options context:(<span class="keyword">void</span> *)context &#123;</span><br><span class="line">    <span class="built_in">NSKVOCache</span> *kvo = [<span class="built_in">NSKVOCache</span> shareInshance];</span><br><span class="line">    <span class="built_in">NSMutableArray</span> *arrayM = kvo.dictM[keyPath];</span><br><span class="line">    <span class="keyword">if</span> (!arrayM) &#123;</span><br><span class="line">        arrayM = [<span class="built_in">NSMutableArray</span> array];</span><br><span class="line">        [kvo.dictM setObject:arrayM forKey:keyPath];</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (![arrayM containsObject:observer]) &#123;</span><br><span class="line">        [arrayM addObject:observer];</span><br><span class="line">        [<span class="keyword">self</span> swizzle_addObserver:observer forKeyPath:keyPath options:options context:context];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">@end</span></span><br></pre></td></tr></table></figure>
+
+<h6 id="方案三：利用obserationInfo里私有属性"><a href="#方案三：利用obserationInfo里私有属性" class="headerlink" title="方案三：利用obserationInfo里私有属性"></a>方案三：利用<code>obserationInfo</code>里私有属性</h6><p><code>obserationInfo</code>属性包含属性的监听者，通知者，以及监听的<code>keyPath</code>，通过私有属性直接拿到当前对象所监听的<code>keyPath</code>，和<code>observer</code></p>
+<p>实现上和方案二基本一直，只不过可以通过<code>obserationInfo</code>充当我们前面的<code>NSKVOCache</code>的功能，进行校验</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 进行检索获取Key</span></span><br><span class="line">- (<span class="built_in">BOOL</span>)observerKeyPath:(<span class="built_in">NSString</span> *)key observer:(<span class="keyword">id</span> )observer</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">id</span> info = <span class="keyword">self</span>.observationInfo;</span><br><span class="line">    <span class="built_in">NSArray</span> *array = [info valueForKey:<span class="string">@"_observances"</span>];</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">id</span> objc <span class="keyword">in</span> array) &#123;</span><br><span class="line">        <span class="keyword">id</span> Properties = [objc valueForKeyPath:<span class="string">@"_property"</span>];</span><br><span class="line">        <span class="keyword">id</span> newObserver = [objc valueForKeyPath:<span class="string">@"_observer"</span>];</span><br><span class="line">        </span><br><span class="line">        <span class="built_in">NSString</span> *keyPath = [Properties valueForKeyPath:<span class="string">@"_keyPath"</span>];</span><br><span class="line">        <span class="keyword">if</span> ([key isEqualToString:keyPath] &amp;&amp; [newObserver isEqual:observer]) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">YES</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">NO</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="其他注意点"><a href="#其他注意点" class="headerlink" title="其他注意点"></a>其他注意点</h4><ul>
+<li>如果对象被注册成为观察者，则该对象必须实现能响应的监听方法，当对象的属性发生改变时就会调用监听方法。如果没有实现，会直接Crash。</li>
+<li><code>keyPath</code>传入的是一个字符串，为避免写错，可以使用<code>NSStringFromSelector(@selector(propertyName))</code>，将属性的getter方法SEL转换成字符串，在编译阶段对keyPath进行校验</li>
+<li>如果注册方法中<code>context</code>传的是一个对象，必须在移除观察之前持有它的强引用，否则监听方法中访问<code>context</code>就可能导致Crash。</li>
+<li>如果监听集合对象的改变，需要通过<code>KVC</code>的<code>mutableArrayValueForKey:</code>等方法获得代理对象，并使用代理对象进行操作，当代理对象的内部对象发生改变时，会触发<code>KVO</code>。如果直接对集合对象进行操作改变，不会触发<code>KVO</code>。</li>
+<li>在观察者类的监听方法中，应该为无法识别的<code>context</code> 或者 <code>object</code>、keyPath调用父类的<code>[super observeValueForKeyPath:keyPath ofObject:object change:change context:context];</code></li>
+</ul>
+<h3 id="KVO实现原理"><a href="#KVO实现原理" class="headerlink" title="KVO实现原理"></a>KVO实现原理</h3><h4 id="isa-swizzling"><a href="#isa-swizzling" class="headerlink" title="isa-swizzling"></a>isa-swizzling</h4><p>苹果使用了isa混写技术（isa-swizzling）来实现KVO，当我们调用addObserver:forKeyPath:options:context:方法为instance添加KVO监听后，系统会在运行时利于Runtime API动态创建instance对象所属类的子类NSKVONotifying_A，并且让instance对象的isa指针指向这个全新的子类，并重写原类的被观察属性的setter方法来达到可以通知所有观察者对象的目的。</p>
+<ul>
+<li>这个子类指向它自己的meta-class对象，而不是原类的meta-class对象</li>
+<li>重写的setter方法的SEL对象的IMP为Foundation中的<code>_NSSetXXXValueAndNotify</code>函数（XXX为key的数据类型），当被观察的属性发生变化时，会调用_NSSetXXXValueAndNotify函数，这个函数中调用：<ol>
+<li>willChangeValueForKey:方法</li>
+<li>父类原来的setter方法</li>
+<li>didChangeValueForKey:方法（内部触发observer监听方法observeValueForKeyPath:ofObject:change:context:）</li>
+</ol>
+</li>
+<li>在移除KVO监听后，被观察对象的isa会指回原类A，但是NSKVONotifying_A类并没有销毁，还是保存在内存中</li>
+</ul>
+<h4 id="KVO动态生成的子类都有哪些方法"><a href="#KVO动态生成的子类都有哪些方法" class="headerlink" title="KVO动态生成的子类都有哪些方法"></a>KVO动态生成的子类都有哪些方法</h4><p>NSKVONotifying_A除了重写setter方法，还是重写了class、dealloc、_isKVO这三个方法（可以使用runtime的class_copyMethodList函数打印方法列表获取），其中：</p>
+<ul>
+<li>Class:class 方法返回的是父类的class对象，目的是为了不让外界知道KVO动态生成类的存在；</li>
+<li>Dealloc:释放KVO使用过程产生的东西</li>
+<li>_isKVO:用来标示它是一个KVO的类</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/11/17/iOS%E2%80%94%E2%80%94KVC%E7%9B%B8%E5%85%B3%E6%80%BB%E7%BB%93/" rel="prev" title="iOS——KVC相关总结">
+      <i class="fa fa-chevron-left"></i> iOS——KVC相关总结
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/12/14/%E6%9B%B4%E6%94%B9AppStore%E5%85%AC%E5%8F%B8%E4%BF%A1%E6%81%AF/" rel="next" title="更改AppStore公司信息">
+      更改AppStore公司信息 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#KVO概述"><span class="nav-number">1.</span> <span class="nav-text">KVO概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#KVO的基本使用"><span class="nav-number">2.</span> <span class="nav-text">KVO的基本使用</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#注册方法"><span class="nav-number">2.1.</span> <span class="nav-text">注册方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#监听方法"><span class="nav-number">2.2.</span> <span class="nav-text">监听方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#移除方法"><span class="nav-number">2.3.</span> <span class="nav-text">移除方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#举个🌰"><span class="nav-number">2.4.</span> <span class="nav-text">举个🌰</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#实际应用"><span class="nav-number">2.5.</span> <span class="nav-text">实际应用</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#KVO触发监听方法的方式"><span class="nav-number">2.6.</span> <span class="nav-text">KVO触发监听方法的方式</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#自动触发"><span class="nav-number">2.6.1.</span> <span class="nav-text">自动触发</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#手动触发"><span class="nav-number">2.6.2.</span> <span class="nav-text">手动触发</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#KVO的进阶使用"><span class="nav-number">3.</span> <span class="nav-text">KVO的进阶使用</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#observationInfo属性"><span class="nav-number">3.1.</span> <span class="nav-text">observationInfo属性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#context的使用"><span class="nav-number">3.2.</span> <span class="nav-text">context的使用</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#KVO的自动触发控制"><span class="nav-number">3.3.</span> <span class="nav-text">KVO的自动触发控制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#KVO的手动触发"><span class="nav-number">3.4.</span> <span class="nav-text">KVO的手动触发</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#使用场景"><span class="nav-number">3.4.1.</span> <span class="nav-text">使用场景</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#触发方式"><span class="nav-number">3.4.2.</span> <span class="nav-text">触发方式</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#KVO新旧值相等时不触发"><span class="nav-number">3.5.</span> <span class="nav-text">KVO新旧值相等时不触发</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#手动观察集合属性"><span class="nav-number">3.6.</span> <span class="nav-text">手动观察集合属性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#KVO的依赖观察"><span class="nav-number">3.7.</span> <span class="nav-text">KVO的依赖观察</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#一对一关系"><span class="nav-number">3.7.1.</span> <span class="nav-text">一对一关系</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#一对多关系"><span class="nav-number">3.7.2.</span> <span class="nav-text">一对多关系</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#KVO的使用注意"><span class="nav-number">4.</span> <span class="nav-text">KVO的使用注意</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#移除观察者的注意点"><span class="nav-number">4.1.</span> <span class="nav-text">移除观察者的注意点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#防止多次注册-和-移除相同的KVO"><span class="nav-number">4.2.</span> <span class="nav-text">防止多次注册 和 移除相同的KVO</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#黑科技防止多次添加删除KVO出现的问题"><span class="nav-number">4.2.1.</span> <span class="nav-text">黑科技防止多次添加删除KVO出现的问题</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#方案一：利用-try-catch"><span class="nav-number">4.2.1.1.</span> <span class="nav-text">方案一：利用@try @catch</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#方案二：利用模型数组进行存储数据"><span class="nav-number">4.2.1.2.</span> <span class="nav-text">方案二：利用模型数组进行存储数据</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#方案三：利用obserationInfo里私有属性"><span class="nav-number">4.2.1.3.</span> <span class="nav-text">方案三：利用obserationInfo里私有属性</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#其他注意点"><span class="nav-number">4.3.</span> <span class="nav-text">其他注意点</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#KVO实现原理"><span class="nav-number">5.</span> <span class="nav-text">KVO实现原理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#isa-swizzling"><span class="nav-number">5.1.</span> <span class="nav-text">isa-swizzling</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#KVO动态生成的子类都有哪些方法"><span class="nav-number">5.2.</span> <span class="nav-text">KVO动态生成的子类都有哪些方法</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Doris AI</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Doris AI</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v7.7.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

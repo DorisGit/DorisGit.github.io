@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://dorisgit.github.io').hostname,
+    root: '/',
+    scheme: 'Mist',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="为什么需要HTTPSHTTP有什么问题？  使用明文（没有加密）通信，内容可能会被窃听 不会验证通信双方的身份，通信方的身份可能遭遇伪装 无法证明报文的完整性，报文有可能会被篡改  由于HTTP在设计的时候都没有考虑到这些，所以基于HTTP的应用都可能存在安全问题 数据没有加密基于TCP&#x2F;IP的网络，网络各处都会存在被窃听的风险，如果用HTTP协议进行通信，HTTP本身没有加密的功能，所有无法做到">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Http与Https">
+<meta property="og:url" content="https://dorisgit.github.io/2020/05/30/Http%E4%B8%8EHttps/index.html">
+<meta property="og:site_name" content="泡泡茶壶">
+<meta property="og:description" content="为什么需要HTTPSHTTP有什么问题？  使用明文（没有加密）通信，内容可能会被窃听 不会验证通信双方的身份，通信方的身份可能遭遇伪装 无法证明报文的完整性，报文有可能会被篡改  由于HTTP在设计的时候都没有考虑到这些，所以基于HTTP的应用都可能存在安全问题 数据没有加密基于TCP&#x2F;IP的网络，网络各处都会存在被窃听的风险，如果用HTTP协议进行通信，HTTP本身没有加密的功能，所有无法做到">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://img.halfrost.com/Blog/ArticleImage/95_11_.png">
+<meta property="article:published_time" content="2020-05-29T17:14:06.000Z">
+<meta property="article:modified_time" content="2020-06-05T11:48:37.913Z">
+<meta property="article:author" content="Doris AI">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img.halfrost.com/Blog/ArticleImage/95_11_.png">
+
+<link rel="canonical" href="https://dorisgit.github.io/2020/05/30/Http%E4%B8%8EHttps/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Http与Https | 泡泡茶壶</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">泡泡茶壶</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="en">
+    <link itemprop="mainEntityOfPage" href="https://dorisgit.github.io/2020/05/30/Http%E4%B8%8EHttps/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Doris AI">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="泡泡茶壶">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Http与Https
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-05-30 01:14:06" itemprop="dateCreated datePublished" datetime="2020-05-30T01:14:06+08:00">2020-05-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-06-05 19:48:37" itemprop="dateModified" datetime="2020-06-05T19:48:37+08:00">2020-06-05</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="为什么需要HTTPS"><a href="#为什么需要HTTPS" class="headerlink" title="为什么需要HTTPS"></a>为什么需要HTTPS</h2><p>HTTP有什么问题？</p>
+<ol>
+<li>使用明文（没有加密）通信，内容可能会被窃听</li>
+<li>不会验证通信双方的身份，通信方的身份可能遭遇伪装</li>
+<li>无法证明报文的完整性，报文有可能会被篡改</li>
+</ol>
+<p>由于HTTP在设计的时候都没有考虑到这些，所以基于HTTP的应用都可能存在安全问题</p>
+<h4 id="数据没有加密"><a href="#数据没有加密" class="headerlink" title="数据没有加密"></a>数据没有加密</h4><p>基于TCP/IP的网络，网络各处都会存在被窃听的风险，如果用HTTP协议进行通信，HTTP本身没有加密的功能，所有无法做到对通信整体（使用HTTP协议通讯的请求和响应内容）进行加密，HTTP报文采用明文传输。</p>
+<p>即使使用加密内容进行通信，也能被窃听到内容，只不过拿到的是密文，而且HTTP头部是没有加密的，头部信息也会导致信息不安全。</p>
+<p>要解决HTTP的3的安全问题，第一步就是先进行加密通信，于是在传输层增加了一层SSL（Secure Sockets Layer安全套机接层）/TLS（Transport Layer Security安全层传输协议）来加密HTTP的通信内容</p>
+<p>HTTPS并不是新的协议，而是HTTP先和SSL/TLS通信，再由SSL/TLS和TCP通信，也就是说HTTPS使用隧道进行通信。</p>
+<h4 id="无法验证对方身份"><a href="#无法验证对方身份" class="headerlink" title="无法验证对方身份"></a>无法验证对方身份</h4><p>基于TCP的HTTP虽然可以保证数据能完整的传输给对方，但是无法验证对方的身份。HTTP也由于协议的灵活性，应用的非常广泛。通信双方无需验证身份，服务器只要接收到能识别的请求，就会返回一个响应，一个request就会有一个response。由于不确认对方，就会导致一些隐患：</p>
+<ol>
+<li>服务器无法验证请求来自于谁，是否是合法的客户端</li>
+<li>客户端收到响应，无法验证是否来自合法的服务器</li>
+<li>无法阻止海量请求下的Dos拒绝攻击（Denial of Service,拒绝服务攻击）</li>
+</ol>
+<h4 id="无法防止数据被篡改"><a href="#无法防止数据被篡改" class="headerlink" title="无法防止数据被篡改"></a>无法防止数据被篡改</h4><p>HTTP协议是无法保证数据的完整性的，这里的完整性值得是信息的准确度，若无法证明信息的完整行，也就是意味着无法判断信息的准确性。</p>
+<p>客户端和服务端对于收到的请求和响应，都只能无条件的接受，HTTP也无妨知道请求或响应过程中数据是否被篡改了，例如中间人攻击（Main-in-the-Middle attack,MITM）</p>
+<p>HTTP也有验证报文完整性的方法，但是不是很可靠。比如利用MD5和SHA-1等散列值校验的方法用来确认文件的数字签名（MD5和SHA-1低位数的已经不再安全，会遭到碰撞攻击）</p>
+<p>在下载i服务的web网站也会提供PGP（Pertty Good Privacy,完美隐私）创建的数字签名及MD5算法生成的散列值。PGP用来证明创建文件的数字签名，MD5是由单向函数生成的散列值。在HTTP协议下，浏览器是无法知晓数据是否被篡改了，还是需要用户自己查看。如果PGP和MD5在传输钱就被篡改了，用户拿到以后验证发现是一致的，这种情况下也没法保证数据的完整正确性</p>
+<p>跳过TLS，HTTPS不仅能保证密文传输，重要的是还可以验证对方身份，保证报文传输的完整性，完全解决了HTTP上的三大安全问题。</p>
+<h2 id="部署HTTPS的好处"><a href="#部署HTTPS的好处" class="headerlink" title="部署HTTPS的好处"></a>部署HTTPS的好处</h2><h4 id="使用HTTP-2获得更高的性能"><a href="#使用HTTP-2获得更高的性能" class="headerlink" title="使用HTTP/2获得更高的性能"></a>使用HTTP/2获得更高的性能</h4><p>内容交付和网络托管服务提供商正在开始推广HTTP/2。在Velocity的一次会议上，Load Impact和Mozilla报告说，互联网用户可以通过HTTP/2优化比HTTP/1.1上的网站性能要好50-70%。但是想用HTTP/2的性能优势，必须先部署HTTPS，这个规定也是对HTTPS的一个推广。</p>
+<h4 id="提高SEO排名"><a href="#提高SEO排名" class="headerlink" title="提高SEO排名"></a>提高SEO排名</h4><p>谷歌在2014年宣布，支持HTTPS的网站会有排名靠前的较大比重</p>
+<h4 id="更好的推荐数据"><a href="#更好的推荐数据" class="headerlink" title="更好的推荐数据"></a>更好的推荐数据</h4><p>如果采用的谷歌的Analytics库，他目前是强制允许在HTTPS上的，如果还是使用HTTP，会犹豫Analytics不会获取HTTP网站的Referral信息而导致数据不准确</p>
+<h4 id="更高的安全性"><a href="#更高的安全性" class="headerlink" title="更高的安全性"></a>更高的安全性</h4><p>主流浏览器都会针对HTTPS网站增加小绿锁标志，没有小绿锁的网站，给用户的第一印象不是很安全</p>
+<h4 id="提高网站的信任和信誉"><a href="#提高网站的信任和信誉" class="headerlink" title="提高网站的信任和信誉"></a>提高网站的信任和信誉</h4><p>在Chrome62版本后，如果网页上有输入框，没有HTTPS的网页一律视为不安全</p>
+<h4 id="HTML5新特性"><a href="#HTML5新特性" class="headerlink" title="HTML5新特性"></a>HTML5新特性</h4><p>在Chrome 50版本后，地理位置，音频视频接口必须要求运行在HTTPS上，目的是能保证数据传输安全</p>
+<h4 id="iOS-ATS要求"><a href="#iOS-ATS要求" class="headerlink" title="iOS ATS要求"></a>iOS ATS要求</h4><p>苹果为了推广HTTPS，在WWDC2017上也宣布新的App必须要开启ATS（App Transport Security）安全特性</p>
+<h2 id="HTTPS中的密码"><a href="#HTTPS中的密码" class="headerlink" title="HTTPS中的密码"></a>HTTPS中的密码</h2><h4 id="对称密钥加密"><a href="#对称密钥加密" class="headerlink" title="对称密钥加密"></a>对称密钥加密</h4><p>对称密钥加密（Symmetric-Key Encryption），加密的加密和解密使用同一密钥。</p>
+<ul>
+<li>优点：运算速度快</li>
+<li>缺点：密钥容易被获取</li>
+</ul>
+<h4 id="公开密钥加密"><a href="#公开密钥加密" class="headerlink" title="公开密钥加密"></a>公开密钥加密</h4><p>公开密钥加密（Public-key Encryption）,也称为非对称密钥加密，使用一对密钥用于加密和解密，分别为公开密钥和私有密钥。公开密钥所有人都可以获得，通信发送发获得接收方的公开密钥之后，就可以使用公开密钥进行加密，接收方收到通信内容后使用私有密钥进行解密。</p>
+<ul>
+<li>优点：更为安全</li>
+<li>缺点：运算速度慢</li>
+</ul>
+<h4 id="HTTPS采用的加密方式"><a href="#HTTPS采用的加密方式" class="headerlink" title="HTTPS采用的加密方式"></a>HTTPS采用的加密方式</h4><p>HTTPS采用混合的加密机制，使用公开密钥加密用于传输对称密钥，之后使用对称密钥加密进行通信。</p>
+<ul>
+<li>客户端请求连接，服务端生成公钥和私钥</li>
+<li>使用公开加密方式传输公钥，同时生成一个Session Key传输给客户端</li>
+<li>客户端使用公钥对Session Key进行对称加密，传输给服务端</li>
+<li>服务端通过私钥进行解密</li>
+</ul>
+<h4 id="认证"><a href="#认证" class="headerlink" title="认证"></a>认证</h4><p>HTTPS通过使用证书来对通信双方进行认证</p>
+<p>数字证书认证机构（CA，Certificate Authority）是客户端与服务端双方都可信赖的第三方机构。服务器的运营人员向CA提出公开密钥申请，CA在判明提出申请者的身份后，会对已申请的公开密钥做数字签名，然后分配这个已签名的公开密钥，并将公开密钥放入公开证书后绑定在一起。</p>
+<p>进行HTTPS通信时，服务器会将证书发送给客户端，客户端获取其中的公开密钥后，先进行验证，如果验证通过，就可以开始通信了。具体的证书内容，可查看<a href="https://github.com/halfrost/Halfrost-Field/blob/master/contents/Protocol/HTTPS-digital-certificate.md" target="_blank" rel="noopener">《随处可见的公钥证书》</a></p>
+<p>使用openSSL这套开源程序，每个人都可以构建一套属于自己的认证机构，从而给自己颁发服务器证书。浏览器在访问该服务器时，会显示“无法确认连接安全性”或“该网站的安全证书存在问题”等警告信息。</p>
+<h4 id="完整性"><a href="#完整性" class="headerlink" title="完整性"></a>完整性</h4><p>SSL/TLS提供内容摘要功能来验证完整性。</p>
+<h2 id="HTTPS中的SSL-TLS协议"><a href="#HTTPS中的SSL-TLS协议" class="headerlink" title="HTTPS中的SSL/TLS协议"></a>HTTPS中的SSL/TLS协议</h2><table>
+<thead>
+<tr>
+<th></th>
+<th>HTTP</th>
+<th>HTTPS</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>应用层</td>
+<td>HTTP</td>
+<td>HTTP</td>
+</tr>
+<tr>
+<td>安全层</td>
+<td></td>
+<td>SSL/TLS</td>
+</tr>
+<tr>
+<td>传输层</td>
+<td>TCP</td>
+<td>TCP</td>
+</tr>
+<tr>
+<td>网络层</td>
+<td>IP</td>
+<td>IP</td>
+</tr>
+<tr>
+<td>数据链路层</td>
+<td>网络接口</td>
+<td>网络接口</td>
+</tr>
+</tbody></table>
+<p>能让HTTP安全的就是其中的安全层，也就是其背后的TLS协议。它源于九十年代中期在Netscape上开发称为安全套接字层（SSL）层协议，到20世纪90年代末，Netscape将SSL移交给IETF，IETF将其重命名为TLS，并从此成为该协议的管理者。许多人仍将web加密称作SSL，即使绝大多数服务已经切换为仅支持TLS。</p>
+<p>SSL/TLS位于应用层和传输层TCP协议的中间，TLS粗略划分可以分为两层：</p>
+<ul>
+<li>靠近应用层的握手协议TLS Handshaking Protocol</li>
+<li>靠近TCP的记录层协议TLS Record Protocol</li>
+</ul>
+<p>TLS握手协议可细分为5个子协议：</p>
+<ul>
+<li>Change_cipher_spec：密码切换协议</li>
+<li>alert：警告协议</li>
+<li>handshake：握手协议</li>
+<li>Application_data：应用数据协议</li>
+<li>Heartbeat：心跳协议</li>
+</ul>
+<img src="https://img.halfrost.com/Blog/ArticleImage/95_11_.png" alt="img" style="zoom:30%;" />
+
+<h4 id="1、TLS记录层协议"><a href="#1、TLS记录层协议" class="headerlink" title="1、TLS记录层协议"></a>1、TLS记录层协议</h4><p>记录层将上层的信息库分段为TLSPlaintext记录，TLSPlaintext中包含2^14字节或更少子节块数据。根据底层ContentType的不同，消息的边界的处理方式不同，TLS1.3中的规则比TLS1.2中强制执行的规则更加严格。</p>
+<p>握手消息可以合并为单个TLSPlaintext记录，或者在几个记录中分段，前提是：</p>
+<ul>
+<li>握手消息不得与其他记录类型交错。也就是说，如果握手消息被分为两个或多个记录，则他们之间不能有任务其他记录</li>
+<li>握手消息绝不能跨越密钥更改，实现方必须验证密钥更改之前的所有消息是否与记录边界对其；如果没有，你们他们必须用“unexperted_message”alert消息终止连接。因为ClientHello，EndOfEarlyData,ServerHello,Finished和KeyUpdate消息可以在密钥更改之前立即发生，所以实现方必须将这些消息与记录边界对齐。</li>
+</ul>
+<p>实现方绝不能发生握手类型的零长度片段，即使这些片段包含填充</p>
+<p>另外Alert消息禁止在记录之间进行分段，并且多条alert消息不得合并为单个TLSPlaintext记录。换句话说，具有alert类型的记录必须只包含一条消息。</p>
+<p>应用数据消息包含对TLS不透明的数据。应用数据消息应该始终受到保护，可以发生应用数据的零长度片段，因为他们可能作为流量分析对策使用。应用数据片段可以拆分为多个记录，也可以合并为一个记录。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">  ContentType type;</span><br><span class="line">  ProtocolVersion legacy_record_version;</span><br><span class="line">  uint16 length;</span><br><span class="line">  opaque fragment[TLSPlaintext.length];</span><br><span class="line">&#125; TLSPlaintext;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>type</p>
+<p>用户处理TLS握手层的高级协议。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">enum &#123;</span><br><span class="line">          invalid(0),</span><br><span class="line">          change_cipher_spec(20),</span><br><span class="line">          alert(21),</span><br><span class="line">          handshake(22),</span><br><span class="line">          application_data(23),</span><br><span class="line">          heartbeat(24),  &#x2F;* RFC 6520 *&#x2F;</span><br><span class="line">          (255)</span><br><span class="line">      &#125; ContentType;</span><br></pre></td></tr></table></figure>
+
+<p>ContentType是对握手协议的封装，消息头类型和握手层子协议编号的对应关系如下：</p>
+<table>
+<thead>
+<tr>
+<th>消息头类型</th>
+<th>ContentType</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>invalid</td>
+<td>0x00</td>
+</tr>
+<tr>
+<td>change_cipher_spec</td>
+<td>0x14</td>
+</tr>
+<tr>
+<td>alert</td>
+<td>0x15</td>
+</tr>
+<tr>
+<td>handshake</td>
+<td>0x16</td>
+</tr>
+<tr>
+<td>application_data</td>
+<td>0x17</td>
+</tr>
+<tr>
+<td>heartbeat</td>
+<td>0x18</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>legacy_record_version</p>
+<p>除初始化ClientHello之外的TLS1.3实现生成的所有记录（即，在HelloRetryRequest之后未生成的记录），必须将其设置为0x0303,其中处于兼容性目的，他也可以是0x0301。该字段在TLS1.3中已经弃用，必须忽略它。在某些情况下，以前版本的TLS将在此字段中使用其他值。</p>
+<table>
+<thead>
+<tr>
+<th>协议版本</th>
+<th>Version</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>TLS1.3</td>
+<td>0x0304</td>
+</tr>
+<tr>
+<td>TLS 1.2</td>
+<td>0x0303</td>
+</tr>
+<tr>
+<td>TLS 1.1</td>
+<td>0x0302</td>
+</tr>
+<tr>
+<td>TLS 1.0</td>
+<td>0x0301</td>
+</tr>
+<tr>
+<td>SSL 3.0</td>
+<td>0x0300</td>
+</tr>
+</tbody></table>
+</li>
+<li><p>Length</p>
+<p>TLSPlaintext.frament的长度（以字节为单位）。长度不超过2^14字节。接收超过此长度的记录的端点必须使用”record_overflow”alert 消息终止连接</p>
+</li>
+<li><p>fragment</p>
+<p>正在传输的数据，此字段的值是透明的，它被视为一个独立的块，由类型字段指定的更高级别协议处理</p>
+</li>
+</ul>
+<p>当尚未使用密码保护时，TLSPlaintext结构是直接写入传输线路中。一旦记录保护开始，TLSPlaintext记录将受到密码保护。请注意，应用数据不得写入未受保护的连接中。所以在握手成功之前，是不能发送应用数据的。</p>
+<p>TLS记录层协议在整个TLS协议中的定位如下：</p>
+<ul>
+<li>封装处理TLS上层（握手层）中的平行子协议（TLS1.3中是5个子协议，TLS1.2及更老的版本是4个子协议），加上消息头，打包往下传递给TCP处理</li>
+<li>对应用数据进行密码保护，对其他子协议只是简单封装（不加密）</li>
+</ul>
+<h4 id="2、密码切换协议（Change-cipher-spec）"><a href="#2、密码切换协议（Change-cipher-spec）" class="headerlink" title="2、密码切换协议（Change_cipher_spec）"></a>2、密码切换协议（Change_cipher_spec）</h4><p>Change_cipher_spec协议，是TLS记录层对应用是否进行加密的分割线，客户端或服务端一旦收到对端发来的CSS协议，就表明接下来传输数据过程中可以对应用数据协议进行加密了。</p>
+<p>TLS记录层在处理上层5个协议（密码切换协议、警告协议、握手协议、心跳协议、应用数据协议）的时候，TLS不同版本对不同协议的加密情况不同，具体情况如下：</p>
+<table>
+<thead>
+<tr>
+<th align="left">协议版本</th>
+<th>密码切换协议</th>
+<th>警告协议</th>
+<th>握手协议</th>
+<th>心跳协议</th>
+<th>应用数据协议</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">TLS 1.3</td>
+<td>无</td>
+<td>根据连接状态不同进行加密，即一部分会密码</td>
+<td>一部分加密</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+<tr>
+<td align="left">TLS 1.2</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>无</td>
+<td>✅</td>
+</tr>
+</tbody></table>
+<p>协议数据结构如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">	<span class="keyword">enum</span> &#123;change_cipher_spec(<span class="number">1</span>), (<span class="number">255</span>)&#125; type</span><br><span class="line">&#125; ChangeCipherSpec</span><br></pre></td></tr></table></figure>
+
+<h4 id="3、警告协议（alert）"><a href="#3、警告协议（alert）" class="headerlink" title="3、警告协议（alert）"></a>3、警告协议（alert）</h4><p>TLS提供alert内容类型用来表示关闭信息和错误。与其他信息一样，alert消息也会根据当前连接状态进行加密。在TLS 1.3中，错误的严重性隐含在正在发送的警报类型中，并且可以安全地忽略“level”字段。“close_notify”alert用户表示连接从一个方向开始有序的关闭。收到这样的警报后，TLS实现方应该表明程序的数据结束。</p>
+<p>收到错误警告后，TLS实现方应该向应用程序表示出现了错误，并且不允许在连接上发送或接收任何其他数据。</p>
+<p>协议数据结构如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">enum&#123;warning(1),fatal(2), (255)&#125; AlertLevel;</span><br><span class="line">struct &#123;</span><br><span class="line">	AlertLevel level;</span><br><span class="line">	AlertDescription description;</span><br><span class="line">&#125;Alert;</span><br></pre></td></tr></table></figure>
+
+<p>TLS 1.3和TLS 1.2在这个协议上的改动很小，只是新增了几个枚举类型。</p>
+<p>TLS 1.2的所有警告信息：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">enum</span> &#123;</span><br><span class="line">	close_notify(<span class="number">0</span>),</span><br><span class="line">	unexpected_message(<span class="number">10</span>),</span><br><span class="line">	bad_record_mac(<span class="number">20</span>),</span><br><span class="line">	decryption_failed_RESERVED(<span class="number">21</span>),</span><br><span class="line">	record_overflow(<span class="number">22</span>),</span><br><span class="line">	decompression_failure(<span class="number">30</span>),</span><br><span class="line">	handshake_failure(<span class="number">40</span>),</span><br><span class="line">	no_certificate_RESERVED(<span class="number">41</span>),</span><br><span class="line">	bad_certificate(<span class="number">42</span>),</span><br><span class="line">	unsupported_certificate(<span class="number">43</span>),</span><br><span class="line">	certificate_revoked(<span class="number">44</span>),</span><br><span class="line">	certificate_unknow(<span class="number">46</span>),</span><br><span class="line">	illegal_paramter(<span class="number">47</span>),</span><br><span class="line">	unknow_ca(<span class="number">48</span>),</span><br><span class="line">	access_denied(<span class="number">49</span>),</span><br><span class="line">	decode_error(<span class="number">50</span>),</span><br><span class="line">	decrypt_error(<span class="number">51</span>),</span><br><span class="line">	export_restriction_RESERVED(<span class="number">60</span>),</span><br><span class="line">	protocol_version(<span class="number">70</span>),</span><br><span class="line">	internal_error(<span class="number">80</span>),</span><br><span class="line">	user_canceled(<span class="number">90</span>),</span><br><span class="line">	no_renegotiation(<span class="number">100</span>),</span><br><span class="line">	unsupported_extension(<span class="number">110</span>),</span><br><span class="line">	(<span class="number">255</span>)</span><br><span class="line">&#125;AlertDescription;</span><br></pre></td></tr></table></figure>
+
+<p>TLS 1.3 在TLS 1.2基础上新增了9个警告描述信息：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">inapporopriate_fallback(<span class="number">86</span>),</span><br><span class="line">missing_extension(<span class="number">109</span>),</span><br><span class="line">certificate_unobtainable_RESERVED(<span class="number">111</span>),</span><br><span class="line">bad_certificate_status_response(<span class="number">113</span>),</span><br><span class="line">bad_certificate_hash_value_RESERVED(<span class="number">114</span>),</span><br><span class="line">unkonwn_psk_identity(<span class="number">115</span>),</span><br><span class="line">centificate_required(<span class="number">116</span>),</span><br><span class="line">no_application_protocol(<span class="number">120</span>),</span><br></pre></td></tr></table></figure>
+
+<h4 id="4、握手协议（handshake）"><a href="#4、握手协议（handshake）" class="headerlink" title="4、握手协议（handshake）"></a>4、握手协议（handshake）</h4><p>握手协议是整个TLS协议簇中最核心的协议，HTTPS能保证安全也是因为它的功劳。</p>
+<p>握手协议由多个子消息构成，服务端和客户端第一次完成握手需要2-RTT。</p>
+<p>握手协议的目的是为了双方协商出密码块，这个密码块会交给TLS记录层进行密钥加密，也就是说握手协议达成的“共识”（密码块）就是整个TLS和HTTPS安全的基础。</p>
+<p>握手协议在TLS1.2 和 TLS1.3中发生了很大的变化。TLS1.3的0-RTT是一个全新的概念。两个版本在密钥协商上，密码套件选择上都有很大的不同。</p>
+<p>TLS 1.2协议数据结构如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">enum &#123;</span><br><span class="line">	hello_request(0),</span><br><span class="line">	client_hello(1),</span><br><span class="line">	server_hello(2),</span><br><span class="line">	certificate(11),</span><br><span class="line">	server_key_exchange(12),</span><br><span class="line">	certificate_request(13),</span><br><span class="line">	server_hello_done(14),</span><br><span class="line">	certificate_verify(15),</span><br><span class="line">	client_key_exchange(16),</span><br><span class="line">	finished(20),</span><br><span class="line">	(255)</span><br><span class="line">&#125;HandshakeType;</span><br><span class="line"></span><br><span class="line">struct &#123;</span><br><span class="line">	HandshakeType msg_type;</span><br><span class="line">	unit24 length;</span><br><span class="line">	select(HandshakeType) &#123;</span><br><span class="line">		case hello_request:	HelloRequest;</span><br><span class="line">		case client_hello:	ClientHello;</span><br><span class="line">		case server_hello:	ServerHello;</span><br><span class="line">		case certificate:		Certificate;</span><br><span class="line">		case server_key_exchange:	ServerKeyExchange;</span><br><span class="line">		case certificate_request:	CertifiCateRequest;</span><br><span class="line">		case server_hello_done:		ServerHelloDone;</span><br><span class="line">		case certificate_request:	CertificateRequest;</span><br><span class="line">		case client_key_exchange:	ClientKeyExchange;</span><br><span class="line">		case finished:						Finished;</span><br><span class="line">	&#125; body;</span><br><span class="line">&#125;Handshake;</span><br></pre></td></tr></table></figure>
+
+<p>TSL 1.3协议数据结构如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">enum &#123;</span><br><span class="line">	hello_request_RESERVERD(0);</span><br><span class="line">	client_hello(1),</span><br><span class="line">	server_hello(2),</span><br><span class="line">	hello_verify_request_RESERVED(3),</span><br><span class="line">	new_session_ticket(4),</span><br><span class="line">	end_of_early_data(5),</span><br><span class="line">	hello_retry_request_RESERVED(6),</span><br><span class="line">	encrypted_extensions(8),</span><br><span class="line">	certificate(11),</span><br><span class="line">	server_key_exchange_RESERVED(14),</span><br><span class="line">	certifycate_verify(15),</span><br><span class="line">	client_key_exchange_RESERVED(16),</span><br><span class="line">	finished(20),</span><br><span class="line">	certificate_url_RESERVED(21),</span><br><span class="line">	ceritificate_status_RESERVED(22),</span><br><span class="line">	supplemental_data_RESERVED(23),</span><br><span class="line">	key_update(24),</span><br><span class="line">	message_hash(254),</span><br><span class="line">	(255)</span><br><span class="line">&#125;HandshakeType;</span><br><span class="line"></span><br><span class="line">struct &#123;</span><br><span class="line">	HandshakeType msg_type;</span><br><span class="line">	unit24 length;</span><br><span class="line">	select(HandshakeType) &#123;</span><br><span class="line">		case client_hello:	ClientHello;</span><br><span class="line">    case server_hello:	ServerHello;</span><br><span class="line">    case end_of_early_data:	EndOfEarlyData;</span><br><span class="line">    case encrypted_extensions:	EncryptedExtensions;</span><br><span class="line">    case certificate_request:		CertificateRequest;</span><br><span class="line">    case certificate:						Certificate;</span><br><span class="line">    case certificate_verify:		CertificateVerify;</span><br><span class="line">    case finished:							Finished;</span><br><span class="line">    case new_session_ticket:		NewSessionTicket;</span><br><span class="line">    case key_update:						KeyUpdate</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="5、应用数据协议（application-data）"><a href="#5、应用数据协议（application-data）" class="headerlink" title="5、应用数据协议（application_data）"></a>5、应用数据协议（application_data）</h4><p>应用数据洗衣就是TLS上层的各种协议，TLS主要保护的数据就是应用数据协议的数据。</p>
+<p>TLS记录层灰根据加密模式不同在应用数据的末尾加上MAC校验数据。</p>
+<h4 id="6、TLS心跳协议（heartbeat）"><a href="#6、TLS心跳协议（heartbeat）" class="headerlink" title="6、TLS心跳协议（heartbeat）"></a>6、TLS心跳协议（heartbeat）</h4><p>TLS 1.3新增协议。</p>
+<p>协议数据结构如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">enum &#123;</span><br><span class="line">	</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/05/16/RunLoop/" rel="prev" title="RunLoop">
+      <i class="fa fa-chevron-left"></i> RunLoop
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/08/28/ios-%E6%A3%80%E6%B5%8B%E6%97%A0%E7%94%A8%E7%B1%BB%E3%80%81%E6%96%B9%E6%B3%95/" rel="next" title="ios 检测无用类、方法">
+      ios 检测无用类、方法 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#为什么需要HTTPS"><span class="nav-number">1.</span> <span class="nav-text">为什么需要HTTPS</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#数据没有加密"><span class="nav-number">1.0.1.</span> <span class="nav-text">数据没有加密</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#无法验证对方身份"><span class="nav-number">1.0.2.</span> <span class="nav-text">无法验证对方身份</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#无法防止数据被篡改"><span class="nav-number">1.0.3.</span> <span class="nav-text">无法防止数据被篡改</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#部署HTTPS的好处"><span class="nav-number">2.</span> <span class="nav-text">部署HTTPS的好处</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#使用HTTP-2获得更高的性能"><span class="nav-number">2.0.1.</span> <span class="nav-text">使用HTTP&#x2F;2获得更高的性能</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#提高SEO排名"><span class="nav-number">2.0.2.</span> <span class="nav-text">提高SEO排名</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#更好的推荐数据"><span class="nav-number">2.0.3.</span> <span class="nav-text">更好的推荐数据</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#更高的安全性"><span class="nav-number">2.0.4.</span> <span class="nav-text">更高的安全性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#提高网站的信任和信誉"><span class="nav-number">2.0.5.</span> <span class="nav-text">提高网站的信任和信誉</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#HTML5新特性"><span class="nav-number">2.0.6.</span> <span class="nav-text">HTML5新特性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#iOS-ATS要求"><span class="nav-number">2.0.7.</span> <span class="nav-text">iOS ATS要求</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTPS中的密码"><span class="nav-number">3.</span> <span class="nav-text">HTTPS中的密码</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#对称密钥加密"><span class="nav-number">3.0.1.</span> <span class="nav-text">对称密钥加密</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#公开密钥加密"><span class="nav-number">3.0.2.</span> <span class="nav-text">公开密钥加密</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#HTTPS采用的加密方式"><span class="nav-number">3.0.3.</span> <span class="nav-text">HTTPS采用的加密方式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#认证"><span class="nav-number">3.0.4.</span> <span class="nav-text">认证</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#完整性"><span class="nav-number">3.0.5.</span> <span class="nav-text">完整性</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTPS中的SSL-TLS协议"><span class="nav-number">4.</span> <span class="nav-text">HTTPS中的SSL&#x2F;TLS协议</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1、TLS记录层协议"><span class="nav-number">4.0.1.</span> <span class="nav-text">1、TLS记录层协议</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2、密码切换协议（Change-cipher-spec）"><span class="nav-number">4.0.2.</span> <span class="nav-text">2、密码切换协议（Change_cipher_spec）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3、警告协议（alert）"><span class="nav-number">4.0.3.</span> <span class="nav-text">3、警告协议（alert）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4、握手协议（handshake）"><span class="nav-number">4.0.4.</span> <span class="nav-text">4、握手协议（handshake）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5、应用数据协议（application-data）"><span class="nav-number">4.0.5.</span> <span class="nav-text">5、应用数据协议（application_data）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6、TLS心跳协议（heartbeat）"><span class="nav-number">4.0.6.</span> <span class="nav-text">6、TLS心跳协议（heartbeat）</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Doris AI</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Doris AI</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v7.7.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

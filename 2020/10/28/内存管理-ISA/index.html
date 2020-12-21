@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://dorisgit.github.io').hostname,
+    root: '/',
+    scheme: 'Mist',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="ISAISA结构体定义oc对象的本质其实是就是结构体，类也是对象，每个对象都有isa指针，对象的isa指针指向该对象所属的类，类对象的isa指针指向的是当前类的元类对象。 ARM64位架构之前，isa只是一个指针，arm64之后，isa是一个联合体&#x2F;共用体(union)，这是苹果对于isa的优化，结合位域的概念以及位运算的方式来存储更多类相关的信息，简单来说isa指针通过一个叫ISA_MASK的值">
+<meta property="og:type" content="article">
+<meta property="og:title" content="内存管理-ISA &amp; Weak底层">
+<meta property="og:url" content="https://dorisgit.github.io/2020/10/28/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86-ISA/index.html">
+<meta property="og:site_name" content="泡泡茶壶">
+<meta property="og:description" content="ISAISA结构体定义oc对象的本质其实是就是结构体，类也是对象，每个对象都有isa指针，对象的isa指针指向该对象所属的类，类对象的isa指针指向的是当前类的元类对象。 ARM64位架构之前，isa只是一个指针，arm64之后，isa是一个联合体&#x2F;共用体(union)，这是苹果对于isa的优化，结合位域的概念以及位运算的方式来存储更多类相关的信息，简单来说isa指针通过一个叫ISA_MASK的值">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/23_8.png">
+<meta property="article:published_time" content="2020-10-28T09:33:31.000Z">
+<meta property="article:modified_time" content="2020-10-29T15:01:09.584Z">
+<meta property="article:author" content="Doris AI">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/23_8.png">
+
+<link rel="canonical" href="https://dorisgit.github.io/2020/10/28/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86-ISA/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>内存管理-ISA & Weak底层 | 泡泡茶壶</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">泡泡茶壶</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="en">
+    <link itemprop="mainEntityOfPage" href="https://dorisgit.github.io/2020/10/28/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86-ISA/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Doris AI">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="泡泡茶壶">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          内存管理-ISA & Weak底层
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-10-28 17:33:31" itemprop="dateCreated datePublished" datetime="2020-10-28T17:33:31+08:00">2020-10-28</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-10-29 23:01:09" itemprop="dateModified" datetime="2020-10-29T23:01:09+08:00">2020-10-29</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="ISA"><a href="#ISA" class="headerlink" title="ISA"></a>ISA</h3><h4 id="ISA结构体定义"><a href="#ISA结构体定义" class="headerlink" title="ISA结构体定义"></a>ISA结构体定义</h4><p>oc对象的本质其实是就是结构体，类也是对象，每个对象都有isa指针，对象的isa指针指向该对象所属的类，类对象的<code>isa</code>指针指向的是当前类的元类对象。</p>
+<p>ARM64位架构之前，<code>isa</code>只是一个指针，<code>arm64</code>之后，<code>isa</code>是一个联合体/共用体(union)，这是苹果对于isa的优化，结合位域的概念以及位运算的方式来存储更多类相关的信息，简单来说isa指针通过一个叫ISA_MASK的值进行二进制&amp;运算，得到真实的<code>class/meta-class</code>对象的地址。</p>
+<p><code>arm64</code>架构之前，isa指针直接指向当前类<code>objc_class</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F;&#x2F; An opaque type that represents an Objective-C class.</span><br><span class="line">typedef struct objc_class *Class;</span><br><span class="line">&#x2F;&#x2F;&#x2F; Represents an instance of a class.</span><br><span class="line">struct objc_object &#123;</span><br><span class="line">    Class _Nonnull isa  OBJC_ISA_AVAILABILITY;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p><code>arm64</code>之后，<code>isa</code>不再是一个普通的<code>isa</code>指针，也是<code>isa_t</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">struct objc_object &#123;</span><br><span class="line">private:</span><br><span class="line">    isa_t isa;</span><br><span class="line">    &#x2F;&#x2F; ISA() assumes this is NOT a tagged pointer object</span><br><span class="line">    Class ISA();</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; getIsa() allows this to be a tagged pointer object</span><br><span class="line">    Class getIsa();</span><br><span class="line">    ……</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>进一步根据<code>isa_t</code></p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">union</span> isa_t &#123;</span><br><span class="line">    isa_t() &#123; &#125;</span><br><span class="line">    isa_t(uintptr_t value) : bits(value) &#123; &#125;</span><br><span class="line"></span><br><span class="line">    Class cls;</span><br><span class="line">    uintptr_t bits;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> defined(ISA_BITFIELD)</span></span><br><span class="line">    <span class="keyword">struct</span> &#123;</span><br><span class="line">        ISA_BITFIELD;  <span class="comment">// defined in isa.h</span></span><br><span class="line">      <span class="comment">// 截取arm64架构下定义</span></span><br><span class="line"><span class="meta">#   <span class="meta-keyword">define</span> ISA_MASK        0x0000000ffffffff8ULL</span></span><br><span class="line"><span class="meta">#   <span class="meta-keyword">define</span> ISA_MAGIC_MASK  0x000003f000000001ULL</span></span><br><span class="line"><span class="meta">#   <span class="meta-keyword">define</span> ISA_MAGIC_VALUE 0x000001a000000001ULL</span></span><br><span class="line"><span class="meta">#   <span class="meta-keyword">define</span> ISA_BITFIELD                                                      \</span></span><br><span class="line">      uintptr_t nonpointer        : <span class="number">1</span>;                                       \</span><br><span class="line">      uintptr_t has_assoc         : <span class="number">1</span>;                                       \</span><br><span class="line">      uintptr_t has_cxx_dtor      : <span class="number">1</span>;                                       \</span><br><span class="line">      uintptr_t shiftcls          : <span class="number">33</span>; <span class="comment">/*MACH_VM_MAX_ADDRESS 0x1000000000*/</span> \</span><br><span class="line">      uintptr_t magic             : <span class="number">6</span>;                                       \</span><br><span class="line">      uintptr_t weakly_referenced : <span class="number">1</span>;                                       \</span><br><span class="line">      uintptr_t deallocating      : <span class="number">1</span>;                                       \</span><br><span class="line">      uintptr_t has_sidetable_rc  : <span class="number">1</span>;                                       \</span><br><span class="line">      uintptr_t extra_rc          : <span class="number">19</span></span><br><span class="line"><span class="meta">#   <span class="meta-keyword">define</span> RC_ONE   (1ULL&lt;&lt;45)</span></span><br><span class="line"><span class="meta">#   <span class="meta-keyword">define</span> RC_HALF  (1ULL&lt;&lt;18)</span></span><br><span class="line">    &#125;;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>通过源码发现isa_t是一个union联合体，union看上去跟struct差不多，只是命名不同，但是union的定义是它使得几个不同类型的变量共占一段内存（互相覆盖），每次只有一个能使用，而struct的成员则具备独立的内存空间，在使用时互不影响。</p>
+<p>举个例子，假设A类里面声明一个union</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">union</span> x &#123;</span><br><span class="line">  <span class="keyword">char</span> *name;</span><br><span class="line">  <span class="keyword">int</span> age;</span><br><span class="line">  <span class="keyword">bool</span> isRich;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如上定义后，系统会为union x分配8个字节的内存空间，因为指针占8位，int占4位，bool占1位，该union的内存大小由其内部占最大自己的成员类型决定，因为后续操作是需要互相覆盖的。</p>
+<p>在看Struct的定义，假设B类中声明了一个Struct</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">x</span> &#123;</span></span><br><span class="line">  <span class="keyword">char</span> *name;</span><br><span class="line">  <span class="keyword">int</span> age;</span><br><span class="line">  <span class="keyword">bool</span> isRich;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如上定义后，系统会为这个struct x分配16个字节的内存空间，各成员所占内存跟上述大小一致，各自有独立对应的内存空间，不过这里由于需要内存对齐，导致结构体的内存大小不再是8bit</p>
+<p>接着回到上述结构体的内容</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line"><span class="meta">#   <span class="meta-keyword">define</span> ISA_MASK        0x0000000ffffffff8ULL</span></span><br><span class="line"><span class="meta">#   <span class="meta-keyword">define</span> ISA_MAGIC_MASK  0x000003f000000001ULL</span></span><br><span class="line"><span class="meta">#   <span class="meta-keyword">define</span> ISA_MAGIC_VALUE 0x000001a000000001ULL</span></span><br><span class="line"><span class="meta">#   <span class="meta-keyword">define</span> ISA_BITFIELD                                                      \</span></span><br><span class="line">      <span class="keyword">uintptr_t</span> nonpointer        : <span class="number">1</span>;                                       \</span><br><span class="line">      <span class="keyword">uintptr_t</span> has_assoc         : <span class="number">1</span>;                                       \</span><br><span class="line">      <span class="keyword">uintptr_t</span> has_cxx_dtor      : <span class="number">1</span>;                                       \</span><br><span class="line">      <span class="keyword">uintptr_t</span> shiftcls          : <span class="number">33</span>; <span class="comment">/*MACH_VM_MAX_ADDRESS 0x1000000000*/</span> \</span><br><span class="line">      <span class="keyword">uintptr_t</span> magic             : <span class="number">6</span>;                                       \</span><br><span class="line">      <span class="keyword">uintptr_t</span> weakly_referenced : <span class="number">1</span>;                                       \</span><br><span class="line">      <span class="keyword">uintptr_t</span> deallocating      : <span class="number">1</span>;                                       \</span><br><span class="line">      <span class="keyword">uintptr_t</span> has_sidetable_rc  : <span class="number">1</span>;                                       \</span><br><span class="line">      <span class="keyword">uintptr_t</span> extra_rc          : <span class="number">19</span></span><br><span class="line"><span class="meta">#   <span class="meta-keyword">define</span> RC_ONE   (1ULL&lt;&lt;45)</span></span><br><span class="line"><span class="meta">#   <span class="meta-keyword">define</span> RC_HALF  (1ULL&lt;&lt;18)</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>每个成员后面都会有一个:x ,其实这个:x就是位域的应用，简单来说，有的信息他所需要的内存不足以填满一个字节的空间，比如开关状态这样的信息，其实只需要一个二进制空间即可存储，这样就达到了节约内存的目的。（<strong>位域概念是C语言里面的一种数据结构，将一个字节中的二进位划分为多个不同的区域，每个区域具备几个位数，每个域给定一个域名，允许程序中按域名进行操作，这样可以把几个不同的对象用一个字节的二进制位域来表示</strong>）</p>
+<ul>
+<li>nonpointer——0:代表普通指针，存储class/meta-class对象的内存地址；1:代表优化过，使用位域存储更多信息</li>
+<li>has_assoc—— 是否设置过关联对象，如果没有，释放时会更快</li>
+<li>has_cxx_dtor——是否有c++的析构函数，如果没有，释放时会更快</li>
+<li>shiftcls——这个部分存储的是真正的class/meta-class对象的内存地址，因此要通过isa &amp; ISA_MASK才能取出这里的33的值，得到对象真正的地址</li>
+<li>magic——用于在调试的时候分辨对象是否完成了初始化</li>
+<li>weakly_referenced——是否倍弱引用的指针指向过，如果没有，释放时会更快</li>
+<li>deallocating——是否对象正在被释放</li>
+<li>has_sidetable_rc——引用计数器是否过大无法存储在isa中，如果是，这里就是1，引用计数就会被存储在一个叫SideTable的散列表中</li>
+<li>extra_rc——里面存储的值是引用计数的值（retainCount-1），如果这19位不够存储，has_sidetable_rc就会变为1</li>
+</ul>
+<p><img src="/Users/mikasa/Desktop/image_mark/23_8.png" alt="23_8"></p>
+<h4 id="ISA初始化"><a href="#ISA初始化" class="headerlink" title="ISA初始化"></a>ISA初始化</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">inline</span> <span class="keyword">void</span> </span><br><span class="line">objc_object::initIsa(Class cls)</span><br><span class="line">&#123;</span><br><span class="line">    initIsa(cls, <span class="literal">false</span>, <span class="literal">false</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">inline</span> <span class="keyword">void</span> </span><br><span class="line">objc_object::initClassIsa(Class cls)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (DisableNonpointerIsa  ||  cls-&gt;instancesRequireRawIsa()) &#123;</span><br><span class="line">        initIsa(cls, <span class="literal">false</span><span class="comment">/*not nonpointer*/</span>, <span class="literal">false</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        initIsa(cls, <span class="literal">true</span><span class="comment">/*nonpointer*/</span>, <span class="literal">false</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">inline</span> <span class="keyword">void</span></span><br><span class="line">objc_object::initProtocolIsa(Class cls)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> initClassIsa(cls);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">inline</span> <span class="keyword">void</span> </span><br><span class="line">objc_object::initInstanceIsa(Class cls, <span class="keyword">bool</span> hasCxxDtor)</span><br><span class="line">&#123;</span><br><span class="line">    assert(!cls-&gt;instancesRequireRawIsa());</span><br><span class="line">    assert(hasCxxDtor == cls-&gt;hasCxxDtor());</span><br><span class="line"></span><br><span class="line">    initIsa(cls, <span class="literal">true</span>, hasCxxDtor);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到不管是类对象、实例对象、协议对象还是其他对象，初始化isa结构体最终都调用了initIsa函数，只是所传参数不同而已。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">inline</span> <span class="keyword">void</span> </span><br><span class="line">objc_object::initIsa(Class cls, <span class="keyword">bool</span> nonpointer, <span class="keyword">bool</span> hasCxxDtor) </span><br><span class="line">&#123; </span><br><span class="line">    assert(!isTaggedPointer()); </span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 判断是否进行isa优化</span></span><br><span class="line">    <span class="keyword">if</span> (!nonpointer) &#123;</span><br><span class="line">        isa.cls = cls;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        assert(!DisableNonpointerIsa);</span><br><span class="line">        assert(!cls-&gt;instancesRequireRawIsa());</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 初始化一个新的isa_t结构体</span></span><br><span class="line">        <span class="keyword">isa_t</span> newisa(<span class="number">0</span>);</span><br><span class="line">        <span class="comment">// ISA_MAGIC_VALUE的值是，0x000001a000000001ULL，转化为二进制是64位，可观察到实际只赋值了nonpointer 和 magic</span></span><br><span class="line">        newisa.bits = ISA_MAGIC_VALUE;</span><br><span class="line">        <span class="comment">// isa.magic is part of ISA_MAGIC_VALUE</span></span><br><span class="line">        <span class="comment">// isa.nonpointer is part of ISA_MAGIC_VALUE</span></span><br><span class="line">        newisa.has_cxx_dtor = hasCxxDtor;</span><br><span class="line">        <span class="comment">// 将当前对象的类指针赋值到shiftcls</span></span><br><span class="line">        <span class="comment">// 类的指针式按照（8bits）对齐的，其指针后三位都是没有意义的，因此可以右移3位</span></span><br><span class="line">        newisa.shiftcls = (<span class="keyword">uintptr_t</span>)cls &gt;&gt; <span class="number">3</span>;</span><br><span class="line">        isa = newisa;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在Obj-C中，类的指针是按照字节（8bits）对齐的，也就是说类指针地址转化为十进制后，都是8的倍数，也就是说类指针地址转化为二进制后，后三位都是0，既然0是没有意义的，你们在存储的时候就可以忽略，用节省下来的空间存储一下其他信息。</p>
+<p>因此在赋值shiftcls的时候右移三位是安全的，不会丢失任何指针信息。</p>
+<h3 id="SideTables"><a href="#SideTables" class="headerlink" title="SideTables"></a>SideTables</h3><p><code>SideTables</code>是一类型是<code>StripedMap&lt;SideTable&gt;</code>的静态全局哈希表，iPhone下它是一个8个元素长度的<code>hash</code>数组，在Mac下它是一个64个元素长度的hash数组，里面存储了<code>SideTable</code>，<code>SideTable</code>的hash键值就是一个对象obj的address。</p>
+<p>因此可以说，一个<code>obj</code>对呀一个<code>SideTable</code>，但是一个SideTable会对应多个<code>objc</code>。因为<code>SideTable</code>的数量只有8个，所以会有很多objc公用同一个<code>SideTable</code>的情况。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">alignas</span>(StripedMap&lt;SideTable&gt;) <span class="keyword">static</span> <span class="keyword">uint8_t</span> </span><br><span class="line">    SideTableBuf[<span class="keyword">sizeof</span>(StripedMap&lt;SideTable&gt;)];</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">SideTableInit</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">new</span> (SideTableBuf) StripedMap&lt;SideTable&gt;();</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">static</span> StripedMap&lt;SideTable&gt;&amp; SideTables() &#123;</span><br><span class="line">    <span class="keyword">return</span> *<span class="keyword">reinterpret_cast</span>&lt;StripedMap&lt;SideTable&gt;*&gt;(SideTableBuf);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>再来看下StripedMap的结构，StripedMap是一个以void *为hash key，T为value的hash表。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">enum</span> &#123; CacheLineSize = <span class="number">64</span> &#125;;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">StripedMap</span> &#123;</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> TARGET_OS_IPHONE &amp;&amp; !TARGET_OS_SIMULATOR</span></span><br><span class="line">    <span class="keyword">enum</span> &#123; StripeCount = <span class="number">8</span> &#125;;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">else</span></span></span><br><span class="line">    <span class="keyword">enum</span> &#123; StripeCount = <span class="number">64</span> &#125;;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">PaddedT</span> &#123;</span></span><br><span class="line">        <span class="function">T value <span class="title">alignas</span><span class="params">(CacheLineSize)</span></span>;<span class="comment">//T value 64字节对齐</span></span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    PaddedT <span class="built_in">array</span>[StripeCount];<span class="comment">// 所有PaddedT 类型数据被存储在array中</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 该方法以void *为key 来获取对应的T</span></span><br><span class="line">    <span class="function"><span class="keyword">static</span> <span class="keyword">unsigned</span> <span class="keyword">int</span> <span class="title">indexForPointer</span><span class="params">(<span class="keyword">const</span> <span class="keyword">void</span> *p)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">uintptr_t</span> addr = <span class="keyword">reinterpret_cast</span>&lt;<span class="keyword">uintptr_t</span>&gt;(p);</span><br><span class="line">        <span class="keyword">return</span> ((addr &gt;&gt; <span class="number">4</span>) ^ (addr &gt;&gt; <span class="number">9</span>)) % StripeCount;<span class="comment">// 防止index越界</span></span><br><span class="line">    &#125;</span><br><span class="line">    ……</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>hash算法计算方式</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">unsigned</span> <span class="keyword">int</span> <span class="title">indexForPointer</span><span class="params">(<span class="keyword">const</span> <span class="keyword">void</span> *p)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">uintptr_t</span> addr = <span class="keyword">reinterpret_cast</span>&lt;<span class="keyword">uintptr_t</span>&gt;(p);</span><br><span class="line">    <span class="keyword">return</span> ((addr &gt;&gt; <span class="number">4</span>) ^ (addr &gt;&gt; <span class="number">9</span>)) % StripeCount;<span class="comment">// 防止index越界</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>将地址指针右移4位 异或 指针右移9位计算后，进行取余。</p>
+<h3 id="SideTable"><a href="#SideTable" class="headerlink" title="SideTable"></a>SideTable</h3><h4 id="SideTable定义"><a href="#SideTable定义" class="headerlink" title="SideTable定义"></a>SideTable定义</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">SideTable</span> &#123;</span></span><br><span class="line">    <span class="keyword">spinlock_t</span> slock;<span class="comment">// 自旋锁</span></span><br><span class="line">    RefcountMap refcnts;<span class="comment">// 引用计数器表（散列表）</span></span><br><span class="line">    <span class="keyword">weak_table_t</span> weak_table; <span class="comment">// 弱引用表（散列表）</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>spinlock_t：自旋锁，用于上锁/解锁<code>SideTable</code>，保证操作<code>SideTable</code>时的线程安全</li>
+<li>RefcountMap:以<code>DisguisedPtr&lt;objc_object&gt;</code>为key的hash表，用来存储OC对象的引用计数器（仅在未开启isa指针优化，或isa引用计数器溢出的情况下才会用到）</li>
+<li>weak_table_t：存储对象弱引用指针的hash表</li>
+</ul>
+<p><code>SideTable</code>表存储在<code>SideTables()</code>中，<code>SideTables()</code>本质也是散列表，可以通过对象指针来获取他对应的（引用计数器和弱引用表）在哪一个<code>SideTable</code>中。在非嵌入式系统中，<code>SideTables()</code>有64的<code>SideTable</code></p>
+<h4 id="常见问题"><a href="#常见问题" class="headerlink" title="常见问题"></a>常见问题</h4><p><strong>Q：如何找到对象所在的SideTable？</strong></p>
+<p>A：通过<code>indexForPointer</code>函数计算hash算法，找到对象应用的<code>SideTable</code></p>
+<p><strong>Q：为什么不是用一个SideTable，而是用SideTables去管理多个SideTable？</strong></p>
+<p>A：SideTable中有一个自旋锁，如果把所有类都放在同一个<code>SideTable</code>，有任何一个类有改动都会对当前<code>SideTable</code>进行加锁操作，其他操作处于等待状态，这样会导致操作效率和查询效率很低。而多个<code>SideTable</code>的话，操作的都是单个SideTable，并不会影响其他<code>SideTable</code>，这就是分离锁。</p>
+<p>​    全局的引用计数器之所以不存在同一个表中，是为了避免资源竞争，解决效率问题。引用计数表中引入了分离锁的概念，将一个表拆分位多个部分，对他们分别加锁，可以实现并发操作，提升执行效率。</p>
+<p><strong>Q：如何找到对象的引用计数器？</strong></p>
+<p>A：先找到对象所在<code>SideTable</code>，然后根据<code>refcnts</code>查找获取引用计数器值，<code>refcnts</code>也是一个散列表，以当前对象为key，value为引用计数器的值，如果是<code>nonpointer</code>为1的<code>isa</code>指针，还需加上<code>extra_rc</code>的值</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">inline uintptr_t </span><br><span class="line">objc_object::rootRetainCount()</span><br><span class="line">&#123;</span><br><span class="line">    if (isTaggedPointer()) return (uintptr_t)this;</span><br><span class="line"></span><br><span class="line">    sidetable_lock();</span><br><span class="line">    isa_t bits &#x3D; LoadExclusive(&amp;isa.bits);</span><br><span class="line">    ClearExclusive(&amp;isa.bits);</span><br><span class="line">    if (bits.nonpointer) &#123;</span><br><span class="line">        uintptr_t rc &#x3D; 1 + bits.extra_rc;</span><br><span class="line">        if (bits.has_sidetable_rc) &#123;</span><br><span class="line">            rc +&#x3D; sidetable_getExtraRC_nolock();</span><br><span class="line">        &#125;</span><br><span class="line">        sidetable_unlock();</span><br><span class="line">        return rc;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    sidetable_unlock();</span><br><span class="line">    return sidetable_retainCount();</span><br><span class="line">&#125;</span><br><span class="line">&#x2F;&#x2F; 获取SideTable表中refcnts的值</span><br><span class="line">size_t </span><br><span class="line">objc_object::sidetable_getExtraRC_nolock()</span><br><span class="line">&#123;</span><br><span class="line">    assert(isa.nonpointer);</span><br><span class="line">    SideTable&amp; table &#x3D; SideTables()[this];</span><br><span class="line">    RefcountMap::iterator it &#x3D; table.refcnts.find(this);</span><br><span class="line">    if (it &#x3D;&#x3D; table.refcnts.end()) return 0;</span><br><span class="line">    else return it-&gt;second &gt;&gt; SIDE_TABLE_RC_SHIFT;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="weak-table-t"><a href="#weak-table-t" class="headerlink" title="weak_table_t"></a>weak_table_t</h3><p><code>weak_table_t</code>是全局保存的弱引用的hash表，以<code>object</code> ids为keys，以<code>weak_entry_t</code>为values</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;**</span><br><span class="line"> * The global weak references table. Stores object ids as keys,</span><br><span class="line"> * and weak_entry_t structs as their values.</span><br><span class="line"> *&#x2F;</span><br><span class="line">struct weak_table_t &#123;</span><br><span class="line">  weak_entry_t *weak_entries;&#x2F;&#x2F; 存储weak_entry_t的哈希数组</span><br><span class="line">  size_t    num_entries;&#x2F;&#x2F; 当前weak_entries保存的weak_entry_t的数量，哈希数组内保存的元素个数</span><br><span class="line">  uintptr_t mask;&#x2F;&#x2F; 哈希数组的总长度-1，会参与hash函数计算</span><br><span class="line"></span><br><span class="line">	&#x2F;&#x2F; 记录所有项的最大偏移量，即发生hash冲突的最大次数</span><br><span class="line">  &#x2F;&#x2F; 用户判断是否出现了逻辑错误，hash表中的冲突次数绝对不会超过这个值</span><br><span class="line">  &#x2F;&#x2F; 因为会有hash碰撞的情况，而weak_entry_t采用了开放地址寻址法来解决</span><br><span class="line">  &#x2F;&#x2F; 所以某个weak_entry_t时机存储的位置不一定是hash函数计算出来的结果</span><br><span class="line">  uintptr_t max_hash_displacement;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h4 id="weak-entry-t"><a href="#weak-entry-t" class="headerlink" title="weak_entry_t"></a>weak_entry_t</h4><p><code>weak_entry_t</code>的功能是保存一个对象，然后保存一组对象的弱引用</p>
+<p><code>weak_entry_t</code>的哈希存储的数据是<code>weak_referrer_t</code>，实质上是弱引用变量的地址，即objc_object **，通过操作指针的指针，就可以使得弱引用变量在对象析构后指向nil。这里必须保存弱引用变量的地址，才能把它的指向置为nil</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> WEAK_INLINE_COUNT 4</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> REFERRERS_OUT_OF_LINE 2</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> __LP64__</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PTR_MINUS_2 62</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">else</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PTR_MINUS_2 30</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">weak_entry_t</span> &#123;</span></span><br><span class="line">  <span class="comment">// referent中存放的化身为整数的objec_object的实例的地址，下面保存的弱引用变量都指向这个对象</span></span><br><span class="line">  DisguisedPtr&lt;objc_object&gt; referent;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 当指向referent的弱引用个数小于等于4时使用inline_referrers数组保存这些弱引用变量的地址</span></span><br><span class="line">  <span class="comment">// 大于4以后用referent这个哈希数组保存</span></span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 公用32个字节内存空间的联合体</span></span><br><span class="line">  <span class="keyword">union</span> &#123;</span><br><span class="line">      <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">        <span class="keyword">weak_referrer_t</span> *referrers;<span class="comment">//保存weak_referrer_t的哈希数组</span></span><br><span class="line">        <span class="comment">// out_of_line_ness 和 num_refs 构成位域存储，共占64位</span></span><br><span class="line">        <span class="keyword">uintptr_t</span>        out_of_line_ness : <span class="number">2</span>;<span class="comment">// 2，标记当前使用哈希数组还是inline_referrers保存weak_referrer_t</span></span><br><span class="line">        <span class="keyword">uintptr_t</span>        num_refs : PTR_MINUS_2;<span class="comment">// 62，当前referrers内保存的weak_referrer_t数量</span></span><br><span class="line">        <span class="keyword">uintptr_t</span>        mask;<span class="comment">// referrers哈希数组总长度-1，会参与哈希函数计算</span></span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 可能会发生hash冲突的最大次数，用于判断是否出现了逻辑错误，（hash表中的冲突次数绝对不会超过该值）</span></span><br><span class="line">        <span class="comment">// 该值在新建weak_entry_t和插入新的weak_referrer_t时会被更新，它一直记录的都是最大偏移量</span></span><br><span class="line">        <span class="keyword">uintptr_t</span>        max_hash_displacement;</span><br><span class="line">      &#125;;</span><br><span class="line">      <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">        <span class="comment">// out_of_line_ness field is low bits of inline_referrers[1]</span></span><br><span class="line">        <span class="comment">// out_of_line_ness和 inline_referrers[1]的低两位的内存空间重合</span></span><br><span class="line">        <span class="comment">// 长度为4的weak_referrer_t数组</span></span><br><span class="line">        <span class="keyword">weak_referrer_t</span>  inline_referrers[WEAK_INLINE_COUNT];</span><br><span class="line">      &#125;;</span><br><span class="line">  &#125;;</span><br><span class="line">  <span class="comment">// 返回true表示inline_referrers保存，返回false表示referrers保存weak_referrer_t</span></span><br><span class="line">  <span class="function"><span class="keyword">bool</span> <span class="title">out_of_line</span><span class="params">()</span> </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> (out_of_line_ness == REFERRERS_OUT_OF_LINE);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 重载操作符，直接使用memcpy拷贝other到this</span></span><br><span class="line">  <span class="keyword">weak_entry_t</span>&amp; <span class="keyword">operator</span>=(<span class="keyword">const</span> <span class="keyword">weak_entry_t</span>&amp; other) &#123;</span><br><span class="line">      <span class="built_in">memcpy</span>(<span class="keyword">this</span>, &amp;other, <span class="keyword">sizeof</span>(other));</span><br><span class="line">      <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// newReferent是原始对象的指针，newReferrer是指向newReferent弱引用变量的地址</span></span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 初始化列表</span></span><br><span class="line">  <span class="keyword">weak_entry_t</span>(objc_object *newReferent, objc_object **newReferrer)</span><br><span class="line">      : referent(newReferent)</span><br><span class="line">  &#123;</span><br><span class="line">      inline_referrers[<span class="number">0</span>] = newReferrer;</span><br><span class="line">      <span class="comment">// 将inline_referrers数组中的剩余3位都置为nil</span></span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i &lt; WEAK_INLINE_COUNT; i++) &#123;</span><br><span class="line">          inline_referrers[i] = nil;</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>之所以使用定长/哈希数组的切换，应该是考了到实例对象的弱引用变量个数一般比较少，这是使用定长数组不需要在动态申请内存空间（union中两个结构体公用32个字节内存），而是使用weak_entry_t初始化时分配的一块连续内存空间，这回得到允许效率上的提升。</p>
+<h4 id="weak-referrer-t"><a href="#weak-referrer-t" class="headerlink" title="weak_referrer_t"></a>weak_referrer_t</h4><p>用于伪装__weak变量的地址，即用于伪装objc_object *的地址</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// The address of a __weak variable.</span></span><br><span class="line"><span class="comment">// These pointers are stored disguised so memory analysis tools</span></span><br><span class="line"><span class="comment">// don't see lots of interior pointers from the weak table into objects.</span></span><br><span class="line"><span class="comment">// __weak变量的地址（objc_object **），这些指针是伪装的，因此内存分析工具不会看到从weak table到object的大量内部指针</span></span><br><span class="line"><span class="keyword">typedef</span> DisguisedPtr&lt;objc_object *&gt; <span class="keyword">weak_referrer_t</span>;</span><br></pre></td></tr></table></figure>
+
+<h3 id="object-setIvar"><a href="#object-setIvar" class="headerlink" title="_object_setIvar"></a>_object_setIvar</h3><p>设置对象的成员变量，根据成员变量获取当前成员变量类型是strong、weak以及_unsafe_unretained，调用对象存储函数</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> _object_setIvar(id obj, Ivar ivar, id value, <span class="keyword">bool</span> assumeStrong)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (!obj  ||  !ivar  ||  obj-&gt;isTaggedPointer()) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">ptrdiff_t</span> offset;</span><br><span class="line">    <span class="keyword">objc_ivar_memory_management_t</span> memoryManagement;</span><br><span class="line">    _class_lookUpIvar(obj-&gt;ISA(), ivar, offset, memoryManagement);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (memoryManagement == objc_ivar_memoryUnknown) &#123;</span><br><span class="line">        <span class="keyword">if</span> (assumeStrong) memoryManagement = objc_ivar_memoryStrong;</span><br><span class="line">        <span class="keyword">else</span> memoryManagement = objc_ivar_memoryUnretained;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    id *location = (id *)((<span class="keyword">char</span> *)obj + offset);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">switch</span> (memoryManagement) &#123;</span><br><span class="line">    <span class="keyword">case</span> objc_ivar_memoryWeak:       objc_storeWeak(location, value); <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> objc_ivar_memoryStrong:     objc_storeStrong(location, value); <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> objc_ivar_memoryUnretained: *location = value; <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> objc_ivar_memoryUnknown:    _objc_fatal(<span class="string">"impossible"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="objc-storeWeak"><a href="#objc-storeWeak" class="headerlink" title="objc_storeWeak"></a>objc_storeWeak</h4><blockquote>
+<p>更新指针指向，创建对应的弱引用表</p>
+<p>如果存在旧表，也存在成员值，需要进行清理操作，因为这个值可能是nil</p>
+<p>如果有新表，赋值这个新值到变量中，这个值可能是nil</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; Update a weak variable.</span><br><span class="line">&#x2F;&#x2F; If HaveOld is true, the variable has an existing value </span><br><span class="line">&#x2F;&#x2F;   that needs to be cleaned up. This value might be nil.</span><br><span class="line">&#x2F;&#x2F; If HaveNew is true, there is a new value that needs to be </span><br><span class="line">&#x2F;&#x2F;   assigned into the variable. This value might be nil.</span><br><span class="line">&#x2F;&#x2F; If CrashIfDeallocating is true, the process is halted if newObj is </span><br><span class="line">&#x2F;&#x2F;   deallocating or newObj&#39;s class does not support weak references. </span><br><span class="line">&#x2F;&#x2F;   If CrashIfDeallocating is false, nil is stored instead.</span><br><span class="line">enum CrashIfDeallocating &#123;</span><br><span class="line">    DontCrashIfDeallocating &#x3D; false, DoCrashIfDeallocating &#x3D; true</span><br><span class="line">&#125;;</span><br><span class="line">template &lt;HaveOld haveOld, HaveNew haveNew,</span><br><span class="line">          CrashIfDeallocating crashIfDeallocating&gt;</span><br><span class="line">static id </span><br><span class="line">storeWeak(id *location, objc_object *newObj) &#123;</span><br><span class="line">	……</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>前置条件判断</li>
+<li>声明新旧两个SideTable</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">if (haveOld) &#123;</span><br><span class="line">    oldObj &#x3D; *location;</span><br><span class="line">    oldTable &#x3D; &amp;SideTables()[oldObj];</span><br><span class="line">&#125; else &#123;</span><br><span class="line">    oldTable &#x3D; nil;</span><br><span class="line">&#125;</span><br><span class="line">if (haveNew) &#123;</span><br><span class="line">    newTable &#x3D; &amp;SideTables()[newObj];</span><br><span class="line">&#125; else &#123;</span><br><span class="line">    newTable &#x3D; nil;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>根据新值和旧值分别获区全局的SideTables表中的SideTable</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">if (haveNew  &amp;&amp;  newObj) &#123;</span><br><span class="line">        Class cls &#x3D; newObj-&gt;getIsa();</span><br><span class="line">        if (cls !&#x3D; previouslyInitializedClass  &amp;&amp;  </span><br><span class="line">            !((objc_class *)cls)-&gt;isInitialized()) </span><br><span class="line">        &#123;</span><br><span class="line">            SideTable::unlockTwo&lt;haveOld, haveNew&gt;(oldTable, newTable);</span><br><span class="line">            class_initialize(cls, (id)newObj);</span><br><span class="line"></span><br><span class="line">            &#x2F;&#x2F; If this class is finished with +initialize then we&#39;re good.</span><br><span class="line">            &#x2F;&#x2F; If this class is still running +initialize on this thread </span><br><span class="line">            &#x2F;&#x2F; (i.e. +initialize called storeWeak on an instance of itself)</span><br><span class="line">            &#x2F;&#x2F; then we may proceed but it will appear initializing and </span><br><span class="line">            &#x2F;&#x2F; not yet initialized to the check above.</span><br><span class="line">            &#x2F;&#x2F; Instead set previouslyInitializedClass to recognize it on retry.</span><br><span class="line">            previouslyInitializedClass &#x3D; cls;</span><br><span class="line"></span><br><span class="line">            goto retry;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>确保对象在弱引用之前，以及成功初始化</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; Clean up old value, if any.</span><br><span class="line">if (haveOld) &#123;</span><br><span class="line">  weak_unregister_no_lock(&amp;oldTable-&gt;weak_table, oldObj, location);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>清空旧值</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Assign new value, if any.</span></span><br><span class="line"><span class="keyword">if</span> (haveNew) &#123;</span><br><span class="line">    newObj = (objc_object *)</span><br><span class="line">        weak_register_no_lock(&amp;newTable-&gt;weak_table, (<span class="keyword">id</span>)newObj, location, </span><br><span class="line">                              crashIfDeallocating);</span><br><span class="line">    <span class="comment">// weak_register_no_lock returns nil if weak store should be rejected</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// Set is-weakly-referenced bit in refcount table.</span></span><br><span class="line">    <span class="keyword">if</span> (newObj  &amp;&amp;  !newObj-&gt;isTaggedPointer()) &#123;</span><br><span class="line">        newObj-&gt;setWeaklyReferenced_nolock();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Do not set *location anywhere else. That would introduce a race.</span></span><br><span class="line">    *location = (<span class="keyword">id</span>)newObj;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>存储新值<code>weak_register_no_lock</code>函数执行真正的存储逻辑</p>
+<h4 id="weak-register-no-lock"><a href="#weak-register-no-lock" class="headerlink" title="weak_register_no_lock"></a>weak_register_no_lock</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">id </span><br><span class="line">weak_register_no_lock(weak_table_t *weak_table, id referent_id, </span><br><span class="line">                      id *referrer_id, bool crashIfDeallocating)</span><br><span class="line">&#123;</span><br><span class="line">		&#x2F;&#x2F; referent弱引用对象，referrer weak指针的地址</span><br><span class="line">    objc_object *referent &#x3D; (objc_object *)referent_id;</span><br><span class="line">    objc_object **referrer &#x3D; (objc_object **)referrer_id;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; now remember it and where it is being stored</span><br><span class="line">    weak_entry_t *entry;</span><br><span class="line">    if ((entry &#x3D; weak_entry_for_referent(weak_table, referent))) &#123;</span><br><span class="line">        append_referrer(entry, referrer);</span><br><span class="line">    &#125; </span><br><span class="line">    else &#123;</span><br><span class="line">        weak_entry_t new_entry(referent, referrer);</span><br><span class="line">        weak_grow_maybe(weak_table);</span><br><span class="line">        weak_entry_insert(weak_table, &amp;new_entry);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; Do not set *referrer. objc_storeWeak() requires that the </span><br><span class="line">    &#x2F;&#x2F; value not change.</span><br><span class="line"></span><br><span class="line">    return referent_id;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>声明一个<code>weak_entry_t</code>类型实体，这里保存了呗弱引用对象的指针和weak指针的地址</li>
+<li>根据弱引用对象的指针从全局<code>weak_table</code>中查找<code>entry</code>，如果找到则执行插入操作。</li>
+<li>如果<code>weak_entry_for_referent</code>返回的entry存储<code>weak</code>指针的是<code>inline_referrers</code>类型，今天通过直接操作数组中的元素来达到修改数值的目的</li>
+<li>如果没有查找到<code>entry</code>，则新建一个<code>weak_entry_t</code>结构体数组，直接将这个<code>weak_entry_t</code>插入到<code>weak_table</code>表中</li>
+</ul>
+<blockquote>
+<p><code>weak_table_t</code>调用<code>weak_grow_maybe</code> 和 <code>weak_compact_maybe</code>这两个函数，用来当<code>weak_table_t</code>哈希数组过满或者为空的情况下及时调整其大小，优化内存的使用效率，并提高查找效率。这两个函数都是通过<code>weak_resize</code>函数来调整weak_table_t数组的大小</p>
+</blockquote>
+<h4 id="weak-grow-maybe"><a href="#weak-grow-maybe" class="headerlink" title="weak_grow_maybe"></a>weak_grow_maybe</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">#define TABLE_SIZE(entry) (entry-&gt;mask ? entry-&gt;mask + 1 : 0)</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; Grow the given zone&#39;s table of weak references if it is full.</span><br><span class="line">&#x2F;&#x2F; 如果给定区域的弱引用表已满，则对齐进行扩展</span><br><span class="line">static void weak_grow_maybe(weak_table_t *weak_table)</span><br><span class="line">&#123;</span><br><span class="line">    size_t old_size &#x3D; TABLE_SIZE(weak_table);</span><br><span class="line"></span><br><span class="line">    &#x2F;&#x2F; Grow if at least 3&#x2F;4 full.</span><br><span class="line">    &#x2F;&#x2F; 如果目前哈希数组中存储的weak_entry_t数量超过了总长度的3 &#x2F; 4，则进行扩容</span><br><span class="line">    if (weak_table-&gt;num_entries &gt;&#x3D; old_size * 3 &#x2F; 4) &#123;</span><br><span class="line">        &#x2F;&#x2F; 如果weak_table是新建的，则出事其哈希数组长度为64，如果是非空，则扩容为之前长度的两倍</span><br><span class="line">        weak_resize(weak_table, old_size ? old_size*2 : 64);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>该函数用于扩充<code>weak_table_t</code>的<code>weak_entry_t *weak_entries</code>长度，扩充条件是<code>num_entries</code>长度超过了mask+1的3 / 4。初始化<code>weak_table</code>长度是64，每次扩充的长度则是mask+1的两倍，扩容完毕后会把原哈希数组中的weak_entry_t重新哈希化插入到新空间内，并更新weak_tabl_t各成员变量。占据的内存空间的总容量则是<code>(mask+1) * sizeof(weak_entry_t)</code>字节。综上mask+1总是2的N次方（2^6=64 即 N&gt;=6）</p>
+<h4 id="weak-compact-maybe"><a href="#weak-compact-maybe" class="headerlink" title="weak_compact_maybe"></a>weak_compact_maybe</h4><p>该函数会在weak_entry_remove函数中调用，旨在<code>weak_entry_t</code>从<code>weak_table_t</code>的数组中移除后，缩小<code>weak_entry_t *weak_entries</code>的空间</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Shrink the table if it is mostly empty.</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span> weak_compact_maybe(weak_table_t *weak_table)</span><br><span class="line">&#123;</span><br><span class="line">    size_t old_size = TABLE_SIZE(weak_table);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Shrink if larger than 1024 buckets and at most 1/16 full.</span></span><br><span class="line">    <span class="comment">// old_size 超过了1024 并且低于1/16的空间占用率，则进行缩小 </span></span><br><span class="line">    <span class="keyword">if</span> (old_size &gt;= <span class="number">1024</span>  &amp;&amp; old_size / <span class="number">16</span> &gt;= weak_table-&gt;num_entries) &#123;</span><br><span class="line">        <span class="comment">// 缩小容量为1/8</span></span><br><span class="line">        weak_resize(weak_table, old_size / <span class="number">8</span>);</span><br><span class="line">        <span class="comment">// leaves new table no more than 1/2 full</span></span><br><span class="line">        <span class="comment">// 缩小容量1/8 和 空间占用率少于1/16，两个条件组合在一起，保证缩小后的容量占用少于1/2</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>缩小<code>weak_entry_t *weak_entries</code>容量的条件是目前的总长度超过了1024 和 容量占用了少于1/16，<code>weak_entries</code>空间缩小为当前空间的1/8</p>
+<h4 id="weak-resize"><a href="#weak-resize" class="headerlink" title="weak_resize"></a>weak_resize</h4><p>扩大和缩小空间都会调用的weak_resize公共函数</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">void</span> weak_resize(weak_table_t *weak_table, size_t new_size)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="comment">// old_size = mask+1;表示原始哈希数组的总长度</span></span><br><span class="line">  size_t old_size = TABLE_SIZE(weak_table);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 旧weak_entries哈希数组的起始地址</span></span><br><span class="line">  weak_entry_t *old_entries = weak_table-&gt;weak_entries;</span><br><span class="line">  <span class="comment">// 为新 weak_entries 哈希数组申请指定长度的空间，并把起始地址返回</span></span><br><span class="line">  <span class="comment">// 内存空间大小为 new_size * sizeof(weak_entry_t)</span></span><br><span class="line">  weak_entry_t *new_entries = (weak_entry_t *)</span><br><span class="line">      calloc(new_size, <span class="keyword">sizeof</span>(weak_entry_t));</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 更新mask,仍是new_size-1</span></span><br><span class="line">  weak_table-&gt;mask = new_size - <span class="number">1</span>;</span><br><span class="line">  <span class="comment">// 更新哈希数组起始地址</span></span><br><span class="line">  weak_table-&gt;weak_entries = new_entries;</span><br><span class="line">  <span class="comment">// 最大哈希冲突偏移值，默认为0</span></span><br><span class="line">  weak_table-&gt;max_hash_displacement = <span class="number">0</span>;</span><br><span class="line">  <span class="comment">// 当前哈希数组的占用数量，默认为0</span></span><br><span class="line">  weak_table-&gt;num_entries = <span class="number">0</span>;  <span class="comment">// restored by weak_entry_insert below</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// 如果有旧的weak_entry_t，需要放在新的空间内</span></span><br><span class="line">  <span class="keyword">if</span> (old_entries) &#123;</span><br><span class="line">      weak_entry_t *entry;</span><br><span class="line">      weak_entry_t *end = old_entries + old_size;</span><br><span class="line">      <span class="keyword">for</span> (entry = old_entries; entry &lt; end; entry++) &#123;</span><br><span class="line">          <span class="keyword">if</span> (entry-&gt;referent) &#123;</span><br><span class="line">              weak_entry_insert(weak_table, entry);</span><br><span class="line">          &#125;</span><br><span class="line">      &#125;</span><br><span class="line">      free(old_entries);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="weak-entry-insert"><a href="#weak-entry-insert" class="headerlink" title="weak_entry_insert"></a>weak_entry_insert</h4><p>将weak_entry_t<code>添加到</code>weak_table_t-&gt;weak_entries中</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;** </span><br><span class="line"> * Add new_entry to the object&#39;s table of weak references.</span><br><span class="line"> * Does not check whether the referent is already in the table.</span><br><span class="line"> *&#x2F;</span><br><span class="line">&#x2F;&#x2F; 添加一个新的weak_entry_t到对象的弱引用表中</span><br><span class="line">&#x2F;&#x2F; 不进行检查引用对象是否已存在表中</span><br><span class="line">static void weak_entry_insert(weak_table_t *weak_table, weak_entry_t *new_entry)</span><br><span class="line">&#123;</span><br><span class="line">  &#x2F;&#x2F; 哈希数组的起始地址</span><br><span class="line">  weak_entry_t *weak_entries &#x3D; weak_table-&gt;weak_entries;</span><br><span class="line">  assert(weak_entries !&#x3D; nil);</span><br><span class="line">	&#x2F;&#x2F; 调用hash函数找到new_entry在weak_table_t的哈希数组中的位置，可能会发生hash冲突</span><br><span class="line">  size_t begin &#x3D; hash_pointer(new_entry-&gt;referent) &amp; (weak_table-&gt;mask);</span><br><span class="line">  size_t index &#x3D; begin;</span><br><span class="line">  size_t hash_displacement &#x3D; 0;</span><br><span class="line">  while (weak_entries[index].referent !&#x3D; nil) &#123;</span><br><span class="line">    	&#x2F;&#x2F; 如果发生hash冲突+1，继续往下探测</span><br><span class="line">      index &#x3D; (index+1) &amp; weak_table-&gt;mask;</span><br><span class="line">      &#x2F;&#x2F; 如果index每次+1加到值等于begin还是没有找到空位置，则触发bad_weak_table致命错误</span><br><span class="line">      if (index &#x3D;&#x3D; begin) bad_weak_table(weak_entries);</span><br><span class="line">      &#x2F;&#x2F; 记录偏移量 用于更新max_hash_displacement</span><br><span class="line">      hash_displacement++;</span><br><span class="line">  &#125;</span><br><span class="line">	&#x2F;&#x2F; new_entry放入哈希数组中</span><br><span class="line">  weak_entries[index] &#x3D; *new_entry;</span><br><span class="line">  &#x2F;&#x2F; 更新num_entries</span><br><span class="line">  weak_table-&gt;num_entries++;</span><br><span class="line">	&#x2F;&#x2F; 记录weak_table_t哈希数组中发生哈希冲突时的最大偏移量</span><br><span class="line">  if (hash_displacement &gt; weak_table-&gt;max_hash_displacement) &#123;</span><br><span class="line">      weak_table-&gt;max_hash_displacement &#x3D; hash_displacement;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>综合来看，weak_entry_insert函数可知weak_resize函数的整体左右，该函数对哈希数组进行的扩大和缩小，首先根据new_size申请相应大小的内存，new_entries指针指向这块新申请的内存。设置weak_table的mask为new_size-1。此处mask的作用是记录weak_table 总容量的内存边界，此外mask还用在哈希函数中保证index不会哈希数组越界。</p>
+<p>​    weak_table_t的哈希数组可能会发生哈希碰撞，而weak_table_t采用了开放地址寻址法来处理碰撞。如果发生碰撞的话，将寻找相邻（如果已经到尾端的话，则从头开始）的下一个空位，例如weak_entry_for_referent函数，寻找给定的referent在弱引用表中的entry时，如果在循环过程中hash_displacement的值超过了weak_table-&gt;max_hash_displacement则表示，不存在要找的weak_entry_t</p>
+<h4 id="weak-entry-for-referent"><a href="#weak-entry-for-referent" class="headerlink" title="weak_entry_for_referent"></a>weak_entry_for_referent</h4><blockquote>
+<p>根据给定的referent 和 weak_table_t哈希表，查找其中的weak_entry_t并返回，如果未找到则返回NULL。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;** </span><br><span class="line"> * Return the weak reference table entry for the given referent. </span><br><span class="line"> * If there is no entry for referent, return NULL. </span><br><span class="line"> * Performs a lookup.</span><br><span class="line"> *</span><br><span class="line"> * @param weak_table </span><br><span class="line"> * @param referent The object. Must not be nil.</span><br><span class="line"> * </span><br><span class="line"> * @return The table of weak referrers to this object. </span><br><span class="line"> *&#x2F;</span><br><span class="line">&#x2F;&#x2F; weak_table通过&amp;SideTables()[referent]可从全局的SideTables中找到referent所处的weak_table</span><br><span class="line">static weak_entry_t *</span><br><span class="line">weak_entry_for_referent(weak_table_t *weak_table, objc_object *referent)</span><br><span class="line">&#123;</span><br><span class="line">    assert(referent);</span><br><span class="line">		&#x2F;&#x2F; weak_table_t哈希数组的入口</span><br><span class="line">    weak_entry_t *weak_entries &#x3D; weak_table-&gt;weak_entries;</span><br><span class="line"></span><br><span class="line">    if (!weak_entries) return nil;</span><br><span class="line"></span><br><span class="line">  	&#x2F;&#x2F; 哈希函数：hash_pointer函数返回值与mask做与，防止index越界</span><br><span class="line">    size_t begin &#x3D; hash_pointer(referent) &amp; weak_table-&gt;mask;</span><br><span class="line">    size_t index &#x3D; begin;</span><br><span class="line">    size_t hash_displacement &#x3D; 0;</span><br><span class="line">    &#x2F;&#x2F; 如果未发生哈希冲突的话，这weak_table-&gt;weak_entries[index]就是要找的weak_entry_t了</span><br><span class="line">    while (weak_table-&gt;weak_entries[index].referent !&#x3D; referent) &#123;</span><br><span class="line">        &#x2F;&#x2F; 如果发生了哈希冲突 + 1，继续向下探测（开放地址寻址法）</span><br><span class="line">        index &#x3D; (index+1) &amp; weak_table-&gt;mask;</span><br><span class="line">        if (index &#x3D;&#x3D; begin) bad_weak_table(weak_table-&gt;weak_entries);</span><br><span class="line">        &#x2F;&#x2F; 记录探测偏移了多远</span><br><span class="line">        hash_displacement++;</span><br><span class="line">        &#x2F;&#x2F; 如果探测偏移超过了 weak_table_t 的 max_hash_displacement，则说明weak_table中没有referent的weak_entry_t，则返回nil</span><br><span class="line">        if (hash_displacement &gt; weak_table-&gt;max_hash_displacement) &#123;</span><br><span class="line">            return nil;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    return &amp;weak_table-&gt;weak_entries[index];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/10/27/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86-Tagged-Pointer/" rel="prev" title="内存管理-Tagged Pointer">
+      <i class="fa fa-chevron-left"></i> 内存管理-Tagged Pointer
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/10/30/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86-alloc%E3%80%81retainCount%E3%80%81retain%E3%80%81release%E3%80%81dealloc/" rel="next" title="内存管理-alloc、retainCount、retain、release、dealloc">
+      内存管理-alloc、retainCount、retain、release、dealloc <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#ISA"><span class="nav-number">1.</span> <span class="nav-text">ISA</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#ISA结构体定义"><span class="nav-number">1.1.</span> <span class="nav-text">ISA结构体定义</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ISA初始化"><span class="nav-number">1.2.</span> <span class="nav-text">ISA初始化</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SideTables"><span class="nav-number">2.</span> <span class="nav-text">SideTables</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SideTable"><span class="nav-number">3.</span> <span class="nav-text">SideTable</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#SideTable定义"><span class="nav-number">3.1.</span> <span class="nav-text">SideTable定义</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#常见问题"><span class="nav-number">3.2.</span> <span class="nav-text">常见问题</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#weak-table-t"><span class="nav-number">4.</span> <span class="nav-text">weak_table_t</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#weak-entry-t"><span class="nav-number">4.1.</span> <span class="nav-text">weak_entry_t</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#weak-referrer-t"><span class="nav-number">4.2.</span> <span class="nav-text">weak_referrer_t</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#object-setIvar"><span class="nav-number">5.</span> <span class="nav-text">_object_setIvar</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#objc-storeWeak"><span class="nav-number">5.1.</span> <span class="nav-text">objc_storeWeak</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#weak-register-no-lock"><span class="nav-number">5.2.</span> <span class="nav-text">weak_register_no_lock</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#weak-grow-maybe"><span class="nav-number">5.3.</span> <span class="nav-text">weak_grow_maybe</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#weak-compact-maybe"><span class="nav-number">5.4.</span> <span class="nav-text">weak_compact_maybe</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#weak-resize"><span class="nav-number">5.5.</span> <span class="nav-text">weak_resize</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#weak-entry-insert"><span class="nav-number">5.6.</span> <span class="nav-text">weak_entry_insert</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#weak-entry-for-referent"><span class="nav-number">5.7.</span> <span class="nav-text">weak_entry_for_referent</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Doris AI</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Doris AI</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v7.7.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://dorisgit.github.io').hostname,
+    root: '/',
+    scheme: 'Mist',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="苹果在iOS采用RC（引用计数器）进行内存管理，在MRC时代需要我们手动进行内存管理调用retain和release进行引用计数器+1和-1，iOS5之后苹果引入了ARC，通过LLVM和Runtime运行机制编译器自动帮忙添加上retain、release和autoreleasepool进行内存管理，大多数情况下我们已经不用在管理引用计数器问题。 但是为了了解系统内存管理的本质，需要我们通过源码去">
+<meta property="og:type" content="article">
+<meta property="og:title" content="内存管理-Tagged Pointer">
+<meta property="og:url" content="https://dorisgit.github.io/2020/10/27/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86-Tagged-Pointer/index.html">
+<meta property="og:site_name" content="泡泡茶壶">
+<meta property="og:description" content="苹果在iOS采用RC（引用计数器）进行内存管理，在MRC时代需要我们手动进行内存管理调用retain和release进行引用计数器+1和-1，iOS5之后苹果引入了ARC，通过LLVM和Runtime运行机制编译器自动帮忙添加上retain、release和autoreleasepool进行内存管理，大多数情况下我们已经不用在管理引用计数器问题。 但是为了了解系统内存管理的本质，需要我们通过源码去">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/image-20201028113927598.png">
+<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/zufmtqnvbq.png">
+<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/image-20201028114331053.png">
+<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/cj0aj4o1ul.png">
+<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/image-20201028161517267.png">
+<meta property="article:published_time" content="2020-10-27T11:18:37.000Z">
+<meta property="article:modified_time" content="2020-10-28T09:32:55.772Z">
+<meta property="article:author" content="Doris AI">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/image-20201028113927598.png">
+
+<link rel="canonical" href="https://dorisgit.github.io/2020/10/27/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86-Tagged-Pointer/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>内存管理-Tagged Pointer | 泡泡茶壶</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">泡泡茶壶</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="en">
+    <link itemprop="mainEntityOfPage" href="https://dorisgit.github.io/2020/10/27/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86-Tagged-Pointer/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Doris AI">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="泡泡茶壶">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          内存管理-Tagged Pointer
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-10-27 19:18:37" itemprop="dateCreated datePublished" datetime="2020-10-27T19:18:37+08:00">2020-10-27</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-10-28 17:32:55" itemprop="dateModified" datetime="2020-10-28T17:32:55+08:00">2020-10-28</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>苹果在iOS采用RC（引用计数器）进行内存管理，在MRC时代需要我们手动进行内存管理调用retain和release进行引用计数器+1和-1，iOS5之后苹果引入了ARC，通过LLVM和Runtime运行机制编译器自动帮忙添加上retain、release和autoreleasepool进行内存管理，大多数情况下我们已经不用在管理引用计数器问题。</p>
+<p>但是为了了解系统内存管理的本质，需要我们通过源码去探究一下。</p>
+<h3 id="Tagged-Pointer"><a href="#Tagged-Pointer" class="headerlink" title="Tagged Pointer"></a>Tagged Pointer</h3><h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><h4 id="存在问题"><a href="#存在问题" class="headerlink" title="存在问题"></a>存在问题</h4><p>对象在内存中是对齐的，他们的地址总是指针的整数倍，通常为16倍数</p>
+<p>通常情况下，对象、指针、NSInteger的内存占用都与当前CPU的位数有关，一个NSInteger类型的变量在32位下占4个字节，在64位下就会占用8个字节，指针也是，对象同理，同一个程序从32位机器上迁移到64位机器上，虽然逻辑没变化，但是内存占用上会翻倍，同时在效率上为了存储和访问一个NSNumber对象，我们需要在堆上为它分配内存维护引用计数器，管理它的生命周期，这都将造成运行效率上的损失。</p>
+<h4 id="改进方案"><a href="#改进方案" class="headerlink" title="改进方案"></a>改进方案</h4><p>为了改进内存和效率上的问题，苹果引入了Tagged Pointer，由于NSNumber之类的变量本身的值需要占用的内存大小常常不需要8字节。所以我们可以将一个对象拆分为两个部分，一部分直接保存数据，一部分作为特殊标记，表示这是一个特别的指针不指向任何一个地址。</p>
+<h3 id="Tagged-Pointer定义"><a href="#Tagged-Pointer定义" class="headerlink" title="Tagged Pointer定义"></a>Tagged Pointer定义</h3><h4 id="宏定义"><a href="#宏定义" class="headerlink" title="宏定义"></a>宏定义</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#if __LP64__</span><br><span class="line">#define OBJC_HAVE_TAGGED_POINTERS 1</span><br><span class="line">#endif</span><br></pre></td></tr></table></figure>
+
+<p>64-bit，tag存储在LSB（Least Significant Bit最低位）。其他情况比如真机，tag存储在MSB（Most Significant Bit最高位）</p>
+<ul>
+<li><code>MacOS</code>下采用 LSB（Least Significant Bit，即最低有效位）为<code>Tagged Pointer</code>标识位；</li>
+<li><code>iOS</code>下则采用 MSB（Most Significant Bit，即最高有效位）为<code>Tagged Pointer</code>标识位。</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">#if (TARGET_OS_OSX || TARGET_OS_IOSMAC) &amp;&amp; __x86_64__</span><br><span class="line">    &#x2F;&#x2F; 64-bit Mac - tag bit is LSB</span><br><span class="line">#   define OBJC_MSB_TAGGED_POINTERS 0</span><br><span class="line">#else</span><br><span class="line">    &#x2F;&#x2F; Everything else - tag bit is MSB</span><br><span class="line">#   define OBJC_MSB_TAGGED_POINTERS 1</span><br><span class="line">#endif</span><br><span class="line"></span><br><span class="line">#if OBJC_MSB_TAGGED_POINTERS</span><br><span class="line">#   define _OBJC_TAG_MASK (1UL&lt;&lt;63)</span><br><span class="line">#   define _OBJC_TAG_INDEX_SHIFT 60</span><br><span class="line">#   define _OBJC_TAG_SLOT_SHIFT 60</span><br><span class="line">#   define _OBJC_TAG_PAYLOAD_LSHIFT 4</span><br><span class="line">#   define _OBJC_TAG_PAYLOAD_RSHIFT 4</span><br><span class="line">#   define _OBJC_TAG_EXT_MASK (0xfUL&lt;&lt;60)</span><br><span class="line">#   define _OBJC_TAG_EXT_INDEX_SHIFT 52</span><br><span class="line">#   define _OBJC_TAG_EXT_SLOT_SHIFT 52</span><br><span class="line">#   define _OBJC_TAG_EXT_PAYLOAD_LSHIFT 12</span><br><span class="line">#   define _OBJC_TAG_EXT_PAYLOAD_RSHIFT 12</span><br><span class="line">#else</span><br><span class="line">#   define _OBJC_TAG_MASK 1UL</span><br><span class="line">#   define _OBJC_TAG_INDEX_SHIFT 1</span><br><span class="line">#   define _OBJC_TAG_SLOT_SHIFT 0</span><br><span class="line">#   define _OBJC_TAG_PAYLOAD_LSHIFT 0</span><br><span class="line">#   define _OBJC_TAG_PAYLOAD_RSHIFT 4</span><br><span class="line">#   define _OBJC_TAG_EXT_MASK 0xfUL</span><br><span class="line">#   define _OBJC_TAG_EXT_INDEX_SHIFT 4</span><br><span class="line">#   define _OBJC_TAG_EXT_SLOT_SHIFT 4</span><br><span class="line">#   define _OBJC_TAG_EXT_PAYLOAD_LSHIFT 0</span><br><span class="line">#   define _OBJC_TAG_EXT_PAYLOAD_RSHIFT 12</span><br><span class="line">#endif</span><br></pre></td></tr></table></figure>
+
+<p>接下来是一个枚举定义，定义了默认使用了<code>Tagged Pointer</code>的类。例如NSString、NSNumber、NSIndexPath、NSDate</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">if</span> __has_feature(objc_fixed_enum)  ||  __cplusplus &gt;= 201103L</span></span><br><span class="line"><span class="keyword">enum</span> <span class="keyword">objc_tag_index_t</span> : <span class="keyword">uint16_t</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">else</span></span></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">uint16_t</span> <span class="keyword">objc_tag_index_t</span>;</span><br><span class="line"><span class="keyword">enum</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 60-bit payloads</span></span><br><span class="line">    OBJC_TAG_NSAtom            = <span class="number">0</span>, </span><br><span class="line">    OBJC_TAG_1                 = <span class="number">1</span>, </span><br><span class="line">    OBJC_TAG_NSString          = <span class="number">2</span>, </span><br><span class="line">    OBJC_TAG_NSNumber          = <span class="number">3</span>, </span><br><span class="line">    OBJC_TAG_NSIndexPath       = <span class="number">4</span>, </span><br><span class="line">    OBJC_TAG_NSManagedObjectID = <span class="number">5</span>, </span><br><span class="line">    OBJC_TAG_NSDate            = <span class="number">6</span>,</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 60-bit reserved</span></span><br><span class="line">    OBJC_TAG_RESERVED_7        = <span class="number">7</span>, </span><br><span class="line"></span><br><span class="line">    <span class="comment">// 52-bit payloads</span></span><br><span class="line">    OBJC_TAG_Photos_1          = <span class="number">8</span>,</span><br><span class="line">    OBJC_TAG_Photos_2          = <span class="number">9</span>,</span><br><span class="line">    OBJC_TAG_Photos_3          = <span class="number">10</span>,</span><br><span class="line">    OBJC_TAG_Photos_4          = <span class="number">11</span>,</span><br><span class="line">    OBJC_TAG_XPC_1             = <span class="number">12</span>,</span><br><span class="line">    OBJC_TAG_XPC_2             = <span class="number">13</span>,</span><br><span class="line">    OBJC_TAG_XPC_3             = <span class="number">14</span>,</span><br><span class="line">    OBJC_TAG_XPC_4             = <span class="number">15</span>,</span><br><span class="line"></span><br><span class="line">    OBJC_TAG_First60BitPayload = <span class="number">0</span>, </span><br><span class="line">    OBJC_TAG_Last60BitPayload  = <span class="number">6</span>, </span><br><span class="line">    OBJC_TAG_First52BitPayload = <span class="number">8</span>, </span><br><span class="line">    OBJC_TAG_Last52BitPayload  = <span class="number">263</span>, </span><br><span class="line"></span><br><span class="line">    OBJC_TAG_RESERVED_264      = <span class="number">264</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> __has_feature(objc_fixed_enum)  &amp;&amp;  !defined(__cplusplus)</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">enum</span> <span class="keyword">objc_tag_index_t</span> <span class="keyword">objc_tag_index_t</span>;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+
+<h4 id="方法定义"><a href="#方法定义" class="headerlink" title="方法定义"></a>方法定义</h4><p>校验是否是<code>tagged pointer</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">bool</span> </span><br><span class="line">_objc_isTaggedPointer(<span class="keyword">const</span> <span class="keyword">void</span> * _Nullable ptr)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> ((<span class="keyword">uintptr_t</span>)ptr &amp; _OBJC_TAG_MASK) == _OBJC_TAG_MASK;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>生成一个<code>tagged pointer</code>，最高四位是tagged，余下是数据</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">void</span> * _Nonnull</span><br><span class="line">_objc_makeTaggedPointer(<span class="keyword">objc_tag_index_t</span> tag, <span class="keyword">uintptr_t</span> value)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// PAYLOAD_LSHIFT and PAYLOAD_RSHIFT are the payload extraction shifts.</span></span><br><span class="line">    <span class="comment">// They are reversed here for payload insertion.</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// assert(_objc_taggedPointersEnabled());</span></span><br><span class="line">    <span class="keyword">if</span> (tag &lt;= OBJC_TAG_Last60BitPayload) &#123;</span><br><span class="line">        <span class="comment">// assert(((value &lt;&lt; _OBJC_TAG_PAYLOAD_RSHIFT) &gt;&gt; _OBJC_TAG_PAYLOAD_LSHIFT) == value);</span></span><br><span class="line">        <span class="keyword">uintptr_t</span> result =</span><br><span class="line">            (_OBJC_TAG_MASK | </span><br><span class="line">             ((<span class="keyword">uintptr_t</span>)tag &lt;&lt; _OBJC_TAG_INDEX_SHIFT) | </span><br><span class="line">             ((value &lt;&lt; _OBJC_TAG_PAYLOAD_RSHIFT) &gt;&gt; _OBJC_TAG_PAYLOAD_LSHIFT));</span><br><span class="line">        <span class="keyword">return</span> _objc_encodeTaggedPointer(result);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// assert(tag &gt;= OBJC_TAG_First52BitPayload);</span></span><br><span class="line">        <span class="comment">// assert(tag &lt;= OBJC_TAG_Last52BitPayload);</span></span><br><span class="line">        <span class="comment">// assert(((value &lt;&lt; _OBJC_TAG_EXT_PAYLOAD_RSHIFT) &gt;&gt; _OBJC_TAG_EXT_PAYLOAD_LSHIFT) == value);</span></span><br><span class="line">        <span class="keyword">uintptr_t</span> result =</span><br><span class="line">            (_OBJC_TAG_EXT_MASK |</span><br><span class="line">             ((<span class="keyword">uintptr_t</span>)(tag - OBJC_TAG_First52BitPayload) &lt;&lt; _OBJC_TAG_EXT_INDEX_SHIFT) |</span><br><span class="line">             ((value &lt;&lt; _OBJC_TAG_EXT_PAYLOAD_RSHIFT) &gt;&gt; _OBJC_TAG_EXT_PAYLOAD_LSHIFT));</span><br><span class="line">        <span class="keyword">return</span> _objc_encodeTaggedPointer(result);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从Tagged Pointer中获取值</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">objc_tag_index_t</span> </span><br><span class="line">_objc_getTaggedPointerTag(<span class="keyword">const</span> <span class="keyword">void</span> * _Nullable ptr) </span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// assert(_objc_isTaggedPointer(ptr));</span></span><br><span class="line">    <span class="keyword">uintptr_t</span> value = _objc_decodeTaggedPointer(ptr);</span><br><span class="line">    <span class="keyword">uintptr_t</span> basicTag = (value &gt;&gt; _OBJC_TAG_INDEX_SHIFT) &amp; _OBJC_TAG_INDEX_MASK;</span><br><span class="line">    <span class="keyword">uintptr_t</span> extTag =   (value &gt;&gt; _OBJC_TAG_EXT_INDEX_SHIFT) &amp; _OBJC_TAG_EXT_INDEX_MASK;</span><br><span class="line">    <span class="keyword">if</span> (basicTag == _OBJC_TAG_INDEX_MASK) &#123;</span><br><span class="line">        <span class="keyword">return</span> (<span class="keyword">objc_tag_index_t</span>)(extTag + OBJC_TAG_First52BitPayload);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> (<span class="keyword">objc_tag_index_t</span>)basicTag;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="特点"><a href="#特点" class="headerlink" title="特点"></a>特点</h3><p>Tagged Pointer的引入，直接将值存储于指针本身，不旦减少了内存的占用，而且它不存在在堆中，也不需要malloc和free，还提高了运行效率。</p>
+<p>我们也可以在 WWDC2013 的《Session 404 Advanced in Objective-C》视频中，看到苹果对于<code>Tagged Pointer</code>特点的介绍：</p>
+<ul>
+<li>Tagged Pointer专门用于存储小的对象，例如NSNumber、NSSting</li>
+<li>Tagged Pointer的值不再是地址，而是真正的值，所以，它实际不再是一个对象，它只是一个披着对象皮的指针，所以它并不存储在堆中，也不需要malloc和free</li>
+<li>在内存读取上有着3倍的速度，创建时也比之前快106倍</li>
+</ul>
+<h5 id="关闭tagged-pointer的数据混淆"><a href="#关闭tagged-pointer的数据混淆" class="headerlink" title="关闭tagged pointer的数据混淆"></a>关闭tagged pointer的数据混淆</h5><p>在现在的版本中，为了保证数据安全，苹果对tagged point做了数据混淆，开发者通过打印指针无法判断他是不是一个tagged pointer，更无法读取其存储的数据。</p>
+<p>在分析tagged pointer之前，我们需要先把<code>tagged pointer</code>数据混淆关闭，以方便我们进行调试。通过设置环境变量<code>OBJC_DISABLE_TAG_OBFUSCATION</code>为<code>YES</code></p>
+<h4 id="iOS应用举例"><a href="#iOS应用举例" class="headerlink" title="iOS应用举例"></a>iOS应用举例</h4><h5 id="NSNumber应用"><a href="#NSNumber应用" class="headerlink" title="NSNumber应用"></a>NSNumber应用</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">NSNumber *charNumber &#x3D; [NSNumber numberWithChar:&#39;1&#39;];</span><br><span class="line">NSNumber *shortNumber &#x3D; [NSNumber numberWithShort:1];</span><br><span class="line">NSNumber *intNumber &#x3D; [NSNumber numberWithInt:1];</span><br><span class="line">NSNumber *floatNumber &#x3D; [NSNumber numberWithFloat:1.0];</span><br><span class="line">NSNumber *longNumber &#x3D; [NSNumber numberWithLong:1];</span><br><span class="line">NSNumber *doubleNumber &#x3D; [NSNumber numberWithDouble:1.0];</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 输出变量的指针地址：</span><br><span class="line">&#x2F;&#x2F; charNumber 0xb000000000000310</span><br><span class="line">&#x2F;&#x2F; shortNumber 0xb000000000000011</span><br><span class="line">&#x2F;&#x2F; intNumber 0xb000000000000012</span><br><span class="line">&#x2F;&#x2F; floatNumber 0xb000000000000014</span><br><span class="line">&#x2F;&#x2F; longNumber 0xb000000000000013</span><br><span class="line">&#x2F;&#x2F; doubleNumber 0xb000000000000015</span><br></pre></td></tr></table></figure>
+
+<p><img src="/Users/mikasa/Desktop/image_mark/image-20201028113927598.png" alt="image-20201028113927598"></p>
+<p>规律都是以0xb(1011开头)</p>
+<ul>
+<li>最高位是1，说明指针是一个Tagged Pointer类型</li>
+<li>第61-63位是11（十进制对应的是3），根据上诉枚举定义也就是（OBJC_TAG_NSNumber）</li>
+<li>第1-4位是NSNumber类型，比如char是0 short是1，int是2，float是4，long是3，double是5</li>
+<li>剩下56位就是真正的值了</li>
+</ul>
+<p><img src="/Users/mikasa/Desktop/image_mark/zufmtqnvbq.png" alt="zufmtqnvbq"></p>
+<h5 id="NSString应用"><a href="#NSString应用" class="headerlink" title="NSString应用"></a>NSString应用</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">NSString *str1 &#x3D; [NSString stringWithFormat:@&quot;a&quot;];</span><br><span class="line">NSString *str2 &#x3D; [NSString stringWithFormat:@&quot;ab&quot;];</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 输出变量的指针地址：</span><br><span class="line">&#x2F;&#x2F; str1: 0xa000000000000611</span><br><span class="line">&#x2F;&#x2F; str2: 0xa000000000062612</span><br></pre></td></tr></table></figure>
+
+<p><img src="/Users/mikasa/Desktop/image_mark/image-20201028114331053.png" alt="image-20201028114331053"></p>
+<p>与NSNumber类似</p>
+<ul>
+<li>最高位是1，说明指针是一个Tagged Pointer类型</li>
+<li>第61-63位是10（对应的十进制是2），根据上述枚举定义类型也就是OBJC_TAG_NSString</li>
+<li>第1-4位是字符串长度</li>
+<li>剩下的56位就是真正的值了</li>
+</ul>
+<p>进一步扩展</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">NSString *a &#x3D; @&quot;a&quot;;</span><br><span class="line">NSMutableString *b &#x3D; [a mutableCopy];</span><br><span class="line">NSString *c &#x3D; [a copy];</span><br><span class="line">NSString *d &#x3D; [[a mutableCopy] copy];</span><br><span class="line">NSString *e &#x3D; [NSString stringWithString:a];</span><br><span class="line">NSString *f &#x3D; [NSString stringWithFormat:@&quot;f&quot;];</span><br><span class="line">NSString *string1 &#x3D; [NSString stringWithFormat:@&quot;abcdefg&quot;];</span><br><span class="line">NSString *string2 &#x3D; [NSString stringWithFormat:@&quot;abcdefghi&quot;];</span><br><span class="line">NSString *string3 &#x3D; [NSString stringWithFormat:@&quot;abcdefghij&quot;];</span><br><span class="line"></span><br><span class="line">&#x2F;* MacOS打印结果</span><br><span class="line">a: 0x100002038, __NSCFConstantString, 18446744073709551615</span><br><span class="line">b: 0x10071f3c0, __NSCFString, 1</span><br><span class="line">c: 0x100002038, __NSCFConstantString, 18446744073709551615</span><br><span class="line">d: 0x6115, NSTaggedPointerString, 18446744073709551615</span><br><span class="line">e: 0x100002038, __NSCFConstantString, 18446744073709551615</span><br><span class="line">f: 0x6615, NSTaggedPointerString, 18446744073709551615</span><br><span class="line">string1: 0x6766656463626175, NSTaggedPointerString, 18446744073709551615</span><br><span class="line">string2: 0x880e28045a54195, NSTaggedPointerString, 18446744073709551615</span><br><span class="line">string3: 0x10071f6d0, __NSCFString, 1 *&#x2F;</span><br></pre></td></tr></table></figure>
+
+<p>从打印结果来看，有三种NSString类型：</p>
+<table>
+<thead>
+<tr>
+<th align="left">类型</th>
+<th align="left">描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">__NSCFConstantString</td>
+<td align="left">常量字符串，存储在字符串常量区，继承于 __NSCFString。相同内容的 __NSCFConstantString 对象的地址相同，也就是说常量字符串对象是一种单例，可以通过 == 判断字符串内容是否相同。2. 这种对象一般通过字面值@”…”创建。如果使用 __NSCFConstantString 来初始化一个字符串，那么这个字符串也是相同的 __NSCFConstantString。</td>
+</tr>
+<tr>
+<td align="left">__NSCFString</td>
+<td align="left">存储在堆区，需要维护其引用计数，继承于 NSMutableString。2. 通过stringWithFormat:等方法创建的NSString对象（且字符串值过大无法使用Tagged Pointer存储）一般都是这种类型。</td>
+</tr>
+<tr>
+<td align="left">NSTaggedPointerString</td>
+<td align="left">Tagged Pointer，字符串的值直接存储在了指针上。</td>
+</tr>
+</tbody></table>
+<p>打印结果分析：</p>
+<table>
+<thead>
+<tr>
+<th align="left">NSString 对象</th>
+<th align="left">类型</th>
+<th align="left">分析</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">a</td>
+<td align="left">__NSCFConstantString</td>
+<td align="left">通过字面量@”…”创建</td>
+</tr>
+<tr>
+<td align="left">b</td>
+<td align="left">__NSCFString</td>
+<td align="left">a 的深拷贝，指向不同的内存地址，被拷贝到堆区</td>
+</tr>
+<tr>
+<td align="left">c</td>
+<td align="left">__NSCFConstantString</td>
+<td align="left">a 的浅拷贝，指向同一块内存地址</td>
+</tr>
+<tr>
+<td align="left">d</td>
+<td align="left">NSTaggedPointerString</td>
+<td align="left">单独对 a 进行 copy（如 c），浅拷贝是指向同一块内存地址，所以不会产生Tagged Pointer；单独对 a 进行 mutableCopy（如 b），复制出来是可变对象，内容大小可以扩展；而Tagged Pointer存储的内容大小有限，因此无法满足可变对象的存储要求。</td>
+</tr>
+<tr>
+<td align="left">e</td>
+<td align="left">__NSCFConstantString</td>
+<td align="left">使用 __NSCFConstantString 来初始化的字符串</td>
+</tr>
+<tr>
+<td align="left">f</td>
+<td align="left">NSTaggedPointerString</td>
+<td align="left">通过stringWithFormat:方法创建，指针足够存储字符串的值。</td>
+</tr>
+<tr>
+<td align="left">string1</td>
+<td align="left">NSTaggedPointerString</td>
+<td align="left">通过stringWithFormat:方法创建，指针足够存储字符串的值。</td>
+</tr>
+<tr>
+<td align="left">string2</td>
+<td align="left">NSTaggedPointerString</td>
+<td align="left">通过stringWithFormat:方法创建，指针足够存储字符串的值。</td>
+</tr>
+<tr>
+<td align="left">string3</td>
+<td align="left">__NSCFString</td>
+<td align="left">通过stringWithFormat:方法创建，指针不足够存储字符串的值。</td>
+</tr>
+</tbody></table>
+<p><img src="/Users/mikasa/Desktop/image_mark/cj0aj4o1ul.png" alt="cj0aj4o1ul"></p>
+<p>在objc4源码中，我们经常会在函数中看见tagged pointer。比如objc_msgSend函数：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">/********************************************************************</span><br><span class="line"> *</span><br><span class="line"> * id objc_msgSend(id self, SEL _cmd, ...);</span><br><span class="line"> * IMP objc_msgLookup(id self, SEL _cmd, ...);</span><br><span class="line"> * </span><br><span class="line"> * objc_msgLookup ABI:</span><br><span class="line"> * IMP returned in x17</span><br><span class="line"> * x16 reserved for our use but not used</span><br><span class="line"> *</span><br><span class="line"> ********************************************************************/</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="keyword">if</span> SUPPORT_TAGGED_POINTERS</span></span><br><span class="line">	.data</span><br><span class="line">	.align 3</span><br><span class="line">	.globl _objc_debug_taggedpointer_classes</span><br><span class="line">_objc_debug_taggedpointer_classes:</span><br><span class="line">	.fill 16, 8, 0</span><br><span class="line">	.globl _objc_debug_taggedpointer_ext_classes</span><br><span class="line">_objc_debug_taggedpointer_ext_classes:</span><br><span class="line">	.fill 256, 8, 0</span><br><span class="line"><span class="meta">#</span><span class="bash">endif</span></span><br><span class="line"></span><br><span class="line">	ENTRY _objc_msgSend</span><br><span class="line">	UNWIND _objc_msgSend, NoFrame</span><br><span class="line"></span><br><span class="line">	cmp	p0, #0			// nil check and tagged pointer check</span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="keyword">if</span> SUPPORT_TAGGED_POINTERS</span></span><br><span class="line">	b.le	LNilOrTagged		//  (MSB tagged pointer looks negative)</span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="keyword">else</span></span></span><br><span class="line">	b.eq	LReturnZero</span><br><span class="line"><span class="meta">#</span><span class="bash">endif</span></span><br><span class="line">	ldr	p13, [x0]		// p13 = isa</span><br><span class="line">	GetClassFromIsa_p16 p13		// p16 = class</span><br><span class="line">LGetIsaDone:</span><br><span class="line">	CacheLookup NORMAL		// calls imp or objc_msgSend_uncached</span><br></pre></td></tr></table></figure>
+
+<p><code>objc_msgSend</code>函数能够识别<code>tagged pointer</code>，比如<code>NSNumber</code>的<code>intValue</code>方法，直接从指针提取数据，不会进行<code>objc_msgSend</code>的三大流程，节省了调用开销。</p>
+<p>内存管理相关，如<code>retain</code>方法中的<code>rootRetain</code>：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">ALWAYS_INLINE id </span><br><span class="line">objc_object::rootRetain(bool tryRetain, bool handleOverflow)</span><br><span class="line">&#123;</span><br><span class="line">    if (isTaggedPointer()) return (id)this;</span><br><span class="line">    ……</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>进行判断是否是tagged pointer伪对象</p>
+<h4 id="Tagged-Pointer注意点"><a href="#Tagged-Pointer注意点" class="headerlink" title="Tagged Pointer注意点"></a>Tagged Pointer注意点</h4><p>前面知道，tagged pointer并不是真正的对象，它没有isa指针，所以直接访问tagged pointer的isa成员的话，在编译器就会出现警告。</p>
+<p><strong>执行以下两段待会，会出现什么情况？</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">- (void)mm_tagged_no_pointer &#123;</span><br><span class="line">    dispatch_queue_t queue &#x3D; dispatch_get_global_queue(0, 0);</span><br><span class="line">    for (int i &#x3D; 0; i &lt; 1000; i++) &#123;</span><br><span class="line">        dispatch_async(queue, ^&#123;</span><br><span class="line">            self.name &#x3D; [NSString stringWithFormat:@&quot;abcdefghi1&quot;];</span><br><span class="line">            NSLog(@&quot;%p---%@&quot;,self.name,[self.name class]);</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行结果，Crash</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)mm_tagged_pointer &#123;</span><br><span class="line">    <span class="built_in">dispatch_queue_t</span> queue = dispatch_get_global_queue(<span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">1000</span>; i++) &#123;</span><br><span class="line">        <span class="built_in">dispatch_async</span>(queue, ^&#123;</span><br><span class="line">            <span class="keyword">self</span>.name = [<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"abcdefghi"</span>];</span><br><span class="line">            <span class="built_in">NSLog</span>(<span class="string">@"%p---%@"</span>,<span class="keyword">self</span>.name,[<span class="keyword">self</span>.name <span class="keyword">class</span>]);</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行结果，正常</p>
+<p>分别打印两段代码中的<code>self.name</code>，可以发现第一段代码中的<code>self.name</code>类型为<code>CFString</code> ，第二段代码中的类型为<code>NSTaggedPointerString</code>。</p>
+<p><img src="/Users/mikasa/Desktop/image_mark/image-20201028161517267.png" alt="image-20201028161517267"></p>
+<p>观察一下Crash崩溃函数调用信息，不难发现，在线程退出的时候，会对当前线程中的TSD数据（<code>Autoreleasepool</code>及放入其中的对象进行<code>release</code>），多条线程并发执行过程中，可能就会出现对一个对象多次调用<code>release</code>造成对象过度释放，导致Crash</p>
+<p><strong>解决办法（保证多线程数据安全）：</strong></p>
+<ul>
+<li>使用atomic属性关键字</li>
+<li>加锁</li>
+<li>队列串行访问</li>
+<li>信号量</li>
+</ul>
+<p>而第二段代码中的NSString类型为<code>NSTaggedPointerString</code>类型，在objc_release函数会判断是否是TaggedPointer类型，是的话就不会进行release操作，也就避免了因过度释放对象而导致的Crash。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> </span><br><span class="line">objc_release(id obj)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (!obj) <span class="keyword">return</span>;</span><br><span class="line">    <span class="keyword">if</span> (obj-&gt;isTaggedPointer()) <span class="keyword">return</span>;</span><br><span class="line">    <span class="keyword">return</span> obj-&gt;<span class="built_in">release</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/10/23/AutoreleasePool/" rel="prev" title="AutoreleasePool">
+      <i class="fa fa-chevron-left"></i> AutoreleasePool
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/10/28/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86-ISA/" rel="next" title="内存管理-ISA & Weak底层">
+      内存管理-ISA & Weak底层 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Tagged-Pointer"><span class="nav-number">1.</span> <span class="nav-text">Tagged Pointer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#背景"><span class="nav-number">2.</span> <span class="nav-text">背景</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#存在问题"><span class="nav-number">2.1.</span> <span class="nav-text">存在问题</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#改进方案"><span class="nav-number">2.2.</span> <span class="nav-text">改进方案</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Tagged-Pointer定义"><span class="nav-number">3.</span> <span class="nav-text">Tagged Pointer定义</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#宏定义"><span class="nav-number">3.1.</span> <span class="nav-text">宏定义</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#方法定义"><span class="nav-number">3.2.</span> <span class="nav-text">方法定义</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#特点"><span class="nav-number">4.</span> <span class="nav-text">特点</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#关闭tagged-pointer的数据混淆"><span class="nav-number">4.0.1.</span> <span class="nav-text">关闭tagged pointer的数据混淆</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#iOS应用举例"><span class="nav-number">4.1.</span> <span class="nav-text">iOS应用举例</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#NSNumber应用"><span class="nav-number">4.1.1.</span> <span class="nav-text">NSNumber应用</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#NSString应用"><span class="nav-number">4.1.2.</span> <span class="nav-text">NSString应用</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Tagged-Pointer注意点"><span class="nav-number">4.2.</span> <span class="nav-text">Tagged Pointer注意点</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Doris AI</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Doris AI</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v7.7.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

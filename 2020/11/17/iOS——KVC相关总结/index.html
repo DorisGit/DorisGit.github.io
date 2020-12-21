@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://dorisgit.github.io').hostname,
+    root: '/',
+    scheme: 'Mist',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="KVC KVC 全称是（Key-Value Coding）键值编码，是有NSKeyValueCoding非正式协议启用的一种机制，对象采用这种机制来提供对其属性的间接访问，可以通过字符串来访问一个对象的成员变量或其关联的存取方法（setter or getter）。 通常，我们可以直接通过存储方法或变量名来访问对象的属性，我们也可以通过KVC间接访问对象的属性，并且KVC还可以访问私有变量。某些情">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS——KVC相关总结">
+<meta property="og:url" content="https://dorisgit.github.io/2020/11/17/iOS%E2%80%94%E2%80%94KVC%E7%9B%B8%E5%85%B3%E6%80%BB%E7%BB%93/index.html">
+<meta property="og:site_name" content="泡泡茶壶">
+<meta property="og:description" content="KVC KVC 全称是（Key-Value Coding）键值编码，是有NSKeyValueCoding非正式协议启用的一种机制，对象采用这种机制来提供对其属性的间接访问，可以通过字符串来访问一个对象的成员变量或其关联的存取方法（setter or getter）。 通常，我们可以直接通过存储方法或变量名来访问对象的属性，我们也可以通过KVC间接访问对象的属性，并且KVC还可以访问私有变量。某些情">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/image-20201208151209139.png">
+<meta property="article:published_time" content="2020-11-17T08:02:22.000Z">
+<meta property="article:modified_time" content="2020-12-08T12:26:04.193Z">
+<meta property="article:author" content="Doris AI">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/image-20201208151209139.png">
+
+<link rel="canonical" href="https://dorisgit.github.io/2020/11/17/iOS%E2%80%94%E2%80%94KVC%E7%9B%B8%E5%85%B3%E6%80%BB%E7%BB%93/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>iOS——KVC相关总结 | 泡泡茶壶</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">泡泡茶壶</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="en">
+    <link itemprop="mainEntityOfPage" href="https://dorisgit.github.io/2020/11/17/iOS%E2%80%94%E2%80%94KVC%E7%9B%B8%E5%85%B3%E6%80%BB%E7%BB%93/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Doris AI">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="泡泡茶壶">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          iOS——KVC相关总结
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-11-17 16:02:22" itemprop="dateCreated datePublished" datetime="2020-11-17T16:02:22+08:00">2020-11-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-12-08 20:26:04" itemprop="dateModified" datetime="2020-12-08T20:26:04+08:00">2020-12-08</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="KVC"><a href="#KVC" class="headerlink" title="KVC"></a>KVC</h3><ul>
+<li>KVC 全称是（Key-Value Coding）键值编码，是有<code>NSKeyValueCoding</code>非正式协议启用的一种机制，对象采用这种机制来提供对其属性的间接访问，可以通过字符串来访问一个对象的成员变量或其关联的存取方法（<code>setter</code> or <code>getter</code>）。</li>
+<li>通常，我们可以直接通过存储方法或变量名来访问对象的属性，我们也可以通过<code>KVC</code>间接访问对象的属性，并且<code>KVC</code>还可以访问私有变量。某些情况下，<code>KVC</code>还可以帮助简化代码</li>
+<li><code>KVC</code>是许多其他Cocoa技术的基础，比如<code>KVO</code>、<code>Cocoa bingdings</code>，<code>Core Data</code>，<code>AppleScript-ability</code>等。</li>
+</ul>
+<p>访问对象属性</p>
+<h4 id="常用API"><a href="#常用API" class="headerlink" title="常用API"></a>常用API</h4><figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Return an array containing the results of invoking -valueForKey: on each of the receiver's elements. The returned array will contain NSNull elements for each instance of -valueForKey: returning nil.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">- (<span class="keyword">id</span>)valueForKey:(<span class="built_in">NSString</span> *)key;<span class="comment">// 通过key来取值</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* Invoke -setValue:forKey: on each of the receiver's elements.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">- (<span class="keyword">void</span>)setValue:(<span class="keyword">nullable</span> <span class="keyword">id</span>)value forKey:(<span class="built_in">NSString</span> *)key;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Key-path-taking variants of like-named methods. The default implementation of each parses the key path enough to determine whether or not it has more than one component (key path components are separated by periods). If so, -valueForKey: is invoked with the first key path component as the argument, and the method being invoked is invoked recursively on the result, with the remainder of the key path passed as an argument. If not, the like-named non-key-path-taking method is invoked.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">- (<span class="keyword">nullable</span> <span class="keyword">id</span>)valueForKeyPath:(<span class="built_in">NSString</span> *)keyPath; <span class="comment">// 通过keyPath来取值</span></span><br><span class="line">- (<span class="keyword">void</span>)setValue:(<span class="keyword">nullable</span> <span class="keyword">id</span>)value forKeyPath:(<span class="built_in">NSString</span> *)keyPath;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Given an array of keys, return a dictionary containing the keyed attribute values, to-one-related objects, and/or collections of to-many-related objects. Entries for which -valueForKey: returns nil have NSNull as their value in the returned dictionary.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">- (<span class="built_in">NSDictionary</span>&lt;<span class="built_in">NSString</span> *, <span class="keyword">id</span>&gt; *)dictionaryWithValuesForKeys:(<span class="built_in">NSArray</span>&lt;<span class="built_in">NSString</span> *&gt; *)keys;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Given a dictionary containing keyed attribute values, to-one-related objects, and/or collections of to-many-related objects, set the keyed values. Dictionary entries whose values are NSNull result in -setValue:nil forKey:key messages being sent to the receiver.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">- (<span class="keyword">void</span>)setValuesForKeysWithDictionary:(<span class="built_in">NSDictionary</span>&lt;<span class="built_in">NSString</span> *, <span class="keyword">id</span>&gt; *)keyedValues;</span><br></pre></td></tr></table></figure>
+
+<h5 id="setValue-forKey"><a href="#setValue-forKey" class="headerlink" title="setValue:forKey"></a>setValue:forKey</h5><p>通过<code>KVC</code>间接为属性赋值</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[myAccount setValue:@(100.0) forKey:@&quot;currentBalance&quot;];</span><br></pre></td></tr></table></figure>
+
+<h5 id="valueForKey"><a href="#valueForKey" class="headerlink" title="valueForKey"></a>valueForKey</h5><p>通过<code>KVC</code>间接取值，通过其<code>key</code>获取值</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[myAccount valueForKey:@&quot;currentBalance&quot;];</span><br></pre></td></tr></table></figure>
+
+<h5 id="setValue-forKeyPath"><a href="#setValue-forKeyPath" class="headerlink" title="setValue:forKeyPath"></a>setValue:forKeyPath</h5><p>KVC<code>还支持多级访问</code>，KeyPath用法和点语法相同。例如：我们想对<code>myAccount</code>的<code>owner</code>属性的<code>address</code>属性的<code>street</code>属性赋值，其<code>keyPath</code>为<code>myAccount.owner.address.</code></p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[myAccount setValue:<span class="string">@"地址"</span> forKeyPath:<span class="string">@"owner.address.street"</span>];</span><br></pre></td></tr></table></figure>
+
+<h4 id="多值操作"><a href="#多值操作" class="headerlink" title="多值操作"></a>多值操作</h4><p>给定一组<code>Key</code>，获得一组<code>Value</code>，以字典的形式返回。该方法为数组中的每个<code>key</code>调用<code>valueForKey</code>方法</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="built_in">NSDictionary</span>&lt;<span class="built_in">NSString</span> *, <span class="keyword">id</span>&gt; *)dictionaryWithValuesForKeys:(<span class="built_in">NSArray</span>&lt;<span class="built_in">NSString</span> *&gt; *)keys;</span><br></pre></td></tr></table></figure>
+
+<p>将指定字典中的值设置到消息接受者的属性中，使用字典的key标示属性。默认实现市委每个键值调用setValue:forKey:方法，会根据需要用nil替换NSNull对象。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">- (void)setValuesForKeysWithDictionary:(NSDictionary&lt;NSString *, id&gt; *)keyedValues;</span><br></pre></td></tr></table></figure>
+
+<h4 id="访问集合属性"><a href="#访问集合属性" class="headerlink" title="访问集合属性"></a>访问集合属性</h4><p>我们可以像访问其他对象一样使用<code>valueForKey:</code>或<code>setValue:forKey:</code>方法获取或设置集合对象（主要包括<code>NSArray</code>或<code>NSSet</code>）。但是，当我们要操作集合对象的内容，比如添加或者删除元素时，通过KVC的可变代理方法获取集合代理对象是有效的。</p>
+<p>根据<code>KVO</code>的实现原理，是在运行时动态生成子类并重写<code>setter</code>方法来达到可以通知所有观察者对象的目的，因此我们对集合对象进行操作是不会触发<code>KVO</code>的。当我们要使用<code>KVO</code>监听集合对象变化时，需要通过<code>KVC</code>的可变代理方法获取集合代理对象，然后对代理对象进行操作，当代理对象内部对象发生变化时，会触发<code>KVO</code>的监听方法。</p>
+<p><code>KVC</code>提供了三种不同的代理对象访问的代理方法，每种都有<code>key</code> 和 <code>keyPath</code>两种方法。</p>
+<ul>
+<li><p>返回NSMutableArray对象的代理对象</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="built_in">NSMutableArray</span> *)mutableArrayValueForKey:(<span class="built_in">NSString</span> *)key;</span><br><span class="line"></span><br><span class="line">- (<span class="built_in">NSMutableArray</span> *)mutableArrayValueForKeyPath:(<span class="built_in">NSString</span> *)keyPath;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>返回NSMutableSet对象的代理对象</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">- (NSMutableSet *)mutableSetValueForKey:(NSString *)key;</span><br><span class="line"></span><br><span class="line">- (NSMutableSet *)mutableSetValueForKeyPath:(NSString *)keyPath;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>返回NSMutableOrderedSet对象的代理对象</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="built_in">NSMutableOrderedSet</span> *)mutableOrderedSetValueForKey:(<span class="built_in">NSString</span> *)key API_AVAILABLE(macos(<span class="number">10.7</span>), ios(<span class="number">5.0</span>), watchos(<span class="number">2.0</span>), tvos(<span class="number">9.0</span>));</span><br><span class="line"></span><br><span class="line">- (<span class="built_in">NSMutableOrderedSet</span> *)mutableOrderedSetValueForKeyPath:(<span class="built_in">NSString</span> *)keyPath API_AVAILABLE(macos(<span class="number">10.7</span>), ios(<span class="number">5.0</span>), watchos(<span class="number">2.0</span>), tvos(<span class="number">9.0</span>));</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h4 id="使用集合运算符"><a href="#使用集合运算符" class="headerlink" title="使用集合运算符"></a>使用集合运算符</h4><p>KVC的valueForKeyPath:方法除了可以取出属性值以外，还可以在keyPath中嵌套集合运算符，来对集合对象进行操作。</p>
+<p>KeyPath 分为三部分，left key path（左键路径）、Collection operation（集合运算符）、right key path（右键路径，要进行运算的集合中的属性）</p>
+<p>集合运算符分为三类：</p>
+<ul>
+<li>聚合运算符：以某种方式合并集合中的对象，并返回右键路径中指定的属性的数据类型匹配的一个对象，一般返回NSNumber对象</li>
+<li>数组运算符：根据运算符的条件，将符合条件的对象以一个NSArray对象返回</li>
+<li>嵌套运算符：处理集合对象中嵌套其他集合对象的情况，并根据运算符返回一个NSArray 或 NSSet对象</li>
+</ul>
+<h5 id="聚合运算符"><a href="#聚合运算符" class="headerlink" title="聚合运算符"></a>聚合运算符</h5><p>以某种方式合并集合中的对象，并返回右键路径中指定的属性的数据类型匹配的一个对象，一般返回NSNumber对象</p>
+<h6 id="avg"><a href="#avg" class="headerlink" title="@avg"></a>@avg</h6><p>读取集合中每个元素的右键路径指定的属性，将其转换为double类型（nil 用 0代替），并计算这些值的算术平均值，然后将结果以NSNumber对象返回。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 计算集合中amount属性的平均值</span></span><br><span class="line"><span class="built_in">NSNumber</span> *transactionAverage = [<span class="keyword">self</span>.transactions valueForKeyPath:<span class="string">@"@avg.amount"</span>];</span><br></pre></td></tr></table></figure>
+
+<h6 id="count"><a href="#count" class="headerlink" title="@count"></a>@count</h6><p>计算集合中的元素个数，以NSNumber实例返回</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 计算 transactions 集合中的元素个数。</span></span><br><span class="line"><span class="built_in">NSNumber</span> *numberOfTransactions = [<span class="keyword">self</span>.transactions valueForKeyPath:<span class="string">@"@count"</span>];</span><br><span class="line"><span class="comment">// numberOfTransactions 的值为 13。</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>备注：@count运算符比较特别，它不需要写右键路径，即使写了也会被忽略</p>
+</blockquote>
+<h6 id="sum"><a href="#sum" class="headerlink" title="@sum"></a>@sum</h6><p>读取集合中每个元素的右键路径指定的属性，将其转换为double类型(nil 用 0代替)，并计算这些值的总和，然后将结果以NSNumber实例返回</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; 计算amount 的总和</span><br><span class="line">NSNumber *amountSum &#x3D; [self.transactions valueForKeyPath:@&quot;@sum.amount&quot;];</span><br></pre></td></tr></table></figure>
+
+<h6 id="max"><a href="#max" class="headerlink" title="@max"></a>@max</h6><p>返回集合右键路径指定的属性的最大值</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; 获取日期的最大值</span><br><span class="line">NSDate *latestDate &#x3D; [self.transactions valueForKeyPath:@&quot;@max.date&quot;];</span><br></pre></td></tr></table></figure>
+
+<p>@min</p>
+<p>返回集合右键路径指定的属性的最小值</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 获取日期的最小值</span></span><br><span class="line"><span class="built_in">NSDate</span> *earliestDate = [<span class="keyword">self</span>.transactions valueForKeyPath:<span class="string">@"@min.date"</span>];</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>备注：@max 和 @min根据右键路径指定的属性在集合中搜索，搜索使用compare:方法进行。因此，右键路径指定的属性必须能响应compare:消息。搜索忽略值为nil的集合项，也可通过重写compare:方法对搜索结果进行控制。</p>
+</blockquote>
+<h5 id="数组运算符"><a href="#数组运算符" class="headerlink" title="数组运算符"></a>数组运算符</h5><p>根据运算符的条件，将符合条件的对象以一个NSArray实例返回。</p>
+<h6 id="unionOfObjects"><a href="#unionOfObjects" class="headerlink" title="@unionOfObjects"></a>@unionOfObjects</h6><p>读取数组中每个元素的右键路径指定的属性，放在一个NSArray实例中返回</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; 获取集合中的所有payee对象</span><br><span class="line">NSArray *payees &#x3D; [self.transactions valueForKeyPath:@&quot;@unionOfObjects.payee&quot;];</span><br><span class="line">&#x2F;&#x2F; payees 数组中包含所有payee元素的字符串</span><br></pre></td></tr></table></figure>
+
+<h6 id="distinctUnionOfObjects"><a href="#distinctUnionOfObjects" class="headerlink" title="@distinctUnionOfObjects"></a>@distinctUnionOfObjects</h6><p>读取数组中每个元素的右键路径指定的属性，放在一个NSArray实例中，将数组进行去重后返回。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; 获取集合中的所有不同的 payee 对象。</span><br><span class="line">NSArray *distinctPayees &#x3D; [self.transactions valueForKeyPath:@&quot;@distinctUnionOfObjects.payee&quot;];</span><br><span class="line">&#x2F;&#x2F; distinctPayees 数组包含以下字符串：Car Loan, General Cable, Animal Hospital, Green Power, Mortgage</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意：在使用数组运算符时，如果有任何操作的对象为nil，则valueForKeyPath:方法将引发异常</p>
+</blockquote>
+<h5 id="嵌套运算符"><a href="#嵌套运算符" class="headerlink" title="嵌套运算符"></a>嵌套运算符</h5><p>处理集合对象中嵌套其他集合对象的情况，并根据运算符返回一个NSArray 和 NSSet实例。</p>
+<p>如下，一个数组中放着另外两个数组</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">NSArray</span>* moreTransactions = @[&lt;<span class="meta"># transaction data #&gt;];</span></span><br><span class="line"><span class="built_in">NSArray</span>* arrayOfArrays = @[<span class="keyword">self</span>.transactions, moreTransactions];</span><br></pre></td></tr></table></figure>
+
+<h6 id="unionOfArrays"><a href="#unionOfArrays" class="headerlink" title="@unionOfArrays"></a>@unionOfArrays</h6><p>读取集合中每个集合中每个元素的右键路径指定的属性，放在一个NSArray实例中返回。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 获取 arrayOfArrays 集合中的每个集合中的所有 payee 对象。</span></span><br><span class="line"><span class="built_in">NSArray</span> *collectedPayees = [arrayOfArrays valueForKeyPath:<span class="string">@"@unionOfArrays.payee"</span>];</span><br></pre></td></tr></table></figure>
+
+<h6 id="distinctUnionOfArrays"><a href="#distinctUnionOfArrays" class="headerlink" title="@distinctUnionOfArrays"></a>@distinctUnionOfArrays</h6><p>读取集合中每个集合每个元素的右键路径指定的属性，放在一个NSArray实例中，将数组进行去重后返回。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 获取 arrayOfArrays 集合中的每个集合中的所有不同的 payee 对象。</span></span><br><span class="line"><span class="built_in">NSArray</span> *collectedDistinctPayees = [arrayOfArrays valueForKeyPath:<span class="string">@"@distinctUnionOfArrays.payee"</span>];</span><br></pre></td></tr></table></figure>
+
+<h6 id="distinctUnionOfSets"><a href="#distinctUnionOfSets" class="headerlink" title="@distinctUnionOfSets"></a>@distinctUnionOfSets</h6><p>读取集合中每个集合每个元素的右键路径指定的属性，放在一个NSSet实例中，去重后返回。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">NSSet</span> *collectedDistinctPayees = [setOfSets valueForKeyPath:<span class="string">@"@distinctUnionOfSets.payee"</span>];</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>注意：</strong></p>
+<ul>
+<li>在使用嵌套运算符时，valueForKeyPath:内部会根据运算符创建一个NSMuatbleArray 或 NSMuatbleSet对象，将集合中的array 和 set添加进去在进行操作。如果集合中有非集合元素，会导致Crash</li>
+<li>使用unionArrays 或 distionctUnionOfArrays运算符，消息接收者应该是arrayOfArrays类型，即<code>NSArray&lt;NASrray *&gt; *arrayOfArrays;</code>；使用distinctUnionOfSets运算符，消息接收者的类型应该是setOfSets或者arrayOfSets类型，否则会发生异常。</li>
+<li>在使用嵌套运算符时，如果有任何操作对象为nil，则valueForKeyPath:方法将引发异常</li>
+</ul>
+</blockquote>
+<h5 id="扩展"><a href="#扩展" class="headerlink" title="扩展"></a>扩展</h5><p>如果集合对象都是NSNumber，右键路径可以用self</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">NSArray *array &#x3D; @[@1, @2, @3, @4, @5];</span><br><span class="line">NSNumber *sum &#x3D; [array valueForKeyPath:@&quot;@sum.self&quot;];</span><br><span class="line">NSLog(@&quot;%d&quot;,[sum intValue]);</span><br></pre></td></tr></table></figure>
+
+<h4 id="自定义集合运算符"><a href="#自定义集合运算符" class="headerlink" title="自定义集合运算符"></a>自定义集合运算符</h4><p>根据<code>Runtime</code>获取<code>NSArray</code>类的方法列表</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">+ (<span class="keyword">void</span>)print_arrayMethodList &#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">int</span> count;</span><br><span class="line">    Method *methods = class_copyMethodList([<span class="built_in">NSArray</span> <span class="keyword">class</span>], &amp;count);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>;i &lt; count; i++) &#123;</span><br><span class="line">        Method method = methods[i];</span><br><span class="line">        SEL sel = method_getName(method);</span><br><span class="line">        <span class="built_in">NSLog</span>(<span class="string">@"%@"</span>,<span class="built_in">NSStringFromSelector</span>(sel));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>输出结果(未完全截图)：</p>
+<p><img src="/Users/mikasa/Desktop/image_mark/image-20201208151209139.png" alt="image-20201208151209139"></p>
+<p>方法很多，搜索关键字<code>avg</code>、<code>count</code>、<code>sum</code>等<code>KVC</code>为我们提供的集合运算符，发现都有对象的方法<code>_&lt;operatorKey&gt;ForKeyPath:</code></p>
+<blockquote>
+<p>注意：再来看一下<code>NSSet</code>类支持的集合运算符：</p>
+<p>可见<code>NSSet</code>类不支持<code>@unionOfObjects</code> 和 <code>@unionOfArrays</code>运算符，如果使用了就会抛出<code>NSInvalidArgumentException</code>异常并崩溃，reason：<code>[&lt;__NSSetI 0x6000017a12f0&gt; valueForKeyPath:]: this class does not implement the unionOfArrays operation.</code>不支持该运算符。</p>
+<p>而<code>NSArray</code>类虽然支持<code>@distinctUnionOfSets</code>运算符，但是必须是<code>arrayOfSets</code>类型，即<code>NSArray&lt; NSSet* &gt;* arrayOfSets;</code>，因为<code>_distinctUnionOfSetsForKeyPath</code>方法中会创建一个<code>NSMutableSet</code>实例，并调用<code>unionSet:</code>方法将集合中的set元素添加进去再进行操作，如果是<code>arrayOfArrays</code>类型就会抛出<code>NSInvalidArgumentException</code>并导致程序崩溃，reason: <code>&#39;*** -[NSMutableSet unionSet:]: set argument is not an NSSet&#39;</code>即集合中有非<code>NSSet</code>元素。</p>
+</blockquote>
+<p>我们尝试为NSArray添加一个分类，并定义一个_medianForKeyPath:方法，用来获取NSArray中的中位数。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">@interface NSArray (kvc)</span><br><span class="line">@end</span><br><span class="line"></span><br><span class="line">@implementation NSArray (kvc)</span><br><span class="line">- (NSNumber *)_medianForKeyPath:(NSString *)keyPath &#123;</span><br><span class="line">    &#x2F;&#x2F;排序</span><br><span class="line">    NSArray *sortedArray &#x3D; [self sortedArrayUsingSelector:@selector(compare:)];</span><br><span class="line">    double median;</span><br><span class="line">    if (self.count % 2 &#x3D;&#x3D; 0) &#123;</span><br><span class="line">        NSInteger index1 &#x3D; sortedArray.count * 0.5;</span><br><span class="line">        NSInteger index2 &#x3D; sortedArray.count * 0.5 - 1;</span><br><span class="line">        median &#x3D; ([[sortedArray objectAtIndex:index1] doubleValue] + [[sortedArray objectAtIndex:index2] doubleValue]) * 0.5;</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        NSInteger index &#x3D; (sortedArray.count-1) * 0.5;</span><br><span class="line">        median &#x3D; [[sortedArray objectAtIndex:index] doubleValue];</span><br><span class="line">    &#125;</span><br><span class="line">    return [NSNumber numberWithDouble:median];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">@end</span><br></pre></td></tr></table></figure>
+
+<p>测试</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">+ (<span class="keyword">void</span>)medianObject_kvc &#123;</span><br><span class="line">    <span class="built_in">NSArray</span> *arr = @[@<span class="number">3</span>,@<span class="number">4</span>,@<span class="number">8</span>,@<span class="number">1</span>];</span><br><span class="line">    <span class="built_in">NSNumber</span> *num = [arr valueForKeyPath:<span class="string">@"@median.self"</span>];</span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"%@"</span>,num);</span><br><span class="line">&#125;</span><br><span class="line">[<span class="number">15</span>:<span class="number">55</span>:<span class="number">06</span>] +[MMKVC medianObject_kvc] [第<span class="number">67</span>行] 💕 <span class="number">3.5</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="非对象值处理"><a href="#非对象值处理" class="headerlink" title="非对象值处理"></a>非对象值处理</h4><p><code>KVC</code>支持基础数据类型和结构体，在使用<code>KVC</code>赋值或取值的时候，会自动在非对象值和对象值之间转换</p>
+<ul>
+<li>当进行取值如<code>valueForKey:</code>时，如果返回值非对象，会使用该值初始化一个<code>NSNumber</code>或 <code>NSValue</code>实例，然后返回该实例。</li>
+<li>当进行赋值如<code>setValue:forKey:</code>时，如果key的数据类型非对象，则会发送一条<code>&lt;type&gt;Value</code>消息给value对象以提取基础数据，然后复制给<code>key</code></li>
+</ul>
+<blockquote>
+<p>注意：</p>
+<ul>
+<li>因为swift中的所有属性都是对象，所以这里仅适用于Objective-C属性。当进行赋值如setValue:forKey时，如果key 的数据类是非对象类型，则value就禁止传nil。否则调用setNilValueForKey:方法，该方法的默认实现抛出异常NSInvalidArgumentException，并导致Crash</li>
+</ul>
+</blockquote>
+<h4 id="属性验证"><a href="#属性验证" class="headerlink" title="属性验证"></a>属性验证</h4><p><code>KVC</code>提供了属性验证的方法，如下，我们可以在使用<code>KVC</code>赋值前验证能否为这个<code>key</code>赋值指定的<code>value</code>。</p>
+<p><code>validateValue</code>方法的默认实现是查看消息接收者类中是否实现了遵循命名规则为<code>validate&lt;key&gt;:error:</code>的方法，如果有就返回调用该方法的结果，如果没有，就默认验证成功并返回YES，我们可以在消息接收者类中实现<code>validate&lt;key&gt;:error:</code>方法来定义逻辑返回YES 或 NO</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="built_in">BOOL</span>)validateValue:(<span class="keyword">inout</span> <span class="keyword">id</span> _Nullable * _Nonnull)ioValue forKeyPath:(<span class="built_in">NSString</span> *)inKeyPath error:(<span class="keyword">out</span> <span class="built_in">NSError</span> **)outError;</span><br><span class="line"></span><br><span class="line">- (<span class="built_in">BOOL</span>)validateValue:(<span class="keyword">inout</span> <span class="keyword">id</span> _Nullable * _Nonnull)ioValue forKey:(<span class="built_in">NSString</span> *)inKey error:(<span class="keyword">out</span> <span class="built_in">NSError</span> **)outError;</span><br></pre></td></tr></table></figure>
+
+<p>示例</p>
+<p>在Person类中实现了validateName:error:方法，验证给name赋的值是不是Jack。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ViewController.m</span></span><br><span class="line">    Person *person = [[Person alloc] init];</span><br><span class="line">    <span class="built_in">NSString</span> *value = <span class="string">@"rose"</span>;</span><br><span class="line">    <span class="built_in">NSString</span> *key = <span class="string">@"name"</span>;</span><br><span class="line">    <span class="built_in">NSError</span>  *error;</span><br><span class="line">    <span class="built_in">BOOL</span> result = [person validateValue:&amp;value forKey:key error:&amp;error];</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (error) &#123;</span><br><span class="line">        <span class="built_in">NSLog</span>(<span class="string">@"error = %@"</span>, error);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">NSLog</span>(<span class="string">@"%d"</span>,result);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Person.m</span></span><br><span class="line">- (<span class="built_in">BOOL</span>)validateName:(<span class="keyword">id</span> *)value error:(<span class="keyword">out</span> <span class="built_in">NSError</span> * _Nullable __autoreleasing *)outError</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">NSString</span> *name = *value;</span><br><span class="line">    <span class="built_in">BOOL</span> result = <span class="literal">NO</span>;</span><br><span class="line">    <span class="keyword">if</span> ([name isEqualToString:<span class="string">@"jack"</span>]) &#123;</span><br><span class="line">        result = <span class="literal">YES</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 打印：0</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>备注：默认情况下，KVC是不会自动验证属性的。</p>
+</blockquote>
+<h4 id="搜索规则"><a href="#搜索规则" class="headerlink" title="搜索规则"></a>搜索规则</h4><h5 id="基本的getter搜索模式"><a href="#基本的getter搜索模式" class="headerlink" title="基本的getter搜索模式"></a>基本的getter搜索模式</h5><p>以下是valueForKey:方法的默认实现，给定一个key作为输入参数，在消息接收者类中操作，执行以下过程。</p>
+<ol>
+<li>按照<code>get&lt;key&gt;</code>、<code>&lt;key&gt;</code>、<code>is&lt;key&gt;</code>、<code>_&lt;key&gt;</code>顺序查找，如果找到就调用取值直接执行5，否则执行2</li>
+<li>查找countOf<key>、objectIn<key>AtIndex:、<key>AtIndexes:命名的方法。如果找到第一个和后面两个中的至少一个，则创建一个能够响应所有NSArray的方法的集合代理对象（类型为NSKeyValueArray，继承NSArray），并返回该对象。否则执行3<ul>
+<li>代理对象随后将将其接收到的任何NSArray消息转换为countOf<key>、objetIn<key>AtIndex:、<key>AtIndexes:消息的组合，并将其发送给KVC调用方。如果原始对象还实现了一个名为get<key>:range:的可选方法，则代理对象也会在适当时使用该方法</li>
+<li>当KVC调用方与代理对象一起工作时，允许底层属性的行为如果NSArray一样，即使它不是NSArray</li>
+</ul>
+</li>
+<li>查找<code>countOf&lt;key&gt;</code>、<code>enumeratorOf&lt;key&gt;</code>、<code>memberOf&lt;key&gt;:</code>命名的方法，如果三个方法都找到，则创建一个能够响应所有NSSet的方法的集合代理对象（类型为NSKeyValueSet，继承自NSSet），并返回该对象。否则执行4<ul>
+<li>代理对象随后将其接收到的任何NSSet消息转换为<code>countOf&lt;key&gt;</code>、<code>enumeratorOf&lt;key&gt;</code>、<code>memberOf&lt;key&gt;:</code>消息的组合，并将其发送给KVC的调用方</li>
+<li>当KVC调用方与代理对象一起工作时，允许底层属性的行为如同NSSet一样，即使他不是NSSet。</li>
+</ul>
+</li>
+<li>查看消息接收者类的<code>+accessInstanceVariableDirectly</code>方法的返回值（默认返回YES），如果返回YES，就按照<code>_&lt;key&gt;</code>、<code>_is&lt;key&gt;</code>、<code>&lt;key&gt;</code>、<code>is&lt;key&gt;</code>顺序查找成员变量。如果找到就直接取值执行5，否则执行6。如果<code>+accessInstanceVariableDirectly</code>方法返回NO， 也会执行6</li>
+<li>如果取到值是一个对象指针，即获取的是对象，则直接将对象返回。如果取得值是一个NSNumber支持的数据类型，则转换为NSValue对象，然后返回。</li>
+<li>调用valueForUndefinedKey:方法，该方法抛出异常NSUnknownKeyException，并导致程序Crash，这是默认实现，我们可以重写该方法根据特点的key做一些特殊处理。</li>
+</ol>
+<h5 id="基本的Setter搜索模式"><a href="#基本的Setter搜索模式" class="headerlink" title="基本的Setter搜索模式"></a>基本的Setter搜索模式</h5><p>以下是setValue:forKey方法的默认实现，给定一个key作为输入参数，返回属性名为key的集合的代理对象（这里指的是NSMutableArray对象），在消息接收者类中操作，执行以下过程。</p>
+<ol>
+<li><p>查找—对方法<code>insert&lt;Key&gt;:atIndexes:</code>和<code>remove&lt;Key&gt;AtIndexes:</code><br>（相当于<code>NSMutableArray</code>的原始方法<code>insertObjects:atIndexes:</code>和<code>removeObjectsAtIndexes:</code>）。</p>
+<ul>
+<li><p>如果我们至少实现了一个<code>insertion</code>方法和一个<code>removal</code>方法，则返回一个代理对象，来响应发送给<code>NSMutableArray</code>的消息，通过发送<code>insertObject:in&lt;Key&gt;AtIndex:</code>、<code>removeObjectFrom&lt;Key&gt;AtIndex:</code>、<code>insert&lt;Key&gt;:atIndexes:</code>、<code>remove&lt;Key&gt;AtIndexes:</code>组合消息给<code>KVC</code>调用方。否则执行②。</p>
+<blockquote>
+<p>该代理对象类型为<code>NSKeyValueFastMutableArray2</code>，继承链为<code>NSKeyValueFastMutableArray2</code>-&gt;<code>NSKeyValueFastMutableArray</code>-&gt;<code>NSKeyValueMutableArray</code>-&gt;<code>NSMutableArray</code>。</p>
+</blockquote>
+</li>
+<li><p>如果我们也实现了一个可选的<code>replace object</code>方法，如<code>replaceObjectIn&lt;Key&gt;AtIndex:withObject:</code>或<code>replace&lt;Key&gt;AtIndexes:with&lt;Key&gt;:</code>，代理对象在适当的情况下也会使用它们，以获得最佳性能。</p>
+</li>
+</ul>
+</li>
+<li><p>查找<code>set&lt;Key&gt;:</code>方法。如果找到，就会向<code>KVC</code>调用方发送一个<code>set&lt;Key&gt;:</code></p>
+<p>消息，来返回一个响应<code>NSMutableArray</code>消息的代理对象。否则执行③。</p>
+<blockquote>
+<p>该代理对象类型为<code>NSKeyValueSlowMutableArray</code>，继承链为<code>NSKeyValueSlowMutableArray</code>-&gt;<code>NSKeyValueMutableArray</code>-&gt;<code>NSMutableArray</code>。</p>
+</blockquote>
+<blockquote>
+<p>注意：** 此步骤中描述的机制比上一步的效率低得多，因为它可能重复创建新的集合对象，而不是修改现有的集合对象。因此，在设计自己的键值编码兼容对象时，通常应该避免使用它。</p>
+<p>给代理对象发送<code>NSMutableArray</code>消息都会调用<code>set&lt;Key&gt;:</code>方法。即，对代理对象进行修改，都是调用<code>set&lt;Key&gt;:</code>来重新赋值，所以效率会低很多。</p>
+</blockquote>
+</li>
+<li><p>查看消息接收者类的<code>+accessInstanceVariablesDirectly</code>方法的返回值（默认返回<code>YES</code>）。如果返回<code>YES</code>，就按照<code>_&lt;key&gt;</code>、<code>&lt;key&gt;</code>顺序查找成员变量。如果找到就返回一个代理对象，该代理对象将接收所有<code>NSMutableArray</code>消息，通常是<code>NSMutableArray</code>或其子类。否则执行④。如果<code>+accessInstanceVariablesDirectly</code>方法返回<code>NO</code>也执行④。</p>
+</li>
+<li><p>返回一个可变的集合代理对象。当它接收到<code>NSMutableArray</code>消息时，发送一个<code>valueForUndefinedKey:</code>消息给<code>KVC</code>调用方，该方法抛出异常<code>NSUnknownKeyException</code>，并导致程序<code>Crash</code>。这是默认实现，我们可以重写该方法根据特定<code>key</code>做一些特殊处理。</p>
+</li>
+</ol>
+<h5 id="其他搜索模式"><a href="#其他搜索模式" class="headerlink" title="其他搜索模式"></a>其他搜索模式</h5><p>除了以上三种，<code>KVC</code>还有<code>NSMutableSet</code>和<code>NSMutableOrderedSet</code>两种搜索模式，它们的搜索规则和<code>NSMutableArray</code>相同，只是搜索和调用的方法不同。具体可以查看<code>KVC</code>官方文档 <a href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/KeyValueCoding/SearchImplementation.html#//apple_ref/doc/uid/20000955-CJBBBFFA" target="_blank" rel="noopener">KVC - Accessor Search Patterns</a></p>
+<h4 id="异常处理"><a href="#异常处理" class="headerlink" title="异常处理"></a>异常处理</h4><ul>
+<li><p>根据KVC搜索规则，当没有搜索到对应的key 或者 keyPath相关方法或者变量时，会调用对应的异常方法valueForUndefinedKey: 或 setValue:forUndefinedKey:，这两个方法的默认实现是抛出异常NSUnKnownKeyException，并导致程序Crash。我们可以重写这两个方法来处理异常</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Given that an invocation of -valueForKey: would be unable to get a keyed value using its default access mechanism, return the keyed value using some other mechanism. The default implementation of this method raises an NSUndefinedKeyException. You can override it to handle properties that are dynamically defined at run-time.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">- (<span class="keyword">nullable</span> <span class="keyword">id</span>)valueForUndefinedKey:(<span class="built_in">NSString</span> *)key;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Given that an invocation of -setValue:forKey: would be unable to set the keyed value using its default mechanism, set the keyed value using some other mechanism. The default implementation of this method raises an NSUndefinedKeyException. You can override it to handle properties that are dynamically defined at run-time.</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">- (<span class="keyword">void</span>)setValue:(<span class="keyword">nullable</span> <span class="keyword">id</span>)value forUndefinedKey:(<span class="built_in">NSString</span> *)key;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>当进行赋值如setValue:forKey:时，如果key的数据类型是非对象类型，则value就禁止传nil。否则调用setNilValueForKey:方法，该方法的默认实现是抛出异常NSInvalidArgumentException，并导致程序Crash。我们可以重写这个方法来处理异常。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)setNilValueForKey:(<span class="built_in">NSString</span> *)key</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> ([key isEqualToString:<span class="string">@"hidden"</span>]) &#123;</span><br><span class="line">        [<span class="keyword">self</span> setValue:@(<span class="literal">NO</span>) forKey:@”hidden”];</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        [<span class="keyword">super</span> setNilValueForKey:key];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/10/30/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86-alloc%E3%80%81retainCount%E3%80%81retain%E3%80%81release%E3%80%81dealloc/" rel="prev" title="内存管理-alloc、retainCount、retain、release、dealloc">
+      <i class="fa fa-chevron-left"></i> 内存管理-alloc、retainCount、retain、release、dealloc
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/12/08/iOS%E2%80%94%E2%80%94KVO%E7%9B%B8%E5%85%B3%E6%80%BB%E7%BB%93/" rel="next" title="iOS——KVO相关总结">
+      iOS——KVO相关总结 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#KVC"><span class="nav-number">1.</span> <span class="nav-text">KVC</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#常用API"><span class="nav-number">1.1.</span> <span class="nav-text">常用API</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#setValue-forKey"><span class="nav-number">1.1.1.</span> <span class="nav-text">setValue:forKey</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#valueForKey"><span class="nav-number">1.1.2.</span> <span class="nav-text">valueForKey</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#setValue-forKeyPath"><span class="nav-number">1.1.3.</span> <span class="nav-text">setValue:forKeyPath</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#多值操作"><span class="nav-number">1.2.</span> <span class="nav-text">多值操作</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#访问集合属性"><span class="nav-number">1.3.</span> <span class="nav-text">访问集合属性</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#使用集合运算符"><span class="nav-number">1.4.</span> <span class="nav-text">使用集合运算符</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#聚合运算符"><span class="nav-number">1.4.1.</span> <span class="nav-text">聚合运算符</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#avg"><span class="nav-number">1.4.1.1.</span> <span class="nav-text">@avg</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#count"><span class="nav-number">1.4.1.2.</span> <span class="nav-text">@count</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#sum"><span class="nav-number">1.4.1.3.</span> <span class="nav-text">@sum</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#max"><span class="nav-number">1.4.1.4.</span> <span class="nav-text">@max</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#数组运算符"><span class="nav-number">1.4.2.</span> <span class="nav-text">数组运算符</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#unionOfObjects"><span class="nav-number">1.4.2.1.</span> <span class="nav-text">@unionOfObjects</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#distinctUnionOfObjects"><span class="nav-number">1.4.2.2.</span> <span class="nav-text">@distinctUnionOfObjects</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#嵌套运算符"><span class="nav-number">1.4.3.</span> <span class="nav-text">嵌套运算符</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#unionOfArrays"><span class="nav-number">1.4.3.1.</span> <span class="nav-text">@unionOfArrays</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#distinctUnionOfArrays"><span class="nav-number">1.4.3.2.</span> <span class="nav-text">@distinctUnionOfArrays</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#distinctUnionOfSets"><span class="nav-number">1.4.3.3.</span> <span class="nav-text">@distinctUnionOfSets</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#扩展"><span class="nav-number">1.4.4.</span> <span class="nav-text">扩展</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#自定义集合运算符"><span class="nav-number">1.5.</span> <span class="nav-text">自定义集合运算符</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#非对象值处理"><span class="nav-number">1.6.</span> <span class="nav-text">非对象值处理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#属性验证"><span class="nav-number">1.7.</span> <span class="nav-text">属性验证</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#搜索规则"><span class="nav-number">1.8.</span> <span class="nav-text">搜索规则</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#基本的getter搜索模式"><span class="nav-number">1.8.1.</span> <span class="nav-text">基本的getter搜索模式</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#基本的Setter搜索模式"><span class="nav-number">1.8.2.</span> <span class="nav-text">基本的Setter搜索模式</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#其他搜索模式"><span class="nav-number">1.8.3.</span> <span class="nav-text">其他搜索模式</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#异常处理"><span class="nav-number">1.9.</span> <span class="nav-text">异常处理</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Doris AI</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Doris AI</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v7.7.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

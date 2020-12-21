@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://dorisgit.github.io').hostname,
+    root: '/',
+    scheme: 'Mist',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="ARC和MRC下的autoreleasepoolMRC中的autoreleasepool在MRC环境下，当我们创建和释放一个对象时，需手动管理器内存周期，调用retain 和 release或autorelease方法来释放它。调用retain会让计数器+1，调用release会让计数器-1，当对象计数器为0时，就会被释放。调用autorelease的对象会被添加到自动释放池中，它会在一个合适的时">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AutoreleasePool">
+<meta property="og:url" content="https://dorisgit.github.io/2020/10/23/AutoreleasePool/index.html">
+<meta property="og:site_name" content="泡泡茶壶">
+<meta property="og:description" content="ARC和MRC下的autoreleasepoolMRC中的autoreleasepool在MRC环境下，当我们创建和释放一个对象时，需手动管理器内存周期，调用retain 和 release或autorelease方法来释放它。调用retain会让计数器+1，调用release会让计数器-1，当对象计数器为0时，就会被释放。调用autorelease的对象会被添加到自动释放池中，它会在一个合适的时">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/image-20201026171701138.png">
+<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/image-20201026172111999.png">
+<meta property="article:published_time" content="2020-10-23T06:18:49.000Z">
+<meta property="article:modified_time" content="2020-10-26T09:24:32.968Z">
+<meta property="article:author" content="Doris AI">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/image-20201026171701138.png">
+
+<link rel="canonical" href="https://dorisgit.github.io/2020/10/23/AutoreleasePool/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>AutoreleasePool | 泡泡茶壶</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">泡泡茶壶</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="en">
+    <link itemprop="mainEntityOfPage" href="https://dorisgit.github.io/2020/10/23/AutoreleasePool/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Doris AI">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="泡泡茶壶">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          AutoreleasePool
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-10-23 14:18:49" itemprop="dateCreated datePublished" datetime="2020-10-23T14:18:49+08:00">2020-10-23</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-10-26 17:24:32" itemprop="dateModified" datetime="2020-10-26T17:24:32+08:00">2020-10-26</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h4 id="ARC和MRC下的autoreleasepool"><a href="#ARC和MRC下的autoreleasepool" class="headerlink" title="ARC和MRC下的autoreleasepool"></a>ARC和MRC下的autoreleasepool</h4><h5 id="MRC中的autoreleasepool"><a href="#MRC中的autoreleasepool" class="headerlink" title="MRC中的autoreleasepool"></a>MRC中的autoreleasepool</h5><p>在MRC环境下，当我们创建和释放一个对象时，需手动管理器内存周期，调用<code>retain</code> 和 <code>release</code>或autorelease方法来释放它。调用retain会让计数器+1，调用<code>release</code>会让计数器-1，当对象计数器为0时，就会被释放。调用<code>autorelease</code>的对象会被添加到自动释放池中，它会在一个合适的时候（下文）为对象调用<code>release</code>人，所以加入到<code>autorelease</code>中的对象会被延迟释放。</p>
+<p><strong>release</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">NS_INLINE void _addAutoReleasePool1() &#123;</span><br><span class="line">    __weak MMPerson *person2 &#x3D; nil;</span><br><span class="line">    &#123;</span><br><span class="line">        MMPerson *person &#x3D; [[MMPerson alloc] init];</span><br><span class="line">        [person retain];</span><br><span class="line">        </span><br><span class="line">        person2 &#x3D; person;</span><br><span class="line">        [person release]</span><br><span class="line">    &#125;</span><br><span class="line">    NSLog(@&quot;%@&quot;,person2);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>打印</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">person dealloc</span><br><span class="line">(null)</span><br></pre></td></tr></table></figure>
+
+<p><strong>autorelease</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">NS_INLINE void _addAutoReleasePool1() &#123;</span><br><span class="line">    __weak MMPerson *person2 &#x3D; nil;</span><br><span class="line">    &#123;</span><br><span class="line">        MMPerson *person &#x3D; [[[MMPerson alloc] init] autoreleasepool];</span><br><span class="line">        person2 &#x3D; person;</span><br><span class="line">    &#125;</span><br><span class="line">    NSLog(@&quot;%@&quot;,person2);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>打印</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">person</span><br><span class="line">person dealloc</span><br></pre></td></tr></table></figure>
+
+<p>局部变量person调用release后会被立即释放，而将对象加入到autoreleasepool中不会立即释放，释放时机被延迟了。</p>
+<h5 id="ARC中autoreleasepool"><a href="#ARC中autoreleasepool" class="headerlink" title="ARC中autoreleasepool"></a>ARC中autoreleasepool</h5><p>苹果在iOS5中引入了ARC（Automatic Reference Counting）自动引用计数器管理技术，通过LLVM编译器和Runtime机协作进行自动管理内存。LLVM会在编译时在合适的地方为OC对象插入retain、release和autoreleasepool代码。</p>
+<p><strong>通过alloc、copy、mutableCopy和new方式创建对象</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">NS_INLINE void _addAutoReleasePool1() &#123;</span><br><span class="line">    __weak MMPerson *person2 &#x3D; nil;</span><br><span class="line">    &#123;</span><br><span class="line">        MMPerson *person &#x3D; [MMPerson new];</span><br><span class="line">        person2 &#x3D; person;</span><br><span class="line">    &#125;</span><br><span class="line">    NSLog(@&quot;%@&quot;,person2);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>结果如下，对象出了作用域立即被释放了，编译时插入了release</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[20:53:54] -[MMPerson dealloc] [第22行] 💕 MMPerson dealloc</span><br><span class="line">[20:53:54] _addAutoReleasePool1 [第49行] 💕 (null)</span><br></pre></td></tr></table></figure>
+
+<p><strong>通过系统提供工厂方法创建对象</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">NS_INLINE void _addAutoReleasePool2() &#123;</span><br><span class="line">    __weak MMPerson *person2 &#x3D; nil;</span><br><span class="line">    &#123;</span><br><span class="line">        MMPerson *person &#x3D; [MMPerson buttonWithType:UIButtonTypeSystem];</span><br><span class="line">        person2 &#x3D; person;</span><br><span class="line">    &#125;</span><br><span class="line">    NSLog(@&quot;%@&quot;,person2);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>结果如下，对象超出了其作用域还是存在的，也就是说起内部调用了autorelease方法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[20:53:54] _addAutoReleasePool2 [第58行] 💕 &lt;MMPerson: 0x7fdbad51fe90; baseClass &#x3D; UIButton; frame &#x3D; (0 0; 0 0); opaque &#x3D; NO; layer &#x3D; &lt;CALayer: 0x6000002e6fc0&gt;&gt;</span><br><span class="line">[20:53:54] -[MMPerson dealloc] [第22行] 💕 MMPerson dealloc</span><br></pre></td></tr></table></figure>
+
+<p><strong>总结：</strong></p>
+<p>以 <code>alloc</code>, <code>copy</code>, ,<code>mutableCopy</code>和<code>new</code>这些方法会被默认标记为 <code>__attribute((ns_returns_retained))</code> ，以这些方法创建的对象,编译器在会在调用方法外围要加上内存管理代码<code>retain/release</code>，所以其在作用域结束的时候就会释放，而不以这些关键字开头的方法，会被默认标记为<code>__attribute((ns_returns_not_retained))</code>,编译器会在方法内部自动加上<code>autorelease</code>方法，这时创建的对象就会被注册到自动释放池中，同时其释放会延迟，等到自动释放池销毁的时候才释放。</p>
+<h4 id="main入口函数中的-autoreleasepool"><a href="#main入口函数中的-autoreleasepool" class="headerlink" title="main入口函数中的@autoreleasepool"></a>main入口函数中的@autoreleasepool</h4><p>我们先来看看Xcode11版本中的main()函数，与之前版本的区别</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; Xcode 11</span><br><span class="line">int main(int argc, char * argv[]) &#123;</span><br><span class="line">    NSString * appDelegateClassName;</span><br><span class="line">    @autoreleasepool &#123;</span><br><span class="line">        &#x2F;&#x2F; Setup code that might create autoreleased objects goes here.</span><br><span class="line">        appDelegateClassName &#x3D; NSStringFromClass([AppDelegate class]);</span><br><span class="line">    &#125;</span><br><span class="line">    return UIApplicationMain(argc, argv, nil, appDelegateClassName);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; Xcode 旧版本</span><br><span class="line">int main(int argc, char * argv[]) &#123;</span><br><span class="line">    @autoreleasepool &#123;</span><br><span class="line">        return UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>值得注意的点是</strong>，Xcode11之前是将整个应用程序放在<code>@autoreleasepool</code>中，由于<code>runloop</code>的存在，要程序结束后<code>@autoreleasepool</code>作用域才会结束，这也意味着程序结束后<code>main</code>函数中的<code>@autoreleasepool</code>中的<code>autoreleasepool</code>对象才会释放</p>
+<p>Xcode11之后，触发主线程的<code>UIApplicationMain</code>函数被放置在<code>@autoreleasepool</code>之外，这可以保证<code>@autoreleasepool</code>中的autoreleasepool对象在程序启动后可以被立即释放。</p>
+<p><strong>网上对于<code>main()</code>函数中的<code>@autoreleasepool</code>有一种解释</strong>：</p>
+<p>在iOS工程的<code>main()</code>函数中有一个<code>@autoreleasepool</code>，这个<code>@autoreleasepool</code>负责应用程序所有<code>autoreleasepool</code>对象的释放。</p>
+<p><strong>这个解释是错误的</strong></p>
+<p>如果你的程序使用了AppKit或UIKit框架，系统在主线程的<code>RunLoop</code>里注册了两个<code>Observer</code>，回调都是<code>_wrapRunLoopWithAutoreleasePoolHandler</code> ，第一个<code>Observer</code>的状态是<code>activities=0x1</code>，第二个Observer的状态是<code>activities=0xa0</code></p>
+<p><code>0x1</code>代表的是<code>kCFRunLoopEntry</code>，主线程的<code>runloop</code>就会在即将进入loop时，<code>Observe</code>监听的事件为Entry，其内部回调就会调用<code>_objc_autoreleasePoolPush()</code>创建一个自动释放池，优先级最高，保证创建自动释放池发生在其他所有回调之前</p>
+<p><code>0xa0</code>代表的是<code>kCFRunLoopBeforeWaiting</code>和<code>kCFRunLoopExit</code>，在<code>kCFRunLoopBeforeWaiting</code>事件时调用<code>_objc_autoreleasePoolPop</code>和<code>_objc_autoreleasePoolPush</code>，释放旧的释放池和其中的资源并创建新的自动释放池；在<code>kCFRunLoopExit</code>事件时调用<code>_objc_autoreleasePoolPop</code>来释放自动释放池，同时这个<code>Observer</code>的优先级最低，保证其自动释放池的操作发生在其他回调之后.</p>
+<p>也就是说主线程的runLoop会在每次事件循环迭代中创建并处理<code>@autoreleasepool</code>，而main函数中的<code>@autoreleasepool</code>只是管理他作用域中的对象。</p>
+<p>以上场景与嵌套<code>@autoreleasepool</code>情况类似。</p>
+<h4 id="嵌套-autoreleasepool"><a href="#嵌套-autoreleasepool" class="headerlink" title="嵌套@autoreleasepool"></a>嵌套<code>@autoreleasepool</code></h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">@interface MMPerson : UIButton</span><br><span class="line">@end</span><br><span class="line">@implementation MMPerson</span><br><span class="line">+ (instancetype)person &#123;</span><br><span class="line">    return [[MMPerson alloc] init];</span><br><span class="line">&#125;</span><br><span class="line">- (void)dealloc &#123;</span><br><span class="line">    NSLog(@&quot;MMPerson dealloc&quot;);</span><br><span class="line">&#125;</span><br><span class="line">@end</span><br><span class="line">NS_INLINE void _addAutoReleasePool() &#123;</span><br><span class="line">    @autoreleasepool &#123;</span><br><span class="line">        MMPerson *person &#x3D; [MMPerson person];</span><br><span class="line">        @autoreleasepool &#123;</span><br><span class="line">            MMPerson *person1 &#x3D; person;</span><br><span class="line">            @autoreleasepool &#123;</span><br><span class="line">                MMPerson *person2 &#x3D; person;</span><br><span class="line">                NSLog(@&quot;current count %@&quot;,person);</span><br><span class="line">            &#125;</span><br><span class="line">            NSLog(@&quot;current count 2%@&quot;,person);</span><br><span class="line">        &#125;</span><br><span class="line">        NSLog(@&quot;current count 3%@&quot;,person);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>打印结果</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[20:24:37] _addAutoReleasePool [第68行] 💕 current count 1&lt;MMPerson: 0x7ffe76d22460; baseClass &#x3D; UIButton; frame &#x3D; (0 0; 0 0); opaque &#x3D; NO; layer &#x3D; &lt;CALayer: 0x60000224bce0&gt;&gt;</span><br><span class="line"></span><br><span class="line">[20:24:37] _addAutoReleasePool [第70行] 💕 current count 2&lt;MMPerson: 0x7ffe76d22460; baseClass &#x3D; UIButton; frame &#x3D; (0 0; 0 0); opaque &#x3D; NO; layer &#x3D; &lt;CALayer: 0x60000224bce0&gt;&gt;</span><br><span class="line"></span><br><span class="line">[20:24:37] _addAutoReleasePool [第72行] 💕 current count 3&lt;MMPerson: 0x7ffe76d22460; baseClass &#x3D; UIButton; frame &#x3D; (0 0; 0 0); opaque &#x3D; NO; layer &#x3D; &lt;CALayer: 0x60000224bce0&gt;&gt;</span><br><span class="line"></span><br><span class="line">[20:24:37] -[MMPerson dealloc] [第22行] 💕 MMPerson dealloc</span><br></pre></td></tr></table></figure>
+
+<p>对于多层嵌套而言，在<code>pop</code>的时候总会释放到上次<code>push</code>的位置为止，也就是哨兵位置，多层<code>pool</code>其实就是插入多个哨兵对象而已，然后根据哨兵对象来进行释放。</p>
+<p><strong>注意：如果将一个对象加入到多个pool中</strong>，那么对象内层pool执行pop操作的时候就会被release释放掉，那么当调用<code>rootRelease()</code>的时候就会报错，因为当前对象已经被释放了，那么也就是说对于添加到pool中的对象只能被释放一次（同一个对象不能反复<code>autorelease</code>）</p>
+<h4 id="Autoreleasepool的应用场景"><a href="#Autoreleasepool的应用场景" class="headerlink" title="Autoreleasepool的应用场景"></a>Autoreleasepool的应用场景</h4><p>AppKit和UIkit通常都会在RunLoop每次事件循环迭代中创建并处理<code>@autoreleasepool</code>，因此通常我们不必自己创建<code>@autoreleasepool</code>，但有些情况需要我们创建<code>@autoreleasepool</code></p>
+<blockquote>
+<p>苹果给出了三种需要手动添加<code>@autoreleasepool</code>的场景：</p>
+<ul>
+<li><p>如果你编写的应用程序不是基于UI框架的，比如说命令行工具</p>
+</li>
+<li><p>如果你编写的循环中创建了大量的临时对象；</p>
+<p>你可以在循环中使用<code>@autoreleasepool</code>在下一次迭代之前处理这些对象，在循环中使用<code>@autoreleasepool</code>有助于减少应用程序的最大内存占用</p>
+</li>
+<li><p>如果你创建了辅助线程</p>
+<p>一旦线程开始执行，就必须创建自己的<code>@autoreleasepool</code>；否则，你的应用程序将存在内存泄露</p>
+</li>
+</ul>
+</blockquote>
+<p>举个🌰</p>
+<p>for循环中创建大量临时对象</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">+ (void)mm_circulateMemory &#123;</span><br><span class="line">    </span><br><span class="line">    for (int i &#x3D; 0; i &lt; 100000000; i ++) &#123;</span><br><span class="line">        NSString * str &#x3D; [NSString stringWithFormat:@&quot;no_AutoReleasePool&quot;];</span><br><span class="line">        NSString *tempstr &#x3D; str;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<img src="/Users/mikasa/Desktop/image_mark/image-20201026171701138.png" alt="image-20201026171701138" style="zoom:50%;" />
+
+<p>for循环中使用<code>@autoreleasepool</code>处理临时对象</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">+ (void)mm_circulateMemory_autorelease &#123;</span><br><span class="line">    </span><br><span class="line">    for (int i &#x3D; 0; i &lt; 100000000; i ++) &#123;</span><br><span class="line">        @autoreleasepool &#123;</span><br><span class="line">            NSString * str &#x3D; [NSString stringWithFormat:@&quot;have_AutoReleasePool&quot;];</span><br><span class="line">            NSString *tempstr &#x3D; str;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/Users/mikasa/Desktop/image_mark/image-20201026172111999.png" alt="image-20201026172111999"></p>
+<p>使用<code>@autoreleasepool</code>进行处理临时对象后，内存没有明显变化。</p>
+<h4 id="线程私有数据（TSD）"><a href="#线程私有数据（TSD）" class="headerlink" title="线程私有数据（TSD）"></a>线程私有数据（TSD）</h4><p>​        线程私有数据（Thread-Specific Data 或 TSD）。</p>
+<p>​        在单线程中，我们经常用到全局变量来实现多个函数间数据共享，然而在多线程环境中，由于数据空间是共享的，全局变量也为多个线程多共享。但有时应用程序需要“线程私有的全局变量，仅在单个线程有效，但是却可以跨多个函数访问”，POSIX线程库，听过维护一定的数据结构来解决这个问题，线程私有数据TSD</p>
+<h5 id="使用方式"><a href="#使用方式" class="headerlink" title="使用方式"></a>使用方式</h5><p>​        首先创建允许所有线程访问的全局变量key，然后在任意一个线程中调用pthread_key_create接口创建所有线程有可见的线程特定数据的键值key，但是这个键值所指向的真实数据却是不同，它并不指向同一块内存，而是指向的属于自己数据，更改线程0的key中所指向的数据，并不会影响线程1key中所指向的数据。</p>
+<p>​        各个子线程可以通过pthread_setspecific 和 get_specific接口使用这个key来获取和存储数据，每个线程的操作都在自己的私有线程数据中完成。</p>
+<h5 id="相关API"><a href="#相关API" class="headerlink" title="相关API"></a>相关API</h5><p><strong>创建TSD</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">init <span class="title">pthread_key_create</span><span class="params">(<span class="keyword">pthread_key_t</span> *key, <span class="keyword">void</span>(*destr_function)(<span class="keyword">void</span> *))</span></span></span><br></pre></td></tr></table></figure>
+
+<p>一个进程被启动后，多个线程被创建，当其中一个线程调用函数<code>pthread_key_create</code>，TSD分配一项空间，并将其赋值为key，系统在key结构数据中找到第一个未使用的元素，将其索引返回给调用者。</p>
+<p>如果destr_function不为空，在线程退出（pthread_exit()）时，将以key所关联的数据为参数调用<code>destr_function()</code>，以释放分配的缓冲区。</p>
+<p>无论哪个线程调用pthread_key_create获取的tsd数据区都是所有线程可访问的，各个线程可根据需要存储不同的数据。</p>
+<p><strong>注销TSD</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">pthread_key_delete</span><span class="params">(<span class="keyword">pthread_key_t</span> key)</span></span></span><br></pre></td></tr></table></figure>
+
+<p>函数<code>pthread_key_delete</code>并不会检查当前是否有线程正使用TSD，也不会调清理函数（destr_function），而只是将TSD释放以供下一次调用pthread_key_create使用。</p>
+<p><strong>读写TSD</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">pthread_setspecific</span><span class="params">(<span class="keyword">pthreat_key_t</span> key, <span class="keyword">const</span> <span class="keyword">void</span> *pointer)</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">pthread_getspecific</span><span class="params">(<span class="keyword">pthread_key_t</span> key)</span></span></span><br></pre></td></tr></table></figure>
+
+<p>写入pthread_setspecific()时，将pointer的值（不是所指内容）与key相关联，而相应的读出函数则将与key相关联的数据读出来。</p>
+<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><p><a href="https://woniuxiang.space/blog/post/lightime/多线程（pthreads）" target="_blank" rel="noopener">多线程（pthread）</a></p>
+<p><a href="https://juejin.im/post/6844904094503567368#heading-21" target="_blank" rel="noopener">iOS - 聊聊 autorelease 和 @autoreleasepool</a></p>
+<p><a href="https://juejin.im/post/6844903971405086734#heading-13" target="_blank" rel="noopener">Autorelease &amp; AutoreleasePool</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/08/28/ios-%E6%A3%80%E6%B5%8B%E6%97%A0%E7%94%A8%E7%B1%BB%E3%80%81%E6%96%B9%E6%B3%95/" rel="prev" title="ios 检测无用类、方法">
+      <i class="fa fa-chevron-left"></i> ios 检测无用类、方法
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/10/27/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86-Tagged-Pointer/" rel="next" title="内存管理-Tagged Pointer">
+      内存管理-Tagged Pointer <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#ARC和MRC下的autoreleasepool"><span class="nav-number">1.</span> <span class="nav-text">ARC和MRC下的autoreleasepool</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#MRC中的autoreleasepool"><span class="nav-number">1.1.</span> <span class="nav-text">MRC中的autoreleasepool</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#ARC中autoreleasepool"><span class="nav-number">1.2.</span> <span class="nav-text">ARC中autoreleasepool</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#main入口函数中的-autoreleasepool"><span class="nav-number">2.</span> <span class="nav-text">main入口函数中的@autoreleasepool</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#嵌套-autoreleasepool"><span class="nav-number">3.</span> <span class="nav-text">嵌套@autoreleasepool</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Autoreleasepool的应用场景"><span class="nav-number">4.</span> <span class="nav-text">Autoreleasepool的应用场景</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#线程私有数据（TSD）"><span class="nav-number">5.</span> <span class="nav-text">线程私有数据（TSD）</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#使用方式"><span class="nav-number">5.1.</span> <span class="nav-text">使用方式</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#相关API"><span class="nav-number">5.2.</span> <span class="nav-text">相关API</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考资料"><span class="nav-number"></span> <span class="nav-text">参考资料</span></a></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Doris AI</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Doris AI</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v7.7.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

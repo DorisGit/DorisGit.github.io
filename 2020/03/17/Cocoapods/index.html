@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://dorisgit.github.io').hostname,
+    root: '/',
+    scheme: 'Mist',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="Cocoapods升级升级Cocoapods到最新版本1、先切换gem源 gem sources –remove https:&#x2F;&#x2F;rubygems.org&#x2F; gem source -a https:&#x2F;&#x2F;gems.ruby-china.org 查看是否切换成功 gem source -l 打印出* CURRENT SOURCES * ​      https:&#x2F;&#x2F;gems.ruby-china.or">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Cocoapods">
+<meta property="og:url" content="https://dorisgit.github.io/2020/03/17/Cocoapods/index.html">
+<meta property="og:site_name" content="泡泡茶壶">
+<meta property="og:description" content="Cocoapods升级升级Cocoapods到最新版本1、先切换gem源 gem sources –remove https:&#x2F;&#x2F;rubygems.org&#x2F; gem source -a https:&#x2F;&#x2F;gems.ruby-china.org 查看是否切换成功 gem source -l 打印出* CURRENT SOURCES * ​      https:&#x2F;&#x2F;gems.ruby-china.or">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-03-17T13:13:05.000Z">
+<meta property="article:modified_time" content="2020-07-24T03:02:19.119Z">
+<meta property="article:author" content="Doris AI">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://dorisgit.github.io/2020/03/17/Cocoapods/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Cocoapods | 泡泡茶壶</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">泡泡茶壶</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="en">
+    <link itemprop="mainEntityOfPage" href="https://dorisgit.github.io/2020/03/17/Cocoapods/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Doris AI">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="泡泡茶壶">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Cocoapods
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-03-17 21:13:05" itemprop="dateCreated datePublished" datetime="2020-03-17T21:13:05+08:00">2020-03-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-07-24 11:02:19" itemprop="dateModified" datetime="2020-07-24T11:02:19+08:00">2020-07-24</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="Cocoapods升级"><a href="#Cocoapods升级" class="headerlink" title="Cocoapods升级"></a>Cocoapods升级</h2><h3 id="升级Cocoapods到最新版本"><a href="#升级Cocoapods到最新版本" class="headerlink" title="升级Cocoapods到最新版本"></a>升级Cocoapods到最新版本</h3><p>1、先切换gem源</p>
+<p>gem sources –remove <a href="https://rubygems.org/" target="_blank" rel="noopener">https://rubygems.org/</a></p>
+<p>gem source -a <a href="https://gems.ruby-china.org" target="_blank" rel="noopener">https://gems.ruby-china.org</a></p>
+<p>查看是否切换成功</p>
+<p>gem source -l</p>
+<p>打印出<strong>* CURRENT SOURCES *</strong></p>
+<p>​      <a href="https://gems.ruby-china.org" target="_blank" rel="noopener">https://gems.ruby-china.org</a></p>
+<p>就说明切换成功，如果还是官方的源, 请手动重启电脑尝试</p>
+<p>2、接下来就可以开始升级了Cocoapods了</p>
+<p>sudo gem install -n /usr/local/bin cocoapods –pre</p>
+<p>3、然后敲下</p>
+<p>pod –version</p>
+<p>出现</p>
+<p>1.2.0.beta.1</p>
+<p>恭喜你, 安装成功</p>
+<p>4、剩下的就是设置pod仓库了</p>
+<p>pod setup</p>
+<p>至此, 已经升级到Cocoapods1.1.1了, 可以愉快的把玩Swift3.0的一些三方库了</p>
+<h3 id="升级Cocoapods到指定版本"><a href="#升级Cocoapods到指定版本" class="headerlink" title="升级Cocoapods到指定版本"></a>升级Cocoapods到指定版本</h3><p>a、在终端输入：sudo gem uninstall cocoapods输出下面</p>
+<p>Select gem to uninstall:</p>
+<p>\1. cocoapods-1.1.0.rc.2</p>
+<p>\2. cocoapods-1.2.0.beta.1</p>
+<p>\3. All versions</p>
+<p>&gt;‘在此处输入要删除的版本，如：2’会输出下面</p>
+<p>Successfully uninstalled cocoapods-1.1.1</p>
+<p>b、在终端输入：sudo gem install cocoapods -v 1.1.1</p>
+<p>输出：Fetching: cocoapods-1.1.1.gem (100%)</p>
+<p>ERROR: While executing gem … (Errno::EPERM)</p>
+<p>Operation not permitted - /usr/bin/pod</p>
+<p>c、上面的方法不行，那咱们就换一种输入：sudo gem install -n /usr/local/bin cocoapods -v 1.1.1</p>
+<p>输出：Successfully installed cocoapods-1.1.1</p>
+<p>Parsing documentation for cocoapods-1.1.1</p>
+<p>Installing ri documentation for cocoapods-1.1.1</p>
+<p>1 gem installed</p>
+<p>d、输入pod –version查看一下版本号</p>
+<p>输出：1.1.1</p>
+<p>成功解决ERROR: While executing gem … (Errno::EPERM) Operation not permitted - /usr/bin/pod问题，就可以使用1.1.1版本了</p>
+<h2 id="常见问题"><a href="#常见问题" class="headerlink" title="常见问题"></a>常见问题</h2><h3 id="执行-pod-install-出现-“Failed-to-connect-to-github-com-port-443-Operation-timed-out”解决方案"><a href="#执行-pod-install-出现-“Failed-to-connect-to-github-com-port-443-Operation-timed-out”解决方案" class="headerlink" title="执行 pod install 出现 “Failed to connect to github.com port 443: Operation timed out”解决方案"></a>执行 pod install 出现 “Failed to connect to github.com port 443: Operation timed out”解决方案</h3><p>升级Cocoapods到1.9.0后执行pod install出现以下错误</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[!] Error installing Bugly</span><br><span class="line">[!] /usr/bin/curl -f -L -o /var/folders/2d/klrwscg57tsb6t7qpsc18fpm0000gn/T/d20200317-99220-1t7nt4g/file.zip https://raw.githubusercontent.com/BuglyDevTeam/Bugly-iOS/master/release/Bugly-2.5.2.zip --create-dirs --netrc-optional --retry 2</span><br><span class="line"></span><br><span class="line"><span class="meta">  %</span><span class="bash"> Total    % Received % Xferd  Average Speed   Time    Time     Time  Current</span></span><br><span class="line">                                 Dload  Upload   Total   Spent    Left  Speed</span><br><span class="line">  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0</span><br><span class="line">curl: (7) Failed to connect to raw.githubusercontent.com port 443: Connection refused</span><br></pre></td></tr></table></figure>
+
+<p>然后执行 <code>ping gitHub.com</code>出现</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">PING github.com (52.74.223.119): 56 data bytes</span><br><span class="line">Request timeout for icmp_seq 0</span><br><span class="line">Request timeout for icmp_seq 1</span><br><span class="line">Request timeout for icmp_seq 2</span><br></pre></td></tr></table></figure>
+
+<p>一直处于超时状态，丢包率100%，但是网络没什么问题</p>
+<h4 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h4><ol>
+<li><p>打开终端，执行</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo vim /private/etc/hosts</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>将如下IP-域名映射信息复制到最后：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">151.101.185.194 github.global.ssl.fastly.net</span><br><span class="line">192.30.253.112 github.com</span><br><span class="line">151.101.184.133 assets-cdn.github.com</span><br><span class="line">151.101.184.133 avatars0.githubusercontent.com</span><br><span class="line">151.101.112.133 avatars1.githubusercontent.com</span><br><span class="line">199.232.4.133  raw.githubusercontent.com</span><br><span class="line">13.229.188.59 github.com</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>再次 ping github.com</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">PING github.com (192.30.253.112): 56 data bytes</span><br><span class="line">64 bytes from 192.30.253.112: icmp_seq=0 ttl=48 time=308.088 ms</span><br><span class="line">64 bytes from 192.30.253.112: icmp_seq=1 ttl=48 time=302.332 ms</span><br><span class="line">64 bytes from 192.30.253.112: icmp_seq=2 ttl=48 time=301.365 ms</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>执行 pod install,顺利安装</p>
+</li>
+</ol>
+<h3 id="pod-install时CDN-trunk-URL-couldn’t-be-downloaded-https-raw-githubusercontent-com-CocoaPods-Specs-master-Specs"><a href="#pod-install时CDN-trunk-URL-couldn’t-be-downloaded-https-raw-githubusercontent-com-CocoaPods-Specs-master-Specs" class="headerlink" title="pod install时CDN: trunk URL couldn’t be downloaded: https://raw.githubusercontent.com/CocoaPods/Specs/master/Specs/"></a>pod install时CDN: trunk URL couldn’t be downloaded: <a href="https://raw.githubusercontent.com/CocoaPods/Specs/master/Specs/" target="_blank" rel="noopener">https://raw.githubusercontent.com/CocoaPods/Specs/master/Specs/</a></h3><p>执行pod install一直出现 “CDN: trunk URL couldn’t be downloaded: <a href="https://raw.githubusercontent.com/CocoaPods/Specs/master/Specs/0/f/b/MJRefresh/3.4.3/MJRefresh.podspec.json" target="_blank" rel="noopener">https://raw.githubusercontent.com/CocoaPods/Specs/master/Specs/0/f/b/MJRefresh/3.4.3/MJRefresh.podspec.json</a> Response: Couldn’t connect to server”</p>
+<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><p>1.不替换cdn源：</p>
+<p>步骤：1.终端执行sudo vim /private/etc/hosts</p>
+<p>　　　2.在hosts文件中添加199.232.4.133  raw.githubusercontent.com的映射，重新执行pod install</p>
+<p>2.用source ‘<a href="https://github.com/CocoaPods/Specs.git&#39;替换到cdn源" target="_blank" rel="noopener">https://github.com/CocoaPods/Specs.git&#39;替换到cdn源</a></p>
+<p>步骤：1.在podfile里面添加source ‘<a href="https://github.com/CocoaPods/Specs.git&#39;" target="_blank" rel="noopener">https://github.com/CocoaPods/Specs.git&#39;</a></p>
+<p>　　　2.终端下执行 pod repo remove trunk来移除trunk，重新pod install</p>
+<h4 id="解决办法"><a href="#解决办法" class="headerlink" title="解决办法"></a>解决办法</h4><p>进入 vi ~/.ssh/known_hosts，把  git.wanmeizhensuo.com 对应的那一行删除掉</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/03/12/Objective-C-Runtime%E2%80%94%E2%80%94objc-msgSend%E6%B6%88%E6%81%AF%E5%8F%91%E9%80%81%E5%92%8C%E8%BD%AC%E5%8F%91/" rel="prev" title="Objective-C Runtime——objc_msgSend消息发送和转发">
+      <i class="fa fa-chevron-left"></i> Objective-C Runtime——objc_msgSend消息发送和转发
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/05/13/load%E6%96%B9%E6%B3%95/" rel="next" title="+ Load vs + initialize">
+      + Load vs + initialize <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Cocoapods升级"><span class="nav-number">1.</span> <span class="nav-text">Cocoapods升级</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#升级Cocoapods到最新版本"><span class="nav-number">1.1.</span> <span class="nav-text">升级Cocoapods到最新版本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#升级Cocoapods到指定版本"><span class="nav-number">1.2.</span> <span class="nav-text">升级Cocoapods到指定版本</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#常见问题"><span class="nav-number">2.</span> <span class="nav-text">常见问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#执行-pod-install-出现-“Failed-to-connect-to-github-com-port-443-Operation-timed-out”解决方案"><span class="nav-number">2.1.</span> <span class="nav-text">执行 pod install 出现 “Failed to connect to github.com port 443: Operation timed out”解决方案</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#解决方案"><span class="nav-number">2.1.1.</span> <span class="nav-text">解决方案</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#pod-install时CDN-trunk-URL-couldn’t-be-downloaded-https-raw-githubusercontent-com-CocoaPods-Specs-master-Specs"><span class="nav-number">2.2.</span> <span class="nav-text">pod install时CDN: trunk URL couldn’t be downloaded: https:&#x2F;&#x2F;raw.githubusercontent.com&#x2F;CocoaPods&#x2F;Specs&#x2F;master&#x2F;Specs&#x2F;</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#解决方法"><span class="nav-number">2.2.1.</span> <span class="nav-text">解决方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#解决办法"><span class="nav-number">2.2.2.</span> <span class="nav-text">解决办法</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Doris AI</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">23</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Doris AI</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v7.7.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
