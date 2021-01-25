@@ -196,7 +196,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-01-18 13:32:12" itemprop="dateModified" datetime="2021-01-18T13:32:12+08:00">2021-01-18</time>
+                <time title="Modified: 2021-01-25 14:40:20" itemprop="dateModified" datetime="2021-01-25T14:40:20+08:00">2021-01-25</time>
               </span>
 
           
@@ -215,7 +215,7 @@
 </ul>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">defaults write com.apple.dt.Xcode ShowBuildOperationDuration -bool YES</span><br></pre></td></tr></table></figure>
 
-<p><img src="/Users/mikasa/Desktop/image_mark/image-20210113164314696.png" alt="image-20210113164314696"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/image-20210113164314696.png" alt="image-20210113164314696"></p>
 <ul>
 <li>获取oc文件代码行数</li>
 </ul>
@@ -251,9 +251,9 @@
 </li>
 </ul>
 <h4 id="speedscope"><a href="#speedscope" class="headerlink" title="speedscope"></a><a href="https://github.com/jlfwong/speedscope" target="_blank" rel="noopener">speedscope</a></h4><h5 id="Importing-from-Instruments-app"><a href="#Importing-from-Instruments-app" class="headerlink" title="Importing from Instruments.app"></a>Importing from Instruments.app</h5><p><img src="https://github.com/DorisGit/DorisGit.github.io/blob/master/images/image-20210114170444533.png" alt="image-20210114170444533"></p>
-<p><img src="/Users/mikasa/Desktop/image_mark/image-20210114171317919.png" alt="image-20210114171317919"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/image-20210114171317919.png" alt="image-20210114171317919"></p>
 <p>打开<a href="https://www.speedscope.app/" target="_blank" rel="noopener">https://www.speedscope.app</a>，将剪切板内容粘贴过去</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/image-20210114183314145.png" alt="image-20210114183314145"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/image-20210114183314145.png" alt="image-20210114183314145"></p>
 <h4 id="clang-ftime-trace-优化编译时长"><a href="#clang-ftime-trace-优化编译时长" class="headerlink" title="clang(-ftime-trace)优化编译时长"></a>clang(-ftime-trace)优化编译时长</h4><h5 id="ClangBuildAnalyzer-ftime-trace"><a href="#ClangBuildAnalyzer-ftime-trace" class="headerlink" title="ClangBuildAnalyzer(-ftime-trace)"></a>ClangBuildAnalyzer(-ftime-trace)</h5><ul>
 <li><p>编译/安装ClangBuildAnalyzer</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git clone https://github.com/aras-p/ClangBuildAnalyzer.git</span><br><span class="line">or</span><br><span class="line">git clone https://gitee.com/wangwenchaonj/ClangBuildAnalyzer.git</span><br></pre></td></tr></table></figure>
@@ -271,34 +271,34 @@
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">export CC=/usr/local/bin/clang</span><br><span class="line">export CXX=/usr/local/bin/clang++</span><br></pre></td></tr></table></figure>
 </li>
 <li><p>设置clang编译器<code>-ftime-trace</code>参数</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/image-20210114213116776.png" alt="image-20210114213116776"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/image-20210114213116776.png" alt="image-20210114213116776"></p>
 </li>
 <li><p>对源码进行编译</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">mkdir build</span><br><span class="line">ClangBuildAnalyzer --start ./build</span><br><span class="line">make -f projects/make/Makefile</span><br><span class="line">ClangBuildAnalyzer --stop ./build/ ClangBuildAnalyzer.data</span><br><span class="line">ClangBuildAnalyzer --analyze ClangBuildAnalyzer.data</span><br><span class="line">ls</span><br><span class="line">chmod -R 777 *</span><br></pre></td></tr></table></figure>
 </li>
 <li><p><a href="chrome://tracing/">chrome://tracing/</a>加载时长结果</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/image-20210114213452231.png" alt="image-20210114213452231"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/image-20210114213452231.png" alt="image-20210114213452231"></p>
 </li>
 <li><p>是</p>
 </li>
 </ul>
 <h4 id="优化工程配置"><a href="#优化工程配置" class="headerlink" title="优化工程配置"></a>优化工程配置</h4><h5 id="调整编译优化等级"><a href="#调整编译优化等级" class="headerlink" title="调整编译优化等级"></a>调整编译优化等级</h5><p>编译优化等级的基本原理是牺牲编译时性能，追求运行时的性能，在编译时删除无用代码，保留调试信息，函数内联等，因此提升打包速度的秘诀就是反其道而行之，牺牲运行时性能来换取编译时性能。对于日常测试打包，可以将 Optimize level 设置为 -O0, 表示不做任何优化, 以提升编译器的编译速度</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/image-20210113164453714.png" alt="image-20210113164453714"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/image-20210113164453714.png" alt="image-20210113164453714"></p>
 <h5 id="关闭Bitcode"><a href="#关闭Bitcode" class="headerlink" title="关闭Bitcode"></a>关闭Bitcode</h5><p>BitCode 是 iOS 9 引入的新特性，是由 LLVM 引入的一种中间代码，当这个属性设置为 YES 的时候，Xcode 在打包的时候，会将项目编译成很多个设备对应的安装包，这样在编译打包的时候就比较耗时，但对于内部打包不需要上传 AppStroe, 因此我们可以关闭此特性以减少编译打包时间。</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/image-20210113164817511.png" alt="image-20210113164817511"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/image-20210113164817511.png" alt="image-20210113164817511"></p>
 <h5 id="关闭dsYM生成"><a href="#关闭dsYM生成" class="headerlink" title="关闭dsYM生成"></a>关闭dsYM生成</h5><p>在大部分场景下测试，并不需要生成 dSYM 文件，仅当在最终 App Release Test 和提交应用市场的时候开启即可，可以检查一下子工程（尤其开源库）有么有设置正确</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/image-20210113165021445.png" alt="image-20210113165021445"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/image-20210113165021445.png" alt="image-20210113165021445"></p>
 <h5 id="将-Build-Active-Architecture-Only-改为-Yes"><a href="#将-Build-Active-Architecture-Only-改为-Yes" class="headerlink" title="将 Build Active Architecture Only 改为 Yes"></a>将 Build Active Architecture Only 改为 Yes</h5><p>Debug 时是不需要生成全架构，可以检查一下子工程（尤其开源库）有没有设置正确</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/image-20210113211958796.png" alt="image-20210113211958796"></p>
-<h5 id="优化头文件搜索路径"><a href="#优化头文件搜索路径" class="headerlink" title="优化头文件搜索路径"></a>优化头文件搜索路径</h5><p><img src="/Users/mikasa/Desktop/image_mark/image-20210113212600889.png" alt="image-20210113212600889"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/image-20210113211958796.png" alt="image-20210113211958796"></p>
+<h5 id="优化头文件搜索路径"><a href="#优化头文件搜索路径" class="headerlink" title="优化头文件搜索路径"></a>优化头文件搜索路径</h5><p><img src="http://qn49kho58.bkt.gdipper.com/image-20210113212600889.png" alt="image-20210113212600889"></p>
 <h4 id="优化Swift编译时间"><a href="#优化Swift编译时间" class="headerlink" title="优化Swift编译时间"></a>优化Swift编译时间</h4><h5 id="Swift代码编译耗时分析"><a href="#Swift代码编译耗时分析" class="headerlink" title="Swift代码编译耗时分析"></a>Swift代码编译耗时分析</h5><p>由于项目中swift代码量比较大，首先需要把耗时过长的文件找出来，然后进行重点优化，这里在Other Swift Flags加入两个编译参数：</p>
 <ul>
 <li>-Xfrontend: 如果编译或类型检查时耗时多长，则在Xcode中输出警告</li>
 <li>-debug-time-function-bodies：输出每个函数的编译时长</li>
 </ul>
-<p><img src="/Users/mikasa/Desktop/image_mark/image-20210113161127114.png" alt="image-20210113161127114"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/image-20210113161127114.png" alt="image-20210113161127114"></p>
 <p>然后通过使用<a href="https://github.com/RobertGummesson/BuildTimeAnalyzer-for-Xcode" target="_blank" rel="noopener">BuildTimeAnalyzer-for-Xcode</a>工具分析Xcode编译log，获取分析结果</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/image-20210113161941564.png" alt="image-20210113161941564"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/image-20210113161941564.png" alt="image-20210113161941564"></p>
 <h5 id="Swift代码优化建议"><a href="#Swift代码优化建议" class="headerlink" title="Swift代码优化建议"></a>Swift代码优化建议</h5><h6 id="为复杂的Swift属性使用明确的类型"><a href="#为复杂的Swift属性使用明确的类型" class="headerlink" title="为复杂的Swift属性使用明确的类型"></a>为复杂的Swift属性使用明确的类型</h6><p>在 Swift 中定义变量时可以不带类型声明，Xcode 编译器会更具初始化的值推断变量类型，这为 Swift 开发者提供了很大的便利，但这同时也增加的编译器的分析推断时间，从减少编译时间的角度考虑，对于相对复杂代码语句，减少编译器类型推断，可以大大减少 Xcode 的编译时间</p>
 <h6 id="拆解复杂的Swift表达式"><a href="#拆解复杂的Swift表达式" class="headerlink" title="拆解复杂的Swift表达式"></a>拆解复杂的Swift表达式</h6><p>对复杂表达式进行简化，简化的代码不仅可以提高编译效率，也具有更好的可读性，例如下面样例代码编译时间相差 30 倍</p>
 <h6 id="避免使用加号对字符串或数组进行拼接"><a href="#避免使用加号对字符串或数组进行拼接" class="headerlink" title="避免使用加号对字符串或数组进行拼接"></a>避免使用加号对字符串或数组进行拼接</h6><p>对字符串或数组的拼接，在日常开发中十分常见，需要注意拼接方式对编译时间的影响</p>
@@ -310,14 +310,14 @@
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">!/bin/sh</span></span><br><span class="line">if type -p ccache &gt;/dev/null 2&gt;&amp;1; then</span><br><span class="line">export CCACHE_MAXSIZE=10G</span><br><span class="line">export CCACHE_CPP2=true</span><br><span class="line">export CCACHE_HARDLINK=true</span><br><span class="line">export CCACHE_SLOPPINESS=file_macro,time_macros,include_file_mtime,include_file_ctime,file_stat_matches</span><br><span class="line"><span class="meta">#</span><span class="bash"> 指定日志文件路径到桌面，等下排查集成问题有用，集成成功后删除，否则很占磁盘空间</span></span><br><span class="line">export CCACHE_LOGFILE='~/Desktop/CCache.log'</span><br><span class="line">exec ccache /usr/bin/clang "$@"</span><br><span class="line">else</span><br><span class="line">exec clang "$@"</span><br><span class="line">fi</span><br></pre></td></tr></table></figure>
 
 <h5 id="定义CC常量"><a href="#定义CC常量" class="headerlink" title="定义CC常量"></a>定义CC常量</h5><p>在项目设置Build Setting中，添加常量CC，这个值会让Xcode在编译时把执行路径的可执行文件当作C编译器。</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/image-20210113175120935.png" alt="image-20210113175120935"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/image-20210113175120935.png" alt="image-20210113175120935"></p>
 <p>CC常量的值为 $(SRCROOT)/ccache-clang，如果你的脚本不是放在项目根目录，则自行调整路径。如果一运行项目就报错，检查下路径是不是填错了</p>
 <h5 id="关闭Clang-Modules"><a href="#关闭Clang-Modules" class="headerlink" title="关闭Clang Modules"></a>关闭Clang Modules</h5><p>因为CCache不支持Clang Modules，需要将Enable Modules的选项关闭。</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/image-20210113174944003.png" alt="image-20210113174944003"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/image-20210113174944003.png" alt="image-20210113174944003"></p>
 <p>关闭Clang Modules必须删除所有的@import语句，替换为#import的语言</p>
 <p>搜索后发现@import使用处非常多，暂时放弃此种方案</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/image-20210113174911402.png" alt="image-20210113174911402"></p>
-<h4 id="阶段性测试结果"><a href="#阶段性测试结果" class="headerlink" title="阶段性测试结果"></a>阶段性测试结果</h4><h5 id="修改配置文件"><a href="#修改配置文件" class="headerlink" title="修改配置文件"></a>修改配置文件</h5><p><img src="/Users/mikasa/Desktop/image_mark/image-20210113214244160.png" alt="image-20210113214244160"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/image-20210113174911402.png" alt="image-20210113174911402"></p>
+<h4 id="阶段性测试结果"><a href="#阶段性测试结果" class="headerlink" title="阶段性测试结果"></a>阶段性测试结果</h4><h5 id="修改配置文件"><a href="#修改配置文件" class="headerlink" title="修改配置文件"></a>修改配置文件</h5><p><img src="http://qn49kho58.bkt.gdipper.com/image-20210113214244160.png" alt="image-20210113214244160"></p>
 <h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><p><a href="https://cloud.tencent.com/developer/article/1564372" target="_blank" rel="noopener">iOS 微信编译速度优化分享</a></p>
 <p><a href="http://www.cocoachina.com/articles/19665" target="_blank" rel="noopener">如何将 iOS 项目的编译速度提高5倍</a></p>
 <p><a href="https://zhuanlan.zhihu.com/p/143775034" target="_blank" rel="noopener">iOS如何把编译速度稳定地提高10倍以上</a></p>
@@ -375,7 +375,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-01-16 21:06:19" itemprop="dateModified" datetime="2021-01-16T21:06:19+08:00">2021-01-16</time>
+                <time title="Modified: 2021-01-22 21:15:08" itemprop="dateModified" datetime="2021-01-22T21:15:08+08:00">2021-01-22</time>
               </span>
 
           
@@ -421,6 +421,93 @@
 <h5 id="作用"><a href="#作用" class="headerlink" title="作用"></a>作用</h5><h6 id="对软件测试的影响"><a href="#对软件测试的影响" class="headerlink" title="对软件测试的影响"></a>对软件测试的影响</h6><p>遵守开闭原则的设计，软件测试时只需要对扩展代码进行测试就可以了，原有的功能完全不受影响</p>
 <h6 id="提高代码的可复用性"><a href="#提高代码的可复用性" class="headerlink" title="提高代码的可复用性"></a>提高代码的可复用性</h6><p>粒度越小，被复用的可能性就越大；在面向对象的程序设计中，根据原子和抽象编程可以提高代码的可复用性</p>
 <h6 id="提高软件的可维护性"><a href="#提高软件的可维护性" class="headerlink" title="提高软件的可维护性"></a>提高软件的可维护性</h6><p>遵守开闭原则的设计，其稳定性高和延续性强，从而易于扩展和维护</p>
+<h4 id="单一职责原则"><a href="#单一职责原则" class="headerlink" title="单一职责原则"></a>单一职责原则</h4><blockquote>
+<p>单一职责规定一个类应该有且仅有一个引起它变化的原因，否则类应该被拆分</p>
+</blockquote>
+<p>该原则提出，对象不应该承担太多职责，如果一个对象承担了太多的职责，至少存在以下两个缺点：</p>
+<ul>
+<li>一个职责的变化可能会消弱或者抑制这个类实现其他职责的能力；</li>
+<li>当客户端需要改对象的某一个职责时，不得不将其他不需要的职责全都包含进来，从而造成冗余代码或代码的浪费。</li>
+</ul>
+<h5 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h5><ul>
+<li>降低类的复杂度，一个类只负责一项职责</li>
+<li>提高类的可读性</li>
+<li>提高系统的可维护性</li>
+<li>变更引起的风险降低</li>
+</ul>
+<h5 id="实现方法"><a href="#实现方法" class="headerlink" title="实现方法"></a>实现方法</h5><p>单一职责是最简单但又最难运用的原则，需要设计人员发现类的不同职责并将其分离，再封装到不同的类或模块中。而发现类的多种职责需要设计人员具有较强的分析设计能力和相关重构经验。</p>
+<h5 id="实际举例-1"><a href="#实际举例-1" class="headerlink" title="实际举例"></a>实际举例</h5><p>学生工作管理</p>
+<p>分析：学生工作管理主要分为学生生活辅导+学生学业指导，最好的做法是生活辅导交由辅导员类负责，学业指导交由学业导师负责。</p>
+<p><img src="/Users/mikasa/Desktop/image_mark/image-20210120184950103.png" alt="image-20210120184950103"></p>
+<h4 id="里氏替换原则"><a href="#里氏替换原则" class="headerlink" title="里氏替换原则"></a>里氏替换原则</h4><blockquote>
+<p>继承必须确保超类所拥有的性质在子类中仍然成立，它反映了基类和子类之间的关系，是对开闭原则的补充，是对实现抽象化的具体步骤的规范</p>
+</blockquote>
+<h5 id="作用-1"><a href="#作用-1" class="headerlink" title="作用"></a>作用</h5><ul>
+<li>里氏替换原则是实现开闭原则的重要方式之一</li>
+<li>它克服了继承中重写父类造成的可复用性变差的缺点</li>
+<li>它是动作正确性的保证。即类的扩展不会给已有的系统引入新的错误，降低代码出错的可能性</li>
+<li>加强程序的健壮性，同时变更时可以做到非常好的兼容性，提高程序的维护性、可扩展性，降低需求变更时引入的风险。</li>
+</ul>
+<h5 id="实现方法-1"><a href="#实现方法-1" class="headerlink" title="实现方法"></a>实现方法</h5><blockquote>
+<p>子类可以扩展父类的功能，但是不能改变父类原有的功能。也就是说，子类继承父类时，除添加新的方法时，尽量不要重写父类方法。</p>
+</blockquote>
+<h5 id="定义总结"><a href="#定义总结" class="headerlink" title="定义总结"></a>定义总结</h5><ul>
+<li>子类可以实现父类的抽象方法，但是不能覆盖父类的非抽象方法</li>
+<li>子类中可以增加自己持有的方法</li>
+<li>当子类的方法重载父类的方法时，方法的前置条件（即方法的输入参数）要比父类的方法更宽松</li>
+<li>当子类的方法实现父类的方法时（重写/重载或实现抽象方法），方法的后置条件（即方法的输出/返回值）要比父类的方法更严格或相等</li>
+</ul>
+<p>通过重写父类的方法来完成新的功能写起来虽然比较简单，但是整个继承体系的可复用性会比较差，特别是运用多态比较频繁时，程序运行出错的概率比较大。</p>
+<p>如果程序违背了里氏替换原则，则继承类的对象在基类出现的地方会出现运行错误。其修正办法是：取消原来的继承关系，重新设计它们之间的关系。</p>
+<h5 id="实际举例-2"><a href="#实际举例-2" class="headerlink" title="实际举例"></a>实际举例</h5><p>“几维鸟不是鸟”</p>
+<p>分析：鸟一般都会飞行，但是新西兰的几维鸟由于翅膀退化无法飞行。假设设计一个鸟的实例，燕子、几纬鸟类继承至鸟，获取两种鸟飞行300km花费时间。几纬鸟不会飞，结果会发生“除零异常” 或者 “无限大”，不符合预期。</p>
+<p><img src="/Users/mikasa/Desktop/image_mark/image-20210120191510026.png" alt="image-20210120191510026"></p>
+<p>几维鸟重写了鸟类的setSpeed方法，这违背了里氏替换原则，正确做法是取消几维鸟原来的继承关系，定义鸟 和 几维鸟的父类，动物类</p>
+<p><img src="/Users/mikasa/Desktop/image_mark/image-20210120191742673.png" alt="image-20210120191742673"></p>
+<h4 id="依赖倒置原则"><a href="#依赖倒置原则" class="headerlink" title="依赖倒置原则"></a>依赖倒置原则</h4><blockquote>
+<p>高层模块不应该依赖于低层模块，两者都应该依赖其抽象；抽象不应该依赖于细节，细节应该依赖于抽象。</p>
+<p>其核心思想是：要面向接口编程，不要面向实现编程</p>
+</blockquote>
+<p>依赖倒置原则是实现开闭原则的重要途径之一，它降低了客户与实现模块之间的耦合</p>
+<h5 id="作用-2"><a href="#作用-2" class="headerlink" title="作用"></a>作用</h5><p>软件设计中，抽象具有多变性，而抽象层则相对稳定，因此以抽象为基础搭建起来的架构要比以细节为基础搭建起来的架构要稳定的多。</p>
+<ul>
+<li>降低类间的耦合性</li>
+<li>提高系统的稳定性</li>
+<li>减少并行开发引起的风险</li>
+<li>提高代码的可读性和可维护性</li>
+</ul>
+<h5 id="实现方法-2"><a href="#实现方法-2" class="headerlink" title="实现方法"></a>实现方法</h5><p>依赖倒置的目的是通过面向接口的编程来降低类间的耦合性，实际在使用的过程，满足以下几个规则：</p>
+<ul>
+<li>每个类尽量提供接口和抽象类，或者两者都具备</li>
+<li>变量的声明类型尽量是接口或抽象类</li>
+<li>任何类都不应该从具体类派生</li>
+<li>使用继承时尽量遵循里氏替换原则</li>
+</ul>
+<h5 id="实际举例-3"><a href="#实际举例-3" class="headerlink" title="实际举例"></a>实际举例</h5><p>“顾客购物”</p>
+<p>分析：顾客购物的选择可能会在多个商店，多个商店都提供售卖这个功能，定义抽象类提供售卖方法，不同商店以抽象类为基础进行搭建</p>
+<p>建议参考BeeHive具体实现</p>
+<h4 id="接口隔离原则"><a href="#接口隔离原则" class="headerlink" title="接口隔离原则"></a>接口隔离原则</h4><blockquote>
+<p>客户端不应该被迫依赖于它不适应的方法；一个类对另一个类的依赖应该建立在最小的接口上。</p>
+</blockquote>
+<p>接口隔离原则和单一职责都是为了提高类的内聚性、降低它们之间的耦合性，体现了封装的思想，但两者是不同的：</p>
+<ul>
+<li>单一职责注重的是职责，而接口隔离原则注重的是对接口依赖的隔离</li>
+<li>单一职责主要是约束类，他针对的是程序中的实现和细节；接口隔离原则主要约束接口，主要针对抽象和程序整体框架的构建</li>
+</ul>
+<h5 id="优点-1"><a href="#优点-1" class="headerlink" title="优点"></a>优点</h5><p>接口隔离原则是为了约束接口，降低类对接口的依赖性，有如下几个优点：</p>
+<ul>
+<li>将臃肿庞大的接口分解为多个粒度小的接口，可以预防外来变更的扩散，提高系统的灵活性和可维护性；</li>
+<li>接口隔离提高了系统的内聚性，减少了对外交互，降低了系统的耦合性</li>
+<li>如果接口的粒度大小定义合理，能够保证系统的稳定性；但是，如果定义过小，则会造成接口数量过多，使设计复杂化；如果定义太大，灵活性降低，无法稳定提供定制服务，给整体项目带来无法预料的风险</li>
+<li>使用多个专门的接口还能够体现对象的层次，因为可以通过接口的继承，实现对总接口的定义</li>
+<li>能减少项目过程中的代码冗余，过大的接口里面通常放置许多不同的方法，当实现这个接口的时候，被迫设计冗余的代码</li>
+</ul>
+<h5 id="实现方法-3"><a href="#实现方法-3" class="headerlink" title="实现方法"></a>实现方法</h5><p>在具体应用接口隔离原则时，应该根据一下几个规则来衡量：</p>
+<ul>
+<li>接口尽量小，但是要有限度，一个接口只服务于一个子模块或业务逻辑</li>
+<li>为依赖接口的类定制服务，只提供调用者需要的方法，屏蔽不需要的方法</li>
+<li></li>
+</ul>
 
       
     </div>
@@ -463,10 +550,16 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2020-12-28 14:19:54 / Modified: 20:29:15" itemprop="dateCreated datePublished" datetime="2020-12-28T14:19:54+08:00">2020-12-28</time>
+              <time title="Created: 2020-12-28 14:19:54" itemprop="dateCreated datePublished" datetime="2020-12-28T14:19:54+08:00">2020-12-28</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-01-25 14:40:47" itemprop="dateModified" datetime="2021-01-25T14:40:47+08:00">2021-01-25</time>
+              </span>
 
           
 
@@ -488,12 +581,12 @@
 <li><code>t1</code>阶段，<code>main()</code>函数之前，成为<code>pre-main</code></li>
 <li><code>t2</code>阶段，<code>main()</code>函数及<code>main()</code>函数之后之后处理所需时间</li>
 </ul>
-<p><img src="/Users/mikasa/Desktop/image_mark/1723a78c376791a7.png" alt="1723a78c376791a7"></p>
-<h4 id="t1阶段：pre-main"><a href="#t1阶段：pre-main" class="headerlink" title="t1阶段：pre-main"></a>t1阶段：<code>pre-main</code></h4><p><img src="/Users/mikasa/Desktop/image_mark/1723a70f03e23995.png" alt="1723a70f03e23995"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/1723a78c376791a7.png" alt="1723a78c376791a7"></p>
+<h4 id="t1阶段：pre-main"><a href="#t1阶段：pre-main" class="headerlink" title="t1阶段：pre-main"></a>t1阶段：<code>pre-main</code></h4><p><img src="http://qn49kho58.bkt.gdipper.com/1723a70f03e23995.png" alt="1723a70f03e23995"></p>
 <h4 id="t2阶段"><a href="#t2阶段" class="headerlink" title="t2阶段"></a>t2阶段</h4><p>t2阶段的耗时主要在业务代码，根据打点统计业务耗时</p>
 <h3 id="Xcode测量-pre-main-时间"><a href="#Xcode测量-pre-main-时间" class="headerlink" title="Xcode测量 pre-main 时间"></a>Xcode测量 pre-main 时间</h3><p>通过添加环境变量可以获取到 pre-main阶段的时间。</p>
 <h4 id="DYLD-PRINT-STATISTICS"><a href="#DYLD-PRINT-STATISTICS" class="headerlink" title="DYLD_PRINT_STATISTICS"></a><code>DYLD_PRINT_STATISTICS</code></h4><p>Xcode中提供了测量pre-main的时间，Edit scheme -&gt; Run -&gt;Augments添加环境变量DYLD_PRINT_STATISTICS，value为YES</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/image-20201228143351368.png" alt="image-20201228143351368"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/image-20201228143351368.png" alt="image-20201228143351368"></p>
 <p>启动后可以看到启动时长</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Total pre-main time: 2.4 seconds (100.0%)</span><br><span class="line">         dylib loading time: 1.0 seconds (43.9%)</span><br><span class="line">        rebase&#x2F;binding time: 386.35 milliseconds (15.6%)</span><br><span class="line">            ObjC setup time: 199.85 milliseconds (8.0%)</span><br><span class="line">           initializer time: 798.44 milliseconds (32.3%)</span><br><span class="line">           slowest intializers :</span><br><span class="line">             libSystem.B.dylib :   9.73 milliseconds (0.3%)</span><br><span class="line">          libglInterpose.dylib : 504.02 milliseconds (20.3%)</span><br><span class="line">                  AFNetworking :  50.88 milliseconds (2.0%)</span><br><span class="line">                           xxx : 195.11 milliseconds (7.8%)</span><br></pre></td></tr></table></figure>
 
@@ -518,10 +611,10 @@
 <h2 id="物理内存和虚拟内存"><a href="#物理内存和虚拟内存" class="headerlink" title="物理内存和虚拟内存"></a>物理内存和虚拟内存</h2><h3 id="内存浪费"><a href="#内存浪费" class="headerlink" title="内存浪费"></a>内存浪费</h3><p>早期计算机需要不断启动应用，到达一定数量以后就会报错，应用无法正常运行，必须先关闭前面的部分应用才能继续开启。</p>
 <p>这是因为早期计算机没有虚拟地址，一旦加载都会全部加载到内存中，一但物理内存不够了，那么应用就无法继续开启。</p>
 <p>应用在内存中的排序都是顺序排列的，这样进程只需要将自己的地址尾部往右偏移一点就能访问到别的进程中的内存地址，想当不安全。</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/1723b443939cb86a.png" alt="1723b443939cb86a"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/1723b443939cb86a.png" alt="1723b443939cb86a"></p>
 <h3 id="虚拟内存"><a href="#虚拟内存" class="headerlink" title="虚拟内存"></a>虚拟内存</h3><p>用户使用时并不会使用到全部内存，如果App一启动就全部加载到内存中会浪费很多内存空间，<strong>虚拟内存技术</strong>的出现就是为了解决这个内存浪费情况。</p>
 <p>App启动后会认为自己已经获取到了整个App运行所需的内存空间，但实际上并没有在物理内存上为他申请那么大的空间，只是生产了一张 <strong>虚拟内存和物理内存关联的表</strong>。</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/1723b49489c7e84b.png" alt="1723b49489c7e84b"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/1723b49489c7e84b.png" alt="1723b49489c7e84b"></p>
 <h3 id="地址翻译"><a href="#地址翻译" class="headerlink" title="地址翻译"></a>地址翻译</h3><p>当App需要使用某一块虚拟内存的地址时，会通过这张表查询该虚拟地址是否已经在物理内存中申请了空间。</p>
 <ul>
 <li>如果已经申请就通过表的记录访问物理内存地址</li>
@@ -547,9 +640,9 @@
 <p>每页耗时也会有很大差距，1微妙到0.8毫秒不等。</p>
 <p>使用过程中对这点耗时感觉不明显，但是启动时加载大量数据，如果产生大量缺页中断（Page Fault）从而优化启动速度，这就是二进制重排。</p>
 <h3 id="重排目的"><a href="#重排目的" class="headerlink" title="重排目的"></a>重排目的</h3><p>二进制重排就是为了减少启动时的缺页异常（Page Fault）从而减少启动时间</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/1723b9a250ed488e.png" alt="1723b9a250ed488e"></p>
-<p><img src="/Users/mikasa/Desktop/image_mark/1723b98983c1778f.png" alt="1723b98983c1778f"></p>
-<h3 id="查看Page-Fault"><a href="#查看Page-Fault" class="headerlink" title="查看Page Fault"></a>查看Page Fault</h3><p><img src="/Users/mikasa/Desktop/image_mark/image-20201228172047101.png" alt="image-20201228172047101"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/1723b9a250ed488e.png" alt="1723b9a250ed488e"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/1723b98983c1778f.png" alt="1723b98983c1778f"></p>
+<h3 id="查看Page-Fault"><a href="#查看Page-Fault" class="headerlink" title="查看Page Fault"></a>查看Page Fault</h3><p><img src="http://qn49kho58.bkt.gdipper.com/image-20201228172047101.png" alt="image-20201228172047101"></p>
 <p>Page Fault会随着代码和文件的增加而增加，而二进制重排可以很好优化这个问题，其中心思想是重新排列方法符号的顺序，使启动的相关方法，排在最前面从而减少启动Page Fault。</p>
 <h3 id="Link-Map-File"><a href="#Link-Map-File" class="headerlink" title="Link Map File"></a>Link Map File</h3><h4 id="什么是Link-Map-File文件？"><a href="#什么是Link-Map-File文件？" class="headerlink" title="什么是Link Map File文件？"></a>什么是Link Map File文件？</h4><p><code>Link Map File</code>直译为链接映射文件，是Xcode生成可执行文件时一起生成的文本，用于记录链接相关信息。</p>
 <ul>
@@ -566,7 +659,7 @@
 </ul>
 <h4 id="生成Link-Map-File"><a href="#生成Link-Map-File" class="headerlink" title="生成Link Map File"></a>生成Link Map File</h4><p><code>Xcode</code> 在生成可执行文件的时候默认情况下不生成该文件。</p>
 <p>在<code>Xcode</code>的配置中 <code>Target -&gt; Build Setting -&gt; Linking</code> 将<code>Write Link Map File</code>设置为<code>YES</code>来生成<code>Link Map File</code>，运行代码即可生成<code>Link Map File</code></p>
-<p><img src="/Users/mikasa/Desktop/image_mark/image-20201228184414293.png" alt="image-20201228184414293"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/image-20201228184414293.png" alt="image-20201228184414293"></p>
 <h4 id="查看Link-Map-File文件"><a href="#查看Link-Map-File文件" class="headerlink" title="查看Link Map File文件"></a>查看Link Map File文件</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;Users&#x2F;mikasa&#x2F;Library&#x2F;Developer&#x2F;Xcode&#x2F;DerivedData&#x2F;xxx-esvlirvezjzdpuataqpznpbhress&#x2F;Build&#x2F;Intermediates.noindex&#x2F;xxx.build&#x2F;Debug-iphoneos&#x2F;xxx.build&#x2F;xxx-LinkMap-normal-arm64.txt</span><br></pre></td></tr></table></figure>
 
 <p><code>Link Map File</code>主要分为3部分</p>
@@ -761,16 +854,16 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim xxx_link.order</span><br></pre></td></tr></table></figure>
 
 <p><code>Target -&gt; Build Setting -&gt; Linking -&gt; Order File</code> 设置 <code>order file</code> 的路径</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/image-20201228192825215.png" alt="image-20201228192825215"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/image-20201228192825215.png" alt="image-20201228192825215"></p>
 <h4 id="编写order-file文件"><a href="#编写order-file文件" class="headerlink" title="编写order_file文件"></a>编写order_file文件</h4><p>编写<code>order_file</code>文件的方式，可以参考<a href="[opensource.apple.com](https://opensource.apple.com/)">obj源码</a>，查看其<code>order_file</code></p>
-<p><img src="/Users/mikasa/Desktop/image_mark/image-20201228193020738.png" alt="image-20201228193020738"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/image-20201228193020738.png" alt="image-20201228193020738"></p>
 <p>Link Map File文件中符号表是先加载<code>-[AppDelegate application:didFinishLaunchingWithOptions:]</code>其他符号信息，再加载<code>-[AppDelegate setupEnterApp]</code></p>
-<p><img src="/Users/mikasa/Desktop/image_mark/image-20201228193341997.png" alt="image-20201228193341997"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/image-20201228193341997.png" alt="image-20201228193341997"></p>
 <p>编写一下<code>link.order</code>试试</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">_main</span><br><span class="line">-[AppDelegate setupEnterApp]</span><br><span class="line">-[AppDelegate application:didFinishLaunchingWithOptions:]</span><br></pre></td></tr></table></figure>
 
 <p><code>command + K</code> 后 <code>command + B</code> 再查看一下 <code>Link Map File</code>，顺序已经换过来了</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/image-20201228193941872.png" alt="image-20201228193941872"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/image-20201228193941872.png" alt="image-20201228193941872"></p>
 <h4 id="自动生成order-file"><a href="#自动生成order-file" class="headerlink" title="自动生成order_file"></a>自动生成order_file</h4><p>全手写容易出现问题，想要自动化就要解决下列问题：</p>
 <ul>
 <li>保证不遗漏方法</li>
