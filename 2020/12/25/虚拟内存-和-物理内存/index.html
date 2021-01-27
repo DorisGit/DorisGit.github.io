@@ -53,21 +53,21 @@
 <meta property="og:site_name" content="泡泡茶壶">
 <meta property="og:description" content="先抛出几个让大家思考的问题   汇编代码：mov eax, 0x123456；它的意思是将内存0x123456处的内容送往寄存器。各个应用的数据共同存在于内存中的。假设有一个音乐播放器应用的汇编代码中，引用了0x123456这个内存地址，但是同事运行的应用有很多，那其他应用也完全有可能引用0x123456这个地址，那为什么完全没有冲突和错误呢？     进程是计算机领域最重要的概念之一，什么是进程">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/1614834ac115647a.png">
-<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/1614834abb0b6916.png">
+<meta property="og:image" content="http://qn49kho58.bkt.gdipper.com/1614834ac115647a.png">
+<meta property="og:image" content="http://qn49kho58.bkt.gdipper.com/1614834abb0b6916.png">
 <meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Downloads/1614834ac31b22d5.png">
-<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/1614834ac0ae8581.png">
-<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/1614834af5c46c0f.png">
-<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/1614834af5d7f384.png">
-<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/1614834af763527c.png">
-<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/1614834af8ee1780.png">
-<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/1614834b1b3f3447.png">
-<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/1614834b1bd41e06.png">
+<meta property="og:image" content="http://qn49kho58.bkt.gdipper.com/1614834ac0ae8581.png">
+<meta property="og:image" content="http://qn49kho58.bkt.gdipper.com/1614834af5c46c0f.png">
+<meta property="og:image" content="http://qn49kho58.bkt.gdipper.com/1614834af5d7f384.png">
+<meta property="og:image" content="http://qn49kho58.bkt.gdipper.com/1614834af763527c.png">
+<meta property="og:image" content="http://qn49kho58.bkt.gdipper.com/1614834af8ee1780.png">
+<meta property="og:image" content="http://qn49kho58.bkt.gdipper.com/1614834b1b3f3447.png">
+<meta property="og:image" content="http://qn49kho58.bkt.gdipper.com/1614834b1bd41e06.png">
 <meta property="article:published_time" content="2020-12-25T02:40:39.000Z">
-<meta property="article:modified_time" content="2020-12-25T12:24:04.587Z">
+<meta property="article:modified_time" content="2021-01-27T13:56:34.927Z">
 <meta property="article:author" content="Doris AI">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/1614834ac115647a.png">
+<meta name="twitter:image" content="http://qn49kho58.bkt.gdipper.com/1614834ac115647a.png">
 
 <link rel="canonical" href="https://dorisgit.github.io/2020/12/25/%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98-%E5%92%8C-%E7%89%A9%E7%90%86%E5%86%85%E5%AD%98/">
 
@@ -202,10 +202,16 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2020-12-25 10:40:39 / Modified: 20:24:04" itemprop="dateCreated datePublished" datetime="2020-12-25T10:40:39+08:00">2020-12-25</time>
+              <time title="Created: 2020-12-25 10:40:39" itemprop="dateCreated datePublished" datetime="2020-12-25T10:40:39+08:00">2020-12-25</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-01-27 21:56:34" itemprop="dateModified" datetime="2021-01-27T21:56:34+08:00">2021-01-27</time>
+              </span>
 
           
 
@@ -243,10 +249,10 @@
 <p>A：hash表内部本质是使用了数组，根据数组的起始地址以及某个元素的序号，就可以得到该元素在内存中的地址，而对于内存，访问任意一个地址，访问时间总是相同的。</p>
 </blockquote>
 <p>使用物理寻址的系统：</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/1614834ac115647a.png" alt="1614834ac115647a"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/1614834ac115647a.png" alt="1614834ac115647a"></p>
 <p>上图是一个使用物理寻址的示例，这是一条加载指令，它读取从物理地址4开始的4个字节，CPU通过内存总线，将指令和地址传递给主存，主存读取物理地址4处开始的4个字节，返回给CPU。</p>
 <p>早期计算时使用物理寻址方式，但是到了现在的多任务计算机时代，普遍使用的是虚拟寻址（virtual addressing）如下图所示：</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/1614834abb0b6916.png" alt="1614834abb0b6916"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/1614834abb0b6916.png" alt="1614834abb0b6916"></p>
 <p>CPU通过虚拟地址（virtual address，VA）来访问主存，这个虚拟地址在被送到主存之前会先转换成一个物理地址，将虚拟地址转换成物理地址的任务叫做地址翻译（address translate）。</p>
 <p>地址翻译需要CPU硬件和操作系统之间的配合。CPU芯片上叫做内存管理单元（Menory Management Unit,MMU）的专用硬件，利用存放在主存中的茶轩表来动态翻译虚拟地址，该表的内容由操作系统管理。</p>
 <blockquote>
@@ -268,7 +274,7 @@
 <blockquote>
 <p>其中未分配的VP不占用任何的实际物理空间，32位程序地址空间就有4G，至于64G的程序它的地址空间是一个非常大的天文数组，而目前我们的电脑高配也就是2T磁盘，16G内存。如果64位程序每个VP都映射着时间的PP，无论如何也对应不上的，并且也完全没必要一一映射，从上图中可以看到地址空间内有大量的恐怖，毕竟程序不可能实际使用那么大的地址空间。</p>
 </blockquote>
-<p><img src="/Users/mikasa/Desktop/image_mark/1614834ac0ae8581.png" alt="1614834ac0ae8581"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/1614834ac0ae8581.png" alt="1614834ac0ae8581"></p>
 <p>VM使用主存来作为缓存</p>
 <p>上图展示了一个有8个页面的虚拟内存中，虚拟页0和3还未分配，所以在磁盘上不存在，虚拟页1、4、6被缓存在物理内存中，虚拟也2、5、7已经被映射分配了，但是还没有缓存在主存中。</p>
 <h4 id="页表（Page-Table）"><a href="#页表（Page-Table）" class="headerlink" title="页表（Page Table）"></a>页表（Page Table）</h4><p>系统需要有办法判定某个虚拟页是否缓存在主存的某个地方。</p>
@@ -278,19 +284,19 @@
 </ul>
 <p>这些功能由软硬件联合提供，包括操作系统，CPU中的内存管理单元（Memory Maneagement Unit，MMU）和一个存放在物理内存中叫页表（page table）的数据结构，页表将虚拟页映射到物理页，每次地址翻译硬件将一个虚拟地址转换成物理地址时都会读取页表。</p>
 <p>页表：</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/1614834af5c46c0f.png" alt="1614834af5c46c0f"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/1614834af5c46c0f.png" alt="1614834af5c46c0f"></p>
 <p>上图展示了一个页表的基本结构，页表就是一个页表条目（Page Table Entry，PTE）的数组。虚拟地址的每个页在页表中都有一个队员的PTE，在这里我们假设每个PTE是由一个有效位（Valid bie）和一个n位地址字段组成的。有效位表明了该虚拟页当前是否被缓存在主存中。</p>
 <ul>
 <li>有效位为1，则主存缓存了该虚拟页，地址字段就表示了主存中相应的物理页的起始位置</li>
 <li>有效位为0，则地址字段的null表示这个虚拟页还未被分配，否则该地址就指向该虚拟页在磁盘的起始位置</li>
 </ul>
 <h4 id="页命中和缺页"><a href="#页命中和缺页" class="headerlink" title="页命中和缺页"></a>页命中和缺页</h4><p>当CPU想要读取包含在某个虚拟页的内容时，如果该页已经缓存在主页中，也就是页命中，但是如果该页没有缓存在主存中，则我们称之为缺页。</p>
-<h5 id="Page-Dault"><a href="#Page-Dault" class="headerlink" title="Page Dault"></a>Page Dault</h5><p><img src="/Users/mikasa/Desktop/image_mark/1614834af5d7f384.png" alt="1614834af5d7f384"></p>
+<h5 id="Page-Dault"><a href="#Page-Dault" class="headerlink" title="Page Dault"></a>Page Dault</h5><p><img src="http://qn49kho58.bkt.gdipper.com/1614834af5d7f384.png" alt="1614834af5d7f384"></p>
 <p>图上对VP3中的字的应用会引起不命中</p>
 <p>如上图所示，CPU引用了VP3中的内容，VP3并未缓存在主存中，系统从内存中读取PTE3，得知VP3未被缓存，这会触发一个缺页异常。缺页异常会调用kernel的缺页异常处理程序，该程序会选择一个牺牲页，如下图所示，牺牲页选择了存放在PP3中的VP4</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/1614834af763527c.png" alt="1614834af763527c"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/1614834af763527c.png" alt="1614834af763527c"></p>
 <p>图中VP4的内容被修改了，kernel会将它复制回磁盘，接下来，kernel从磁盘赋值VP3到内存中的PP3并更新PTE3。随后返回用户进程，当异常处理程序换回时，他回重启执行导致缺页的指令，当重新执行这条指令时，VP3已经在主存中，此时就是页命中了。</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/1614834af8ee1780.png" alt="1614834af8ee1780"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/1614834af8ee1780.png" alt="1614834af8ee1780"></p>
 <p>VP3被缓存到PP3</p>
 <p>根据习惯性叫法，我们在磁盘和内存之间传送页的活动叫做交换 或者 页面调度，这种交换活动，只有当不命中发生时才会发生，也就是说，系统并不会将磁盘内容预存到内存中。这种策略被称之为按需页面调度（demand paging）</p>
 <blockquote>
@@ -298,7 +304,7 @@
 </blockquote>
 <h4 id="虚拟内存作为内存管理和内存保护的工具"><a href="#虚拟内存作为内存管理和内存保护的工具" class="headerlink" title="虚拟内存作为内存管理和内存保护的工具"></a>虚拟内存作为内存管理和内存保护的工具</h4><p>理所当然，每个进程都有一个独立的页表和一个独立的虚拟地址空间</p>
 <p>回到文章开头，比如每个C程序都要调用stdio这个库，不可能为每个进程都添加一份库，内存中只有一份stdio库的内容，供每个使用该库的进程共享。</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/1614834b1b3f3447.png" alt="1614834b1b3f3447"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/1614834b1b3f3447.png" alt="1614834b1b3f3447"></p>
 <p>图18：共享页面</p>
 <p>如上图所示：第一个进程的页表将VP2映射到某个物理页面，而第二个进程同样将它的VP2映射到该物理页面，此时物理页面被两个进程共享了。</p>
 <blockquote>
@@ -306,7 +312,7 @@
 </blockquote>
 <p>大家知道，C语言中存在指针，可以直接进行内存操作，因为有了虚拟内存，所以我们的指针操作不会访问到进程的区域，但是哪怕是对于自己的地址空间，很多内存区域也应该是禁止访问的，这不仅包括kernel的区域，也包括自己的只读代码段。那么虚拟内存就提供了这样的一种内存保护工具。</p>
 <p>地址翻译机制 可以使用一种自然的方式来提供内存的访问控制，PTE上添加一些额外的控制位来添加权限，每次CPU生成一个地址时，地址翻译硬件就会读一个PTE。</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/1614834b1bd41e06.png" alt="1614834b1bd41e06"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/1614834b1bd41e06.png" alt="1614834b1bd41e06"></p>
 <p>图19:虚拟内存提供内存保护</p>
 <p>在上图中每个PTE额外添加了三个控制位，SUP位表示进程是否必须运行内核模式，READ 和 WRITE位分别控制页面的读写权限。如果有指令违法了这些控制权限，那么CPU就会触发一个故障，并将控制传递给内核中的异常处理程序，这种异常一般称为 段错误（segmentation fault）。</p>
 <h4 id="段-和-页"><a href="#段-和-页" class="headerlink" title="段 和 页"></a>段 和 页</h4><p>我们明白了页，页是操作系统为了管理主存方便而划分的，对用户不可见，但是思考这种情况，假设一个页的大小是1M，但是某个程序加起来也就0.5M，所以内存和磁盘进行页交换明显的浪费内存了，所以还有一种划分方式就是分段。上面那种情况，我将该段划分为0.5M，在内存和磁盘之间交换，这样就避免了浪费。</p>

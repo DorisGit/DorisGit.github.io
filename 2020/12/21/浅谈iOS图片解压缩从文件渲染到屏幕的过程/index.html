@@ -53,14 +53,14 @@
 <meta property="og:site_name" content="泡泡茶壶">
 <meta property="og:description" content="概述 将一张图片从磁盘中加载出来，并最终显示到屏幕上，中间其实经过了一系列复杂的处理过程，从文件到屏幕，其中包括了对图片的解压缩操作。 渲染图片到屏幕的过程 如上所示，图片渲染到屏幕上，是CPU和GPU协作完成的。 CPU&#x2F;GPU等这样一次渲染过程中的具体分工：  CPU：计算视图frame、图片解码、需要绘制纹理图片通过数据总线交给GPU GPU：纹理混合、顶点变换与计算、像素点的填充计算、渲染">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/16cfbeb484307840.png">
-<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/16cfbeb48572eaa2.png">
-<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/16cfbeb485755223.png">
+<meta property="og:image" content="http://qn49kho58.bkt.gdipper.com/16cfbeb484307840.png">
+<meta property="og:image" content="http://qn49kho58.bkt.gdipper.com/16cfbeb48572eaa2.png">
+<meta property="og:image" content="http://qn49kho58.bkt.gdipper.com/16cfbeb485755223.png">
 <meta property="article:published_time" content="2020-12-21T06:28:48.000Z">
-<meta property="article:modified_time" content="2020-12-24T10:15:27.844Z">
+<meta property="article:modified_time" content="2021-01-27T13:55:51.016Z">
 <meta property="article:author" content="Doris AI">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/16cfbeb484307840.png">
+<meta name="twitter:image" content="http://qn49kho58.bkt.gdipper.com/16cfbeb484307840.png">
 
 <link rel="canonical" href="https://dorisgit.github.io/2020/12/21/%E6%B5%85%E8%B0%88iOS%E5%9B%BE%E7%89%87%E8%A7%A3%E5%8E%8B%E7%BC%A9%E4%BB%8E%E6%96%87%E4%BB%B6%E6%B8%B2%E6%9F%93%E5%88%B0%E5%B1%8F%E5%B9%95%E7%9A%84%E8%BF%87%E7%A8%8B/">
 
@@ -203,7 +203,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-12-24 18:15:27" itemprop="dateModified" datetime="2020-12-24T18:15:27+08:00">2020-12-24</time>
+                <time title="Modified: 2021-01-27 21:55:51" itemprop="dateModified" datetime="2021-01-27T21:55:51+08:00">2021-01-27</time>
               </span>
 
           
@@ -219,7 +219,7 @@
       
         <p>概述</p>
 <p>将一张图片从磁盘中加载出来，并最终显示到屏幕上，中间其实经过了一系列复杂的处理过程，从文件到屏幕，其中包括了对图片的解压缩操作。</p>
-<h4 id="渲染图片到屏幕的过程"><a href="#渲染图片到屏幕的过程" class="headerlink" title="渲染图片到屏幕的过程"></a>渲染图片到屏幕的过程</h4><p><img src="/Users/mikasa/Desktop/image_mark/16cfbeb484307840.png" alt="16cfbeb484307840"></p>
+<h4 id="渲染图片到屏幕的过程"><a href="#渲染图片到屏幕的过程" class="headerlink" title="渲染图片到屏幕的过程"></a>渲染图片到屏幕的过程</h4><p><img src="http://qn49kho58.bkt.gdipper.com/16cfbeb484307840.png" alt="16cfbeb484307840"></p>
 <p>如上所示，图片渲染到屏幕上，是CPU和GPU协作完成的。</p>
 <p>CPU/GPU等这样一次渲染过程中的具体分工：</p>
 <ul>
@@ -228,7 +228,7 @@
 <li>时钟信号：垂直同步信息V-Sync/水平同步信息H-Sync</li>
 <li>iOS设备双缓冲机制：显示系统通常会引入两个帧缓冲区，双缓冲机制</li>
 </ul>
-<h4 id="什么是垂直同步信号和水平同步信息？"><a href="#什么是垂直同步信号和水平同步信息？" class="headerlink" title="什么是垂直同步信号和水平同步信息？"></a>什么是垂直同步信号和水平同步信息？</h4><p><img src="/Users/mikasa/Desktop/image_mark/16cfbeb48572eaa2.png" alt="16cfbeb48572eaa2"></p>
+<h4 id="什么是垂直同步信号和水平同步信息？"><a href="#什么是垂直同步信号和水平同步信息？" class="headerlink" title="什么是垂直同步信号和水平同步信息？"></a>什么是垂直同步信号和水平同步信息？</h4><p><img src="http://qn49kho58.bkt.gdipper.com/16cfbeb48572eaa2.png" alt="16cfbeb48572eaa2"></p>
 <blockquote>
 <p>从上图看，每一行从左到右就叫水平刷新，从上到下就叫垂直信号。整个屏幕刷新完毕，就会发出V-Sync信号。可以简单的用超市买单的扫枪码来理解，扫一个商品二维码后就会出现一个H-Sync信号，扫完所有商品的二维码后，计算商品总价后就相当于发送一个V-Sync信号。从CRT显示器的显示原理来看，单个像素组成了水平扫描线，水平扫描线在垂直方向的堆积形成了完整的画面。显示器的刷新率受显卡DAC控制，显卡DAC完成一帧的扫描后就会产生一个垂直同步信号。</p>
 </blockquote>
@@ -264,7 +264,7 @@
 </ul>
 <blockquote>
 <p>CPU 和 GPU的互相配合</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/16cfbeb485755223.png" alt="16cfbeb485755223"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/16cfbeb485755223.png" alt="16cfbeb485755223"></p>
 </blockquote>
 <h4 id="为什么需要解压缩"><a href="#为什么需要解压缩" class="headerlink" title="为什么需要解压缩"></a>为什么需要解压缩</h4><p>图片的解压缩是需要消耗大量CPU时间，那为什么还需要对图片进行解压缩操作呢？首先需要了解什么是位图：</p>
 <blockquote>

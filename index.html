@@ -375,7 +375,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-01-22 21:15:08" itemprop="dateModified" datetime="2021-01-22T21:15:08+08:00">2021-01-22</time>
+                <time title="Modified: 2021-01-27 21:49:38" itemprop="dateModified" datetime="2021-01-27T21:49:38+08:00">2021-01-27</time>
               </span>
 
           
@@ -506,8 +506,34 @@
 <ul>
 <li>接口尽量小，但是要有限度，一个接口只服务于一个子模块或业务逻辑</li>
 <li>为依赖接口的类定制服务，只提供调用者需要的方法，屏蔽不需要的方法</li>
-<li></li>
+<li>了解环境，拒绝盲从。每个项目或产品都要有选定的环境因素，环境不同，接口拆分的标准就不同。</li>
+<li>提高内聚，减少对外交互。使接口用最少的方法去完成最多的事情。</li>
 </ul>
+<h5 id="实际举例-4"><a href="#实际举例-4" class="headerlink" title="实际举例"></a>实际举例</h5><p>“学生成绩管理”</p>
+<p>分析：学生成绩包括新增成绩、修改成绩、删除成绩、计算总分、打印成绩信息、查询成绩信息等功能，如果将这些功能放在一个接口种肯定不太合理，需要进行拆分“输入模块”、“统计模块”、“打印模块”3个模块</p>
+<p><img src="/Users/mikasa/Desktop/image_mark/image-20210125213020261.png" alt="image-20210125213020261"></p>
+<h4 id="合成复用原则"><a href="#合成复用原则" class="headerlink" title="合成复用原则"></a>合成复用原则</h4><blockquote>
+<p>又名 组合/聚合复用原则。它要求在软件复用时，要尽量先使用组合或者聚合等关联关系来实现，其次才考虑使用继承关系来实现。</p>
+</blockquote>
+<p>如果要使用继承关系，则必须严格遵循里氏替换原则。合成复用原则同里氏替换原则相辅相成。合成复用原则同里氏替换原则相辅相成，两者都是开闭原则的具体实现规范。</p>
+<h5 id="合成复用原则的重要性"><a href="#合成复用原则的重要性" class="headerlink" title="合成复用原则的重要性"></a>合成复用原则的重要性</h5><p>通常的复用分为继承复用 和 合成复用两种，继承复用虽然有简单和易实现的优点，但它也存在以下缺点。</p>
+<h6 id="继承复用缺点"><a href="#继承复用缺点" class="headerlink" title="继承复用缺点"></a>继承复用缺点</h6><ul>
+<li>继承复用破坏了类的封装性。因为继承会将父类的实现细节暴露给子类，父类对子类是透明的，所以这种复用又称“白箱”复用</li>
+<li>子类和父类的耦合度高。父类实现的任何变化都会导致子类的实现发生变化，这不利于类的扩展和维护</li>
+<li>它限制了复用的灵活性。从父类继承而来的实现是静态的，在编译时已经定义，所以运行时不可能在发生变化</li>
+</ul>
+<h6 id="组合或聚合复用优点"><a href="#组合或聚合复用优点" class="headerlink" title="组合或聚合复用优点"></a>组合或聚合复用优点</h6><ul>
+<li>维护了类的封装性。因为成分对象的内部细节是新对象看不见的，所以这种复用又称“黑箱”复用</li>
+<li>新旧类之间的耦合性低。这种复用所需的依赖较少，新对象存取成分对象的唯一方法是通过成分对象接口</li>
+<li>复用的灵活性高。这种复用可以在运行时动态进行，新对象可以动态的引用与成分对象类型相同的对象</li>
+</ul>
+<h5 id="实现方法-4"><a href="#实现方法-4" class="headerlink" title="实现方法"></a>实现方法</h5><p>通过将已有对象纳入新对象中，作为新对象的成员对象来实现的，新对象可以调用已有对象的功能，从而达到复用。</p>
+<h5 id="实际举例-5"><a href="#实际举例-5" class="headerlink" title="实际举例"></a>实际举例</h5><p>“汽车分类管理”</p>
+<p>分析：汽车按“动力源”分为汽油汽车、电动汽车等；按颜色划分可分为白色汽车、黑色汽车、红色汽车。如果同时考虑这两种分类，其组合就很多。</p>
+<h6 id="继承复用实现汽车分类"><a href="#继承复用实现汽车分类" class="headerlink" title="继承复用实现汽车分类"></a>继承复用实现汽车分类</h6><p><img src="/Users/mikasa/Desktop/image_mark/image-20210127214720945.png" alt="image-20210127214720945"></p>
+<p>继承复用实现的汽车管理分类会产生很多子类，而且增加新的“动力源”或者增加新的颜色都要修改源码，这违背了开闭原则，不可取。</p>
+<h6 id="组合或聚合实现汽车分类"><a href="#组合或聚合实现汽车分类" class="headerlink" title="组合或聚合实现汽车分类"></a>组合或聚合实现汽车分类</h6><p><img src="/Users/mikasa/Desktop/image_mark/image-20210127214855801.png" alt="image-20210127214855801"></p>
+<p>颜色作为新对象，采用组合的方式纳入到对象中。</p>
 
       
     </div>
@@ -919,10 +945,16 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2020-12-25 10:40:39 / Modified: 20:24:04" itemprop="dateCreated datePublished" datetime="2020-12-25T10:40:39+08:00">2020-12-25</time>
+              <time title="Created: 2020-12-25 10:40:39" itemprop="dateCreated datePublished" datetime="2020-12-25T10:40:39+08:00">2020-12-25</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-01-27 21:56:34" itemprop="dateModified" datetime="2021-01-27T21:56:34+08:00">2021-01-27</time>
+              </span>
 
           
 
@@ -960,10 +992,10 @@
 <p>A：hash表内部本质是使用了数组，根据数组的起始地址以及某个元素的序号，就可以得到该元素在内存中的地址，而对于内存，访问任意一个地址，访问时间总是相同的。</p>
 </blockquote>
 <p>使用物理寻址的系统：</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/1614834ac115647a.png" alt="1614834ac115647a"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/1614834ac115647a.png" alt="1614834ac115647a"></p>
 <p>上图是一个使用物理寻址的示例，这是一条加载指令，它读取从物理地址4开始的4个字节，CPU通过内存总线，将指令和地址传递给主存，主存读取物理地址4处开始的4个字节，返回给CPU。</p>
 <p>早期计算时使用物理寻址方式，但是到了现在的多任务计算机时代，普遍使用的是虚拟寻址（virtual addressing）如下图所示：</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/1614834abb0b6916.png" alt="1614834abb0b6916"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/1614834abb0b6916.png" alt="1614834abb0b6916"></p>
 <p>CPU通过虚拟地址（virtual address，VA）来访问主存，这个虚拟地址在被送到主存之前会先转换成一个物理地址，将虚拟地址转换成物理地址的任务叫做地址翻译（address translate）。</p>
 <p>地址翻译需要CPU硬件和操作系统之间的配合。CPU芯片上叫做内存管理单元（Menory Management Unit,MMU）的专用硬件，利用存放在主存中的茶轩表来动态翻译虚拟地址，该表的内容由操作系统管理。</p>
 <blockquote>
@@ -985,7 +1017,7 @@
 <blockquote>
 <p>其中未分配的VP不占用任何的实际物理空间，32位程序地址空间就有4G，至于64G的程序它的地址空间是一个非常大的天文数组，而目前我们的电脑高配也就是2T磁盘，16G内存。如果64位程序每个VP都映射着时间的PP，无论如何也对应不上的，并且也完全没必要一一映射，从上图中可以看到地址空间内有大量的恐怖，毕竟程序不可能实际使用那么大的地址空间。</p>
 </blockquote>
-<p><img src="/Users/mikasa/Desktop/image_mark/1614834ac0ae8581.png" alt="1614834ac0ae8581"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/1614834ac0ae8581.png" alt="1614834ac0ae8581"></p>
 <p>VM使用主存来作为缓存</p>
 <p>上图展示了一个有8个页面的虚拟内存中，虚拟页0和3还未分配，所以在磁盘上不存在，虚拟页1、4、6被缓存在物理内存中，虚拟也2、5、7已经被映射分配了，但是还没有缓存在主存中。</p>
 <h4 id="页表（Page-Table）"><a href="#页表（Page-Table）" class="headerlink" title="页表（Page Table）"></a>页表（Page Table）</h4><p>系统需要有办法判定某个虚拟页是否缓存在主存的某个地方。</p>
@@ -995,19 +1027,19 @@
 </ul>
 <p>这些功能由软硬件联合提供，包括操作系统，CPU中的内存管理单元（Memory Maneagement Unit，MMU）和一个存放在物理内存中叫页表（page table）的数据结构，页表将虚拟页映射到物理页，每次地址翻译硬件将一个虚拟地址转换成物理地址时都会读取页表。</p>
 <p>页表：</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/1614834af5c46c0f.png" alt="1614834af5c46c0f"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/1614834af5c46c0f.png" alt="1614834af5c46c0f"></p>
 <p>上图展示了一个页表的基本结构，页表就是一个页表条目（Page Table Entry，PTE）的数组。虚拟地址的每个页在页表中都有一个队员的PTE，在这里我们假设每个PTE是由一个有效位（Valid bie）和一个n位地址字段组成的。有效位表明了该虚拟页当前是否被缓存在主存中。</p>
 <ul>
 <li>有效位为1，则主存缓存了该虚拟页，地址字段就表示了主存中相应的物理页的起始位置</li>
 <li>有效位为0，则地址字段的null表示这个虚拟页还未被分配，否则该地址就指向该虚拟页在磁盘的起始位置</li>
 </ul>
 <h4 id="页命中和缺页"><a href="#页命中和缺页" class="headerlink" title="页命中和缺页"></a>页命中和缺页</h4><p>当CPU想要读取包含在某个虚拟页的内容时，如果该页已经缓存在主页中，也就是页命中，但是如果该页没有缓存在主存中，则我们称之为缺页。</p>
-<h5 id="Page-Dault"><a href="#Page-Dault" class="headerlink" title="Page Dault"></a>Page Dault</h5><p><img src="/Users/mikasa/Desktop/image_mark/1614834af5d7f384.png" alt="1614834af5d7f384"></p>
+<h5 id="Page-Dault"><a href="#Page-Dault" class="headerlink" title="Page Dault"></a>Page Dault</h5><p><img src="http://qn49kho58.bkt.gdipper.com/1614834af5d7f384.png" alt="1614834af5d7f384"></p>
 <p>图上对VP3中的字的应用会引起不命中</p>
 <p>如上图所示，CPU引用了VP3中的内容，VP3并未缓存在主存中，系统从内存中读取PTE3，得知VP3未被缓存，这会触发一个缺页异常。缺页异常会调用kernel的缺页异常处理程序，该程序会选择一个牺牲页，如下图所示，牺牲页选择了存放在PP3中的VP4</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/1614834af763527c.png" alt="1614834af763527c"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/1614834af763527c.png" alt="1614834af763527c"></p>
 <p>图中VP4的内容被修改了，kernel会将它复制回磁盘，接下来，kernel从磁盘赋值VP3到内存中的PP3并更新PTE3。随后返回用户进程，当异常处理程序换回时，他回重启执行导致缺页的指令，当重新执行这条指令时，VP3已经在主存中，此时就是页命中了。</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/1614834af8ee1780.png" alt="1614834af8ee1780"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/1614834af8ee1780.png" alt="1614834af8ee1780"></p>
 <p>VP3被缓存到PP3</p>
 <p>根据习惯性叫法，我们在磁盘和内存之间传送页的活动叫做交换 或者 页面调度，这种交换活动，只有当不命中发生时才会发生，也就是说，系统并不会将磁盘内容预存到内存中。这种策略被称之为按需页面调度（demand paging）</p>
 <blockquote>
@@ -1015,7 +1047,7 @@
 </blockquote>
 <h4 id="虚拟内存作为内存管理和内存保护的工具"><a href="#虚拟内存作为内存管理和内存保护的工具" class="headerlink" title="虚拟内存作为内存管理和内存保护的工具"></a>虚拟内存作为内存管理和内存保护的工具</h4><p>理所当然，每个进程都有一个独立的页表和一个独立的虚拟地址空间</p>
 <p>回到文章开头，比如每个C程序都要调用stdio这个库，不可能为每个进程都添加一份库，内存中只有一份stdio库的内容，供每个使用该库的进程共享。</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/1614834b1b3f3447.png" alt="1614834b1b3f3447"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/1614834b1b3f3447.png" alt="1614834b1b3f3447"></p>
 <p>图18：共享页面</p>
 <p>如上图所示：第一个进程的页表将VP2映射到某个物理页面，而第二个进程同样将它的VP2映射到该物理页面，此时物理页面被两个进程共享了。</p>
 <blockquote>
@@ -1023,7 +1055,7 @@
 </blockquote>
 <p>大家知道，C语言中存在指针，可以直接进行内存操作，因为有了虚拟内存，所以我们的指针操作不会访问到进程的区域，但是哪怕是对于自己的地址空间，很多内存区域也应该是禁止访问的，这不仅包括kernel的区域，也包括自己的只读代码段。那么虚拟内存就提供了这样的一种内存保护工具。</p>
 <p>地址翻译机制 可以使用一种自然的方式来提供内存的访问控制，PTE上添加一些额外的控制位来添加权限，每次CPU生成一个地址时，地址翻译硬件就会读一个PTE。</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/1614834b1bd41e06.png" alt="1614834b1bd41e06"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/1614834b1bd41e06.png" alt="1614834b1bd41e06"></p>
 <p>图19:虚拟内存提供内存保护</p>
 <p>在上图中每个PTE额外添加了三个控制位，SUP位表示进程是否必须运行内核模式，READ 和 WRITE位分别控制页面的读写权限。如果有指令违法了这些控制权限，那么CPU就会触发一个故障，并将控制传递给内核中的异常处理程序，这种异常一般称为 段错误（segmentation fault）。</p>
 <h4 id="段-和-页"><a href="#段-和-页" class="headerlink" title="段 和 页"></a>段 和 页</h4><p>我们明白了页，页是操作系统为了管理主存方便而划分的，对用户不可见，但是思考这种情况，假设一个页的大小是1M，但是某个程序加起来也就0.5M，所以内存和磁盘进行页交换明显的浪费内存了，所以还有一种划分方式就是分段。上面那种情况，我将该段划分为0.5M，在内存和磁盘之间交换，这样就避免了浪费。</p>
@@ -1079,7 +1111,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-12-22 14:08:47" itemprop="dateModified" datetime="2020-12-22T14:08:47+08:00">2020-12-22</time>
+                <time title="Modified: 2021-01-27 21:57:16" itemprop="dateModified" datetime="2021-01-27T21:57:16+08:00">2021-01-27</time>
               </span>
 
           
@@ -1124,7 +1156,7 @@
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Error: "DEVELOPER_DIR" is not defined at /Applications/Xcode.app/Contents/SharedFrameworks/DVTFoundation.framework/Versions/A/Resources/symbolicatecrash line 69.</span><br></pre></td></tr></table></figure>
 
 <h5 id="执行结果"><a href="#执行结果" class="headerlink" title="执行结果"></a>执行结果</h5><p>再执行命令，在终端完成以后，在Crash文件夹中就会多出一个result.log文件，可以查看bug的崩溃信息。</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/image-20201221184525739.png" alt="image-20201221184525739"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/image-20201221184525739.png" alt="image-20201221184525739"></p>
 <h4 id="如何找回已发布到App-Store的App对应的dSYM文件？"><a href="#如何找回已发布到App-Store的App对应的dSYM文件？" class="headerlink" title="如何找回已发布到App Store的App对应的dSYM文件？"></a>如何找回已发布到App Store的App对应的dSYM文件？</h4><h5 id="通过Xcode找回"><a href="#通过Xcode找回" class="headerlink" title="通过Xcode找回"></a>通过Xcode找回</h5><ul>
 <li>打开 Xcode 顶部菜单栏 -&gt; Window -&gt; Organizer 窗口</li>
 <li>打开 Xcode 顶部菜单栏，选择 Archive 标签</li>
@@ -1206,7 +1238,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-12-24 18:15:27" itemprop="dateModified" datetime="2020-12-24T18:15:27+08:00">2020-12-24</time>
+                <time title="Modified: 2021-01-27 21:55:51" itemprop="dateModified" datetime="2021-01-27T21:55:51+08:00">2021-01-27</time>
               </span>
 
           
@@ -1222,7 +1254,7 @@
       
           <p>概述</p>
 <p>将一张图片从磁盘中加载出来，并最终显示到屏幕上，中间其实经过了一系列复杂的处理过程，从文件到屏幕，其中包括了对图片的解压缩操作。</p>
-<h4 id="渲染图片到屏幕的过程"><a href="#渲染图片到屏幕的过程" class="headerlink" title="渲染图片到屏幕的过程"></a>渲染图片到屏幕的过程</h4><p><img src="/Users/mikasa/Desktop/image_mark/16cfbeb484307840.png" alt="16cfbeb484307840"></p>
+<h4 id="渲染图片到屏幕的过程"><a href="#渲染图片到屏幕的过程" class="headerlink" title="渲染图片到屏幕的过程"></a>渲染图片到屏幕的过程</h4><p><img src="http://qn49kho58.bkt.gdipper.com/16cfbeb484307840.png" alt="16cfbeb484307840"></p>
 <p>如上所示，图片渲染到屏幕上，是CPU和GPU协作完成的。</p>
 <p>CPU/GPU等这样一次渲染过程中的具体分工：</p>
 <ul>
@@ -1231,7 +1263,7 @@
 <li>时钟信号：垂直同步信息V-Sync/水平同步信息H-Sync</li>
 <li>iOS设备双缓冲机制：显示系统通常会引入两个帧缓冲区，双缓冲机制</li>
 </ul>
-<h4 id="什么是垂直同步信号和水平同步信息？"><a href="#什么是垂直同步信号和水平同步信息？" class="headerlink" title="什么是垂直同步信号和水平同步信息？"></a>什么是垂直同步信号和水平同步信息？</h4><p><img src="/Users/mikasa/Desktop/image_mark/16cfbeb48572eaa2.png" alt="16cfbeb48572eaa2"></p>
+<h4 id="什么是垂直同步信号和水平同步信息？"><a href="#什么是垂直同步信号和水平同步信息？" class="headerlink" title="什么是垂直同步信号和水平同步信息？"></a>什么是垂直同步信号和水平同步信息？</h4><p><img src="http://qn49kho58.bkt.gdipper.com/16cfbeb48572eaa2.png" alt="16cfbeb48572eaa2"></p>
 <blockquote>
 <p>从上图看，每一行从左到右就叫水平刷新，从上到下就叫垂直信号。整个屏幕刷新完毕，就会发出V-Sync信号。可以简单的用超市买单的扫枪码来理解，扫一个商品二维码后就会出现一个H-Sync信号，扫完所有商品的二维码后，计算商品总价后就相当于发送一个V-Sync信号。从CRT显示器的显示原理来看，单个像素组成了水平扫描线，水平扫描线在垂直方向的堆积形成了完整的画面。显示器的刷新率受显卡DAC控制，显卡DAC完成一帧的扫描后就会产生一个垂直同步信号。</p>
 </blockquote>
@@ -1267,7 +1299,7 @@
 </ul>
 <blockquote>
 <p>CPU 和 GPU的互相配合</p>
-<p><img src="/Users/mikasa/Desktop/image_mark/16cfbeb485755223.png" alt="16cfbeb485755223"></p>
+<p><img src="http://qn49kho58.bkt.gdipper.com/16cfbeb485755223.png" alt="16cfbeb485755223"></p>
 </blockquote>
 <h4 id="为什么需要解压缩"><a href="#为什么需要解压缩" class="headerlink" title="为什么需要解压缩"></a>为什么需要解压缩</h4><p>图片的解压缩是需要消耗大量CPU时间，那为什么还需要对图片进行解压缩操作呢？首先需要了解什么是位图：</p>
 <blockquote>

@@ -56,8 +56,11 @@
 <meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/image-20210120184950103.png">
 <meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/image-20210120191510026.png">
 <meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/image-20210120191742673.png">
+<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/image-20210125213020261.png">
+<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/image-20210127214720945.png">
+<meta property="og:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/image-20210127214855801.png">
 <meta property="article:published_time" content="2021-01-11T08:07:36.000Z">
-<meta property="article:modified_time" content="2021-01-22T13:15:08.887Z">
+<meta property="article:modified_time" content="2021-01-27T13:49:38.393Z">
 <meta property="article:author" content="Doris AI">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://dorisgit.github.io/Users/mikasa/Desktop/image_mark/image-20210120184950103.png">
@@ -203,7 +206,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-01-22 21:15:08" itemprop="dateModified" datetime="2021-01-22T21:15:08+08:00">2021-01-22</time>
+                <time title="Modified: 2021-01-27 21:49:38" itemprop="dateModified" datetime="2021-01-27T21:49:38+08:00">2021-01-27</time>
               </span>
 
           
@@ -334,8 +337,34 @@
 <ul>
 <li>接口尽量小，但是要有限度，一个接口只服务于一个子模块或业务逻辑</li>
 <li>为依赖接口的类定制服务，只提供调用者需要的方法，屏蔽不需要的方法</li>
-<li></li>
+<li>了解环境，拒绝盲从。每个项目或产品都要有选定的环境因素，环境不同，接口拆分的标准就不同。</li>
+<li>提高内聚，减少对外交互。使接口用最少的方法去完成最多的事情。</li>
 </ul>
+<h5 id="实际举例-4"><a href="#实际举例-4" class="headerlink" title="实际举例"></a>实际举例</h5><p>“学生成绩管理”</p>
+<p>分析：学生成绩包括新增成绩、修改成绩、删除成绩、计算总分、打印成绩信息、查询成绩信息等功能，如果将这些功能放在一个接口种肯定不太合理，需要进行拆分“输入模块”、“统计模块”、“打印模块”3个模块</p>
+<p><img src="/Users/mikasa/Desktop/image_mark/image-20210125213020261.png" alt="image-20210125213020261"></p>
+<h4 id="合成复用原则"><a href="#合成复用原则" class="headerlink" title="合成复用原则"></a>合成复用原则</h4><blockquote>
+<p>又名 组合/聚合复用原则。它要求在软件复用时，要尽量先使用组合或者聚合等关联关系来实现，其次才考虑使用继承关系来实现。</p>
+</blockquote>
+<p>如果要使用继承关系，则必须严格遵循里氏替换原则。合成复用原则同里氏替换原则相辅相成。合成复用原则同里氏替换原则相辅相成，两者都是开闭原则的具体实现规范。</p>
+<h5 id="合成复用原则的重要性"><a href="#合成复用原则的重要性" class="headerlink" title="合成复用原则的重要性"></a>合成复用原则的重要性</h5><p>通常的复用分为继承复用 和 合成复用两种，继承复用虽然有简单和易实现的优点，但它也存在以下缺点。</p>
+<h6 id="继承复用缺点"><a href="#继承复用缺点" class="headerlink" title="继承复用缺点"></a>继承复用缺点</h6><ul>
+<li>继承复用破坏了类的封装性。因为继承会将父类的实现细节暴露给子类，父类对子类是透明的，所以这种复用又称“白箱”复用</li>
+<li>子类和父类的耦合度高。父类实现的任何变化都会导致子类的实现发生变化，这不利于类的扩展和维护</li>
+<li>它限制了复用的灵活性。从父类继承而来的实现是静态的，在编译时已经定义，所以运行时不可能在发生变化</li>
+</ul>
+<h6 id="组合或聚合复用优点"><a href="#组合或聚合复用优点" class="headerlink" title="组合或聚合复用优点"></a>组合或聚合复用优点</h6><ul>
+<li>维护了类的封装性。因为成分对象的内部细节是新对象看不见的，所以这种复用又称“黑箱”复用</li>
+<li>新旧类之间的耦合性低。这种复用所需的依赖较少，新对象存取成分对象的唯一方法是通过成分对象接口</li>
+<li>复用的灵活性高。这种复用可以在运行时动态进行，新对象可以动态的引用与成分对象类型相同的对象</li>
+</ul>
+<h5 id="实现方法-4"><a href="#实现方法-4" class="headerlink" title="实现方法"></a>实现方法</h5><p>通过将已有对象纳入新对象中，作为新对象的成员对象来实现的，新对象可以调用已有对象的功能，从而达到复用。</p>
+<h5 id="实际举例-5"><a href="#实际举例-5" class="headerlink" title="实际举例"></a>实际举例</h5><p>“汽车分类管理”</p>
+<p>分析：汽车按“动力源”分为汽油汽车、电动汽车等；按颜色划分可分为白色汽车、黑色汽车、红色汽车。如果同时考虑这两种分类，其组合就很多。</p>
+<h6 id="继承复用实现汽车分类"><a href="#继承复用实现汽车分类" class="headerlink" title="继承复用实现汽车分类"></a>继承复用实现汽车分类</h6><p><img src="/Users/mikasa/Desktop/image_mark/image-20210127214720945.png" alt="image-20210127214720945"></p>
+<p>继承复用实现的汽车管理分类会产生很多子类，而且增加新的“动力源”或者增加新的颜色都要修改源码，这违背了开闭原则，不可取。</p>
+<h6 id="组合或聚合实现汽车分类"><a href="#组合或聚合实现汽车分类" class="headerlink" title="组合或聚合实现汽车分类"></a>组合或聚合实现汽车分类</h6><p><img src="/Users/mikasa/Desktop/image_mark/image-20210127214855801.png" alt="image-20210127214855801"></p>
+<p>颜色作为新对象，采用组合的方式纳入到对象中。</p>
 
     </div>
 
@@ -417,7 +446,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#设计模式"><span class="nav-number">1.</span> <span class="nav-text">设计模式</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#设计模式原则"><span class="nav-number">1.1.</span> <span class="nav-text">设计模式原则</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#开闭原则"><span class="nav-number">1.2.</span> <span class="nav-text">开闭原则</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#实际举例"><span class="nav-number">1.2.1.</span> <span class="nav-text">实际举例</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#作用"><span class="nav-number">1.2.2.</span> <span class="nav-text">作用</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#对软件测试的影响"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">对软件测试的影响</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#提高代码的可复用性"><span class="nav-number">1.2.2.2.</span> <span class="nav-text">提高代码的可复用性</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#提高软件的可维护性"><span class="nav-number">1.2.2.3.</span> <span class="nav-text">提高软件的可维护性</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#单一职责原则"><span class="nav-number">1.3.</span> <span class="nav-text">单一职责原则</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#优点"><span class="nav-number">1.3.1.</span> <span class="nav-text">优点</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#实现方法"><span class="nav-number">1.3.2.</span> <span class="nav-text">实现方法</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#实际举例-1"><span class="nav-number">1.3.3.</span> <span class="nav-text">实际举例</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#里氏替换原则"><span class="nav-number">1.4.</span> <span class="nav-text">里氏替换原则</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#作用-1"><span class="nav-number">1.4.1.</span> <span class="nav-text">作用</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#实现方法-1"><span class="nav-number">1.4.2.</span> <span class="nav-text">实现方法</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#定义总结"><span class="nav-number">1.4.3.</span> <span class="nav-text">定义总结</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#实际举例-2"><span class="nav-number">1.4.4.</span> <span class="nav-text">实际举例</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#依赖倒置原则"><span class="nav-number">1.5.</span> <span class="nav-text">依赖倒置原则</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#作用-2"><span class="nav-number">1.5.1.</span> <span class="nav-text">作用</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#实现方法-2"><span class="nav-number">1.5.2.</span> <span class="nav-text">实现方法</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#实际举例-3"><span class="nav-number">1.5.3.</span> <span class="nav-text">实际举例</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#接口隔离原则"><span class="nav-number">1.6.</span> <span class="nav-text">接口隔离原则</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#优点-1"><span class="nav-number">1.6.1.</span> <span class="nav-text">优点</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#实现方法-3"><span class="nav-number">1.6.2.</span> <span class="nav-text">实现方法</span></a></li></ol></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#设计模式"><span class="nav-number">1.</span> <span class="nav-text">设计模式</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#设计模式原则"><span class="nav-number">1.1.</span> <span class="nav-text">设计模式原则</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#开闭原则"><span class="nav-number">1.2.</span> <span class="nav-text">开闭原则</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#实际举例"><span class="nav-number">1.2.1.</span> <span class="nav-text">实际举例</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#作用"><span class="nav-number">1.2.2.</span> <span class="nav-text">作用</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#对软件测试的影响"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">对软件测试的影响</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#提高代码的可复用性"><span class="nav-number">1.2.2.2.</span> <span class="nav-text">提高代码的可复用性</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#提高软件的可维护性"><span class="nav-number">1.2.2.3.</span> <span class="nav-text">提高软件的可维护性</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#单一职责原则"><span class="nav-number">1.3.</span> <span class="nav-text">单一职责原则</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#优点"><span class="nav-number">1.3.1.</span> <span class="nav-text">优点</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#实现方法"><span class="nav-number">1.3.2.</span> <span class="nav-text">实现方法</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#实际举例-1"><span class="nav-number">1.3.3.</span> <span class="nav-text">实际举例</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#里氏替换原则"><span class="nav-number">1.4.</span> <span class="nav-text">里氏替换原则</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#作用-1"><span class="nav-number">1.4.1.</span> <span class="nav-text">作用</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#实现方法-1"><span class="nav-number">1.4.2.</span> <span class="nav-text">实现方法</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#定义总结"><span class="nav-number">1.4.3.</span> <span class="nav-text">定义总结</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#实际举例-2"><span class="nav-number">1.4.4.</span> <span class="nav-text">实际举例</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#依赖倒置原则"><span class="nav-number">1.5.</span> <span class="nav-text">依赖倒置原则</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#作用-2"><span class="nav-number">1.5.1.</span> <span class="nav-text">作用</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#实现方法-2"><span class="nav-number">1.5.2.</span> <span class="nav-text">实现方法</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#实际举例-3"><span class="nav-number">1.5.3.</span> <span class="nav-text">实际举例</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#接口隔离原则"><span class="nav-number">1.6.</span> <span class="nav-text">接口隔离原则</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#优点-1"><span class="nav-number">1.6.1.</span> <span class="nav-text">优点</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#实现方法-3"><span class="nav-number">1.6.2.</span> <span class="nav-text">实现方法</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#实际举例-4"><span class="nav-number">1.6.3.</span> <span class="nav-text">实际举例</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#合成复用原则"><span class="nav-number">1.7.</span> <span class="nav-text">合成复用原则</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#合成复用原则的重要性"><span class="nav-number">1.7.1.</span> <span class="nav-text">合成复用原则的重要性</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#继承复用缺点"><span class="nav-number">1.7.1.1.</span> <span class="nav-text">继承复用缺点</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#组合或聚合复用优点"><span class="nav-number">1.7.1.2.</span> <span class="nav-text">组合或聚合复用优点</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#实现方法-4"><span class="nav-number">1.7.2.</span> <span class="nav-text">实现方法</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#实际举例-5"><span class="nav-number">1.7.3.</span> <span class="nav-text">实际举例</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#继承复用实现汽车分类"><span class="nav-number">1.7.3.1.</span> <span class="nav-text">继承复用实现汽车分类</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#组合或聚合实现汽车分类"><span class="nav-number">1.7.3.2.</span> <span class="nav-text">组合或聚合实现汽车分类</span></a></li></ol></li></ol></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
