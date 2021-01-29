@@ -40,7 +40,7 @@
       hits: {"per_page":10},
       labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
     },
-    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
     path: '',
     motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
   };
@@ -139,9 +139,34 @@
     <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>Archives</a>
 
   </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>Search
+        </a>
+      </li>
   </ul>
 
 </nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="Searching..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
 </div>
     </header>
 
@@ -375,7 +400,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-01-27 21:49:38" itemprop="dateModified" datetime="2021-01-27T21:49:38+08:00">2021-01-27</time>
+                <time title="Modified: 2021-01-29 14:51:32" itemprop="dateModified" datetime="2021-01-29T14:51:32+08:00">2021-01-29</time>
               </span>
 
           
@@ -534,6 +559,34 @@
 <p>继承复用实现的汽车管理分类会产生很多子类，而且增加新的“动力源”或者增加新的颜色都要修改源码，这违背了开闭原则，不可取。</p>
 <h6 id="组合或聚合实现汽车分类"><a href="#组合或聚合实现汽车分类" class="headerlink" title="组合或聚合实现汽车分类"></a>组合或聚合实现汽车分类</h6><p><img src="/Users/mikasa/Desktop/image_mark/image-20210127214855801.png" alt="image-20210127214855801"></p>
 <p>颜色作为新对象，采用组合的方式纳入到对象中。</p>
+<h4 id="迪米特法则"><a href="#迪米特法则" class="headerlink" title="迪米特法则"></a>迪米特法则</h4><blockquote>
+<p>迪米特法则又称最少知识原则。</p>
+<p>只与你的直接朋友交谈，不跟陌生人说话，其含义是：如果两个软件实体无需直接通信，你们就不应当发生直接的相互调用，可以通过第三方转发该调用。其目的是降低类之间的耦合度，提高模块的相对独立性。</p>
+</blockquote>
+<p>迪米特法则中的“朋友”是指：当前对象本身、当前对象的成员变量、当前对象所创建的对象、当前对象的方法参数等，这些对象同当前对象存在关联、聚合和组合关系，可以直接访问这些对象的方法。</p>
+<h5 id="优点-2"><a href="#优点-2" class="headerlink" title="优点"></a>优点</h5><p>迪米特法则要求限制软件实体之间通信的宽度和深度，正确使用迪米特法则有以下优点：</p>
+<ul>
+<li>降低了类之间的耦合度，提高了模块的相对独立性</li>
+<li>由于亲和度降低，从而提高了类的可复用率和系统的扩展性</li>
+</ul>
+<h5 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h5><p>过度使用迪米特法则则会使系统出现大量的中介类，从而增加系统的复杂度，使模块之间的通信效率降低。</p>
+<blockquote>
+<p>在采用迪米特法则时需要反复权衡，确保高内聚和低耦合的同时，保证系统的结构清晰。</p>
+</blockquote>
+<h5 id="实现方法-5"><a href="#实现方法-5" class="headerlink" title="实现方法"></a>实现方法</h5><p>从定义和特点来讲，他强调以下两点：</p>
+<ul>
+<li>从依赖者角度来说，只依赖应该依赖的对象</li>
+<li>从被依赖者角度来说，只暴露应该暴露的方法</li>
+</ul>
+<p>所以，在运用迪米特法则时，需要注意以下6点：</p>
+<ol>
+<li>在类的划分上，应该创建弱耦合的类。类和类之间的耦合越弱，就越有利于实现可复用的目标。</li>
+<li>在类的结构上，尽量降低类成员的访问权限</li>
+<li>在类的设计上，优先考虑将一个类设置成不变的类</li>
+<li>在对其他类的引用上，将引用其他对象的次数降到最低</li>
+<li>不暴露类的属性成员，而应该提供相应的访问器（set 和 get方法）</li>
+<li>谨慎使用序列化功能</li>
+</ol>
 
       
     </div>
@@ -2187,6 +2240,8 @@
   <div class="theme-info">Theme – <a href="https://mist.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Mist</a> v7.7.0
   </div>
 
+
+
         
 
 
@@ -2221,6 +2276,10 @@
   
 
 
+
+
+  
+<script src="/js/local-search.js"></script>
 
 
 
